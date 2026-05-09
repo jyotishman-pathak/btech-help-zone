@@ -1,32 +1,28 @@
-import { Geist, Geist_Mono, Nunito_Sans, Roboto } from "next/font/google"
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+const inter = Inter({ subsets: ["latin"] });
 
-const robotoHeading = Roboto({subsets:['latin'],variable:'--font-heading'});
-
-const nunitoSans = Nunito_Sans({subsets:['latin'],variable:'--font-sans'})
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
+export const metadata: Metadata = {
+  title: "B Tech Help Zone | One Platform for All B.Tech Study Needs",
+  description: "Previous year papers, notes, mock tests – everything for engineering students.",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", nunitoSans.variable, robotoHeading.variable)}
-    >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
+    <html lang="en" className="scroll-smooth">
+      <body className={`${inter.className} bg-white antialiased`}>
+        <Navbar />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
-  )
+  );
 }
