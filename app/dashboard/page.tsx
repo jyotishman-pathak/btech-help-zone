@@ -1,14 +1,18 @@
-  // ← replaces getServerSession(authOptions)
+// app/dashboard/page.tsx
 import { redirect } from "next/navigation";
 import { auth } from "../../auth";
 
-export default async function DashboardPage() {
-  const session = await auth();   // ← replaces getServerSession(authOptions)
-  if (!session) redirect("/login");
+export default async function DashboardRouter() {
+  const session = await auth();
 
-  const role = (session.user as any)?.role;
+  if (!session?.user) redirect("/login");
 
+  const role = (session.user as any).role;
+
+  if (role === "STUDENT") redirect("/student");
   if (role === "ADMIN") redirect("/admin");
   if (role === "PARENT") redirect("/parent");
-  redirect("/student");
+
+  // ✅ Role not assigned yet — never redirect back to /login
+  redirect("/onboarding"); 
 }

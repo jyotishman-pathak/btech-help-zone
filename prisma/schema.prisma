@@ -1,16 +1,31 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
+ 
 }
 
 datasource db {
   provider = "postgresql"
+  
+
 }
 
 enum Role {
   STUDENT
   ADMIN
   PARENT
+}
+
+enum SubscriptionTier {
+  NORMAL
+  PREMIUM
+  SUPER_PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  EXPIRED
 }
 
 enum ContentType {
@@ -25,21 +40,41 @@ enum ExamType {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String           @id @default(cuid())
+  email         String           @unique
   name          String?
   password      String?
-  role          Role      @default(STUDENT)
+  role          Role             @default(STUDENT)
+  tier          SubscriptionTier @default(NORMAL)   // ← ADD THIS
   emailVerified DateTime?
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
-  accounts     Account[]
-  sessions     Session[]
-  parentOf     ParentChild[] @relation("parent")
-  childOf      ParentChild[] @relation("child")
+  accounts         Account[]
+  sessions         Session[]
+  parentOf         ParentChild[]      @relation("parent")
+  childOf          ParentChild[]      @relation("child")
   mockTestAttempts MockTestAttempt[]
+  subscription     Subscription?
+   topicProgress    UserTopicProgress[]
+
+}
+model Subscription {
+  id                String             @id @default(cuid())
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id])
+  tier              SubscriptionTier
+  status            SubscriptionStatus @default(ACTIVE)
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+  amount            Int
+  currency          String             @default("INR")
+  startsAt          DateTime           @default(now())
+  expiresAt         DateTime
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Account {
@@ -90,67 +125,93 @@ model ParentChild {
 }
 
 model Subject {
-  id       String   @id @default(cuid())
-  name     String
-  category String
+  id        String   @id @default(cuid())
+  name      String
+  category  String
   weightage Int
   createdAt DateTime @default(now())
-    studyMaterials StudyMaterial[]
-    mockTest MockTest[]
-    
+  
+  studyMaterials StudyMaterial[]
+  mockTests      MockTest[]
+  topics         Topic[]
+}
+
+model Topic {
+  id        String   @id @default(cuid())
+  name      String
+  subjectId String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  subject  Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  progress UserTopicProgress[]
+}
+
+model UserTopicProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  topicId     String
+  completed   Boolean  @default(false)
+  completedAt DateTime?
+  
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, topicId])
 }
 
 model StudyMaterial {
-  id          String      @id @default(cuid())
-  title       String
-  type        ContentType
-  fileUrl     String
-  subjectId   String
-  isPremium   Boolean     @default(false)
-  downloads   Int         @default(0)
-  uploadedBy  String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id           String      @id @default(cuid())
+  title        String
+  type         ContentType
+  fileUrl      String
+  subjectId    String
+  requiredTier SubscriptionTier @default(NORMAL)
+  downloads    Int         @default(0)
+  uploadedBy   String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   subject Subject @relation(fields: [subjectId], references: [id])
 }
 
 model MockTest {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  subjectId   String?
-  examType    ExamType @default(FULL_MOCK)
-  year        Int?
-  duration    Int
-  accessCode  String   @unique
-  isActive    Boolean  @default(false)
-  totalMarks  Int
-  questions   MockTestQuestion[]
-  attempts    MockTestAttempt[]
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  subjectId    String?
+  examType     ExamType @default(FULL_MOCK)
+  year         Int?
+  duration     Int
+  accessCode   String   @unique
+  isActive     Boolean  @default(false)
+  totalMarks   Int
+  requiredTier SubscriptionTier @default(NORMAL)
+  questions    MockTestQuestion[]
+  attempts     MockTestAttempt[]
   
   subject Subject? @relation(fields: [subjectId], references: [id])
 }
 
 model MockTestQuestion {
-  id          String   @id @default(cuid())
-  testId      String
-  text        String
-  options     String[]
+  id           String   @id @default(cuid())
+  testId       String
+  text         String
+  options      String[]
   correctIndex Int
-  marks       Int      @default(1)
+  marks        Int      @default(1)
   
   test MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
 model MockTestAttempt {
-  id         String   @id @default(cuid())
-  userId     String
-  testId     String
-  score      Int
-  percentage Float
+  id          String   @id @default(cuid())
+  userId      String
+  testId      String
+  score       Int
+  percentage  Float
   completedAt DateTime @default(now())
   
-  user User      @relation(fields: [userId], references: [id])
-  test MockTest  @relation(fields: [testId], references: [id])
+  user User     @relation(fields: [userId], references: [id])
+  test MockTest @relation(fields: [testId], references: [id])
 }
