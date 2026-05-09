@@ -1,19 +1,31 @@
-import { Button } from "@/components/ui/button"
+import { FeaturedSubjects } from "../components/FeaturedSubjects";
+import { Hero } from "../components/Hero";
+import { PremiumBenefits } from "../components/PremiumBenefits";
+import { PremiumPlans } from "../components/PremiumPlans";
 
-export default function Page() {
+
+export default function Home() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
+    <>
+      <Hero />
+      <FeaturedSubjects />
+      <PremiumBenefits />
+      <PremiumPlans />
+      {/* Mock test teaser can be added here */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold">Ready to Ace Your Exams?</h2>
+          <p className="mt-2 text-lg opacity-90">Join 20,000+ students using mock tests with admin-controlled access codes.</p>
+          <div className="mt-6 flex justify-center gap-4">
+            <button className="rounded-full bg-white px-6 py-2 font-semibold text-blue-600 shadow-md hover:shadow-lg transition">
+              Get Free Access
+            </button>
+            <button className="rounded-full border border-white px-6 py-2 font-semibold hover:bg-white/10 transition">
+              View Premium Plans
+            </button>
+          </div>
         </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
-  )
+      </section>
+    </>
+  );
 }
