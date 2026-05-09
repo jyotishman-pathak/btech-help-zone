@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { Footer } from "../components/Footer";
 import { Navbar } from "../components/Navbar";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,9 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className={`${inter.className} bg-white antialiased`}>
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+      
+        <Providers>
+  <Navbar />
+<main>{children}</main>
+         <Footer />
+        </Providers>
+        
+       
       </body>
     </html>
   );
