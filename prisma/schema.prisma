@@ -193,25 +193,37 @@ model MockTest {
   subject Subject? @relation(fields: [subjectId], references: [id])
 }
 
+
+
 model MockTestQuestion {
-  id           String   @id @default(cuid())
-  testId       String
-  text         String
-  options      String[]
-  correctIndex Int
-  marks        Int      @default(1)
-  
+  id            String   @id @default(cuid())
+  testId        String
+  text          String
+  textAs        String?
+  imageUrl      String?
+  options       String[]
+  optionsAs     String[]
+  correctIndex  Int
+  marks         Int      @default(4)
+  negativeMarks Float    @default(1)   // ← ADD
+  section       String   @default("General")
+  order         Int      @default(0)   // ← ADD
+
   test MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
+// Update MockTestAttempt:
 model MockTestAttempt {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   testId      String
-  score       Int
-  percentage  Float
-  completedAt DateTime @default(now())
-  
+  score       Int       @default(0)
+  percentage  Float     @default(0)
+  answers     Json?     // ← ADD
+  status      String    @default("IN_PROGRESS")  // ← ADD
+  startedAt   DateTime  @default(now())
+  completedAt DateTime? // ← ADD
+
   user User     @relation(fields: [userId], references: [id])
   test MockTest @relation(fields: [testId], references: [id])
 }

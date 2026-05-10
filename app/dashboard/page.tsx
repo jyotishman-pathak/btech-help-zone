@@ -13,6 +13,6 @@ export default async function DashboardRouter() {
   if (role === "ADMIN") redirect("/admin");
   if (role === "PARENT") redirect("/parent");
 
-  // ✅ Role not assigned yet — never redirect back to /login
+  
   redirect("/onboarding"); 
 }

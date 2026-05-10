@@ -1,46 +1,66 @@
+// components/sections/CEEAdvantages.tsx
 "use client";
 
-import { CheckCircle2, Infinity, Shield, Trophy, FileCheck, Sparkles } from "lucide-react";
-import { Card, CardContent } from "../components/ui/card";
 
-const benefits = [
-  { icon: Infinity, title: "Unlimited Access", desc: "All PYQs, notes & mock tests without restrictions" },
-  { icon: FileCheck, title: "Advanced Notes", desc: "Topper's handwritten notes & video summaries" },
-  { icon: Trophy, title: "Full Mock Tests", desc: "Subject-wise, topic-wise & full syllabus tests" },
-  { icon: Shield, title: "Admin-Coded Tests", desc: "Secure test access with private codes" },
-  { icon: Sparkles, title: "Priority Support", desc: "Doubt solving within 24 hours" },
+import { FileCheck, FlaskConical, Timer, TrendingUp, MessageSquare, BookOpen } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+
+const advantages = [
+  { icon: FileCheck, title: "10+ Years CEE PYQs", desc: "Official papers mapped to Assam CEE syllabus with step-by-step solutions." },
+  { icon: FlaskConical, title: "PCM Short Notes", desc: "High-yield formula sheets & concept summaries for quick revision." },
+  { icon: Timer, title: "Timed Mock Tests", desc: "CEE-pattern simulations with auto-grading, speed analysis & rank prediction." },
+  { icon: TrendingUp, title: "Performance Analytics", desc: "Track weak topics, compare with toppers, and get weekly prep reports." },
+  { icon: MessageSquare, title: "Doubt Resolution", desc: "Expert mentors clear PCM doubts within 12 hours (Pro & Elite)." },
+  { icon: BookOpen, title: "College Allocation Guide", desc: "Branch-wise cutoffs, counseling strategy & seat matrix insights." },
 ];
 
-export function PremiumBenefits() {
+export function CEEAdvantages() {
   return (
-    <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Why Go <span className="text-blue-600">Premium?</span>
+    <section className="relative py-24 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
+      {/* Architectural Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+      <div className="container relative mx-auto px-4 md:px-6">
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <Badge variant="secondary" className="mb-4 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400 border-none shadow-sm">
+            Built for CEE Assam 2026
+          </Badge>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+            Engineered for Rank. <span className="text-zinc-400 dark:text-zinc-600">Not just passing.</span>
           </h2>
-          <p className="mt-4 text-lg text-gray-600">Everything you need to crack exams and ace semesters</p>
+          <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+            Class 11 & 12 PCM prep, structured around the Assam CEE pattern. Everything you need to secure a top engineering seat.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {benefits.map((benefit) => (
-            <Card key={benefit.title} className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition">
-              <CardContent className="flex items-start gap-4 pt-6">
-                <div className="rounded-full bg-blue-100 p-2 text-blue-600">
-                  <benefit.icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">{benefit.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{benefit.desc}</p>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {advantages.map((adv, i) => (
+            <motion.div
+              key={adv.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: true }}
+            >
+              <Card className="h-full border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group">
+                <CardContent className="p-6 flex flex-col h-full">
+                  <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <adv.icon className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+                  </div>
+                  <h3 className="font-semibold text-lg text-zinc-900 dark:text-zinc-50 mb-2">{adv.title}</h3>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{adv.desc}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
-        <div className="mt-12 flex justify-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm text-blue-700">
-            <CheckCircle2 className="h-4 w-4" /> Free users get 5 PYQs + 2 mock tests per month
+        <div className="mt-12 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 dark:bg-zinc-900 text-sm text-zinc-600 dark:text-zinc-400">
+            <FileCheck className="w-4 h-4 text-emerald-500" /> Free tier includes 3 PYQ sets & 1 full mock monthly
           </div>
         </div>
       </div>
