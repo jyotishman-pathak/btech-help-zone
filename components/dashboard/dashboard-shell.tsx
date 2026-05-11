@@ -15,11 +15,11 @@ import {
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { Progress } from "../../@/components/ui/progress";
+import { Progress } from "../ui/progress";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../@/components/ui/tabs";
-import { ScrollArea } from "../../@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { ScrollArea } from "../ui/scroll-area";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -171,7 +171,7 @@ function TierGate({ tier, required, fallback = "blur", children, upsellTitle, up
         <Lock className="w-8 h-8 mx-auto text-zinc-400 mb-3" />
         <h4 className="font-semibold text-zinc-900 dark:text-zinc-100">{upsellTitle ?? "Premium Feature"}</h4>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{upsellDescription ?? "Upgrade to unlock."}</p>
-        <Link href="/pricing">
+        <Link href="/student/pricing">
           <Button size="sm" className="mt-4 bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900">
             Upgrade to {required}
           </Button>

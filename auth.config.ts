@@ -1,5 +1,3 @@
-// auth.config.ts
-
 import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
@@ -15,7 +13,8 @@ export const authConfig = {
         nextUrl.pathname
       );
 
-      const isApiAuth = nextUrl.pathname.startsWith("/api/auth");
+      const isApiAuth =
+        nextUrl.pathname.startsWith("/api/auth");
 
       const isStatic =
         nextUrl.pathname.startsWith("/_next") ||
@@ -40,7 +39,8 @@ export const authConfig = {
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.id as string) || token.sub!;
+        session.user.id =
+          (token.id as string) || token.sub!;
 
         (session.user as any).role =
           (token.role as string) ?? "STUDENT";

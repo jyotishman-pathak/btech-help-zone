@@ -1,16 +1,22 @@
-// auth.ts
-
 import NextAuth from "next-auth";
+
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
 import bcrypt from "bcryptjs";
 
 import prisma from "./lib/prisma.client";
+
 import { authConfig } from "./auth.config";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const {
+  handlers,
+  signIn,
+  signOut,
+  auth,
+} = NextAuth({
   ...authConfig,
 
   adapter: PrismaAdapter(prisma),
@@ -32,7 +38,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
 
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (
+          !credentials?.email ||
+          !credentials?.password
+        ) {
           return null;
         }
 

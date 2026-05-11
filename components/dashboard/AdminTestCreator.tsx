@@ -1,15 +1,31 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Plus, Trash2, Image, X, ChevronDown, ChevronUp, Loader2, Check } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Image,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  Check,
+} from "lucide-react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Label } from "../../@/components/ui/label";
-import { Input } from "../../@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../@/components/ui/select";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
-import { Textarea } from "../../@/components/ui/textarea";
-import { Button } from "../../@/components/ui/button";
+import { Textarea } from "../ui/textarea";
+import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 
 interface QuestionDraft {
@@ -17,6 +33,7 @@ interface QuestionDraft {
   text: string;
   textAs: string;
   imageUrl: string | null;
+  uploading?: boolean;
   options: string[];
   optionsAs: string[];
   correctIndex: number;
@@ -34,6 +51,7 @@ function makeQuestion(): QuestionDraft {
     text: "",
     textAs: "",
     imageUrl: null,
+    uploading: false,
     options: ["", "", "", ""],
     optionsAs: ["", "", "", ""],
     correctIndex: 0,
@@ -49,58 +67,116 @@ export function AdminTestCreator() {
   const [duration, setDuration] = useState(180);
   const [requiredTier, setRequiredTier] = useState("NORMAL");
   const [examType, setExamType] = useState("FULL_MOCK");
-  const [questions, setQuestions] = useState<QuestionDraft[]>([makeQuestion()]);
+  const [questions, setQuestions] = useState<QuestionDraft[]>([
+    makeQuestion(),
+  ]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const router = useRouter();
-  const updateQ = (id: string, patch: Partial<QuestionDraft>) =>
-    setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ...patch } : q)));
 
-  const updateOption = (qid: string, i: number, val: string, lang: "en" | "as") =>
+  const updateQ = (id: string, patch: Partial<QuestionDraft>) =>
+    setQuestions((qs) =>
+      qs.map((q) => (q.id === id ? { ...q, ...patch } : q))
+    );
+
+  const updateOption = (
+    qid: string,
+    i: number,
+    val: string,
+    lang: "en" | "as"
+  ) =>
     setQuestions((qs) =>
       qs.map((q) => {
         if (q.id !== qid) return q;
+
         const arr = lang === "en" ? [...q.options] : [...q.optionsAs];
         arr[i] = val;
-        return lang === "en" ? { ...q, options: arr } : { ...q, optionsAs: arr };
+
+        return lang === "en"
+          ? { ...q, options: arr }
+          : { ...q, optionsAs: arr };
       })
     );
 
-  const handleImage = (qid: string, file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => updateQ(qid, { imageUrl: e.target?.result as string });
-    reader.readAsDataURL(file);
+  // ✅ Updated Cloudinary upload function
+  const handleImage = async (qid: string, file: File) => {
+    updateQ(qid, { uploading: true });
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("folder", "cee/questions");
+      form.append("resource_type", "image");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: form,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const { url } = await res.json();
+
+      updateQ(qid, {
+        imageUrl: url,
+        uploading: false,
+      });
+    } catch {
+      updateQ(qid, {
+        uploading: false,
+      });
+
+      setError("Image upload failed. Check Cloudinary credentials.");
+    }
   };
 
   const handleSubmit = async () => {
     if (!title.trim()) return setError("Test title is required");
+
     for (const q of questions) {
-      if (!q.text.trim()) return setError(`Question ${questions.indexOf(q) + 1} has no text`);
+      if (!q.text.trim())
+        return setError(
+          `Question ${questions.indexOf(q) + 1} has no text`
+        );
+
       if (q.options.some((o) => !o.trim()))
-        return setError(`All 4 options required for Q${questions.indexOf(q) + 1}`);
+        return setError(
+          `All 4 options required for Q${questions.indexOf(q) + 1}`
+        );
     }
+
     setError("");
     setSaving(true);
+
     try {
       const res = await fetch("/api/admin/tests", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
+
         body: JSON.stringify({
           title,
           duration,
           requiredTier,
           examType,
-          questions: questions.map(({ id, expanded, ...q }) => q),
+
+          questions: questions.map(
+            ({ id, expanded, uploading, ...q }) => q
+          ),
         }),
       });
+
       if (!res.ok) throw new Error(await res.text());
+
       setSaved(true);
 
-setTimeout(() => {
-  router.push("/admin");
-}, 1200);
+      setTimeout(() => {
+        router.push("/admin");
+      }, 1200);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -115,42 +191,75 @@ setTimeout(() => {
         <CardHeader>
           <CardTitle className="text-lg">Test Details</CardTitle>
         </CardHeader>
+
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2 space-y-1">
             <Label>Test Title *</Label>
+
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="CEE Full Syllabus Mock #13"
             />
           </div>
+
           <div className="space-y-1">
             <Label>Duration (minutes)</Label>
+
             <Input
               type="number"
               value={duration}
               onChange={(e) => setDuration(+e.target.value)}
             />
           </div>
+
           <div className="space-y-1">
             <Label>Access Tier</Label>
-            <Select value={requiredTier} onValueChange={setRequiredTier}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+
+            <Select
+              value={requiredTier}
+              onValueChange={setRequiredTier}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+
               <SelectContent>
-                <SelectItem value="NORMAL">Free (1st test)</SelectItem>
-                <SelectItem value="PREMIUM">Premium</SelectItem>
-                <SelectItem value="SUPER_PREMIUM">Super Premium</SelectItem>
+                <SelectItem value="NORMAL">
+                  Free (1st test)
+                </SelectItem>
+
+                <SelectItem value="PREMIUM">
+                  Premium
+                </SelectItem>
+
+                <SelectItem value="SUPER_PREMIUM">
+                  Super Premium
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-1">
             <Label>Exam Type</Label>
+
             <Select value={examType} onValueChange={setExamType}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+
               <SelectContent>
-                <SelectItem value="FULL_MOCK">Full Mock</SelectItem>
-                <SelectItem value="TOPIC_WISE">Topic Wise</SelectItem>
-                <SelectItem value="YEAR_WISE">Year Wise</SelectItem>
+                <SelectItem value="FULL_MOCK">
+                  Full Mock
+                </SelectItem>
+
+                <SelectItem value="TOPIC_WISE">
+                  Topic Wise
+                </SelectItem>
+
+                <SelectItem value="YEAR_WISE">
+                  Year Wise
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -160,31 +269,47 @@ setTimeout(() => {
       {/* Questions */}
       <div className="space-y-3">
         {questions.map((q, idx) => (
-          <Card key={q.id} className="border-zinc-200 dark:border-zinc-800">
-            {/* Question header */}
+          <Card
+            key={q.id}
+            className="border-zinc-200 dark:border-zinc-800"
+          >
+            {/* Header */}
             <div
               className="flex items-center justify-between p-4 cursor-pointer"
-              onClick={() => updateQ(q.id, { expanded: !q.expanded })}
+              onClick={() =>
+                updateQ(q.id, {
+                  expanded: !q.expanded,
+                })
+              }
             >
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className="text-xs">{idx + 1}</Badge>
+                <Badge variant="outline" className="text-xs">
+                  {idx + 1}
+                </Badge>
+
                 <Badge className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs">
                   {q.section}
                 </Badge>
+
                 <span className="text-sm text-zinc-600 dark:text-zinc-400 truncate max-w-xs">
                   {q.text || "New question"}
                 </span>
               </div>
+
               <div className="flex items-center gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setQuestions((qs) => qs.filter((x) => x.id !== q.id));
+
+                    setQuestions((qs) =>
+                      qs.filter((x) => x.id !== q.id)
+                    );
                   }}
                   className="p-1.5 rounded text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
+
                 {q.expanded ? (
                   <ChevronUp className="w-4 h-4 text-zinc-400" />
                 ) : (
@@ -195,54 +320,94 @@ setTimeout(() => {
 
             {q.expanded && (
               <CardContent className="pt-0 space-y-4">
-                {/* Section + marks row */}
+                {/* Section */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Section</Label>
-                    <Select value={q.section} onValueChange={(v) => updateQ(q.id, { section: v })}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+
+                    <Select
+                      value={q.section}
+                      onValueChange={(v) =>
+                        updateQ(q.id, { section: v })
+                      }
+                    >
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+
                       <SelectContent>
-                        {SECTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        {SECTIONS.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {s}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div className="space-y-1">
                     <Label className="text-xs">Marks (+)</Label>
+
                     <Input
                       type="number"
                       value={q.marks}
-                      onChange={(e) => updateQ(q.id, { marks: +e.target.value })}
+                      onChange={(e) =>
+                        updateQ(q.id, {
+                          marks: +e.target.value,
+                        })
+                      }
                       className="h-9"
                     />
                   </div>
+
                   <div className="space-y-1">
                     <Label className="text-xs">Negative (-)</Label>
+
                     <Input
                       type="number"
                       value={q.negativeMarks}
-                      onChange={(e) => updateQ(q.id, { negativeMarks: +e.target.value })}
+                      onChange={(e) =>
+                        updateQ(q.id, {
+                          negativeMarks: +e.target.value,
+                        })
+                      }
                       className="h-9"
                     />
                   </div>
                 </div>
 
-                {/* Question text (EN + AS) */}
+                {/* Questions */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Question (English) *</Label>
+                    <Label className="text-xs">
+                      Question (English) *
+                    </Label>
+
                     <Textarea
                       value={q.text}
-                      onChange={(e) => updateQ(q.id, { text: e.target.value })}
+                      onChange={(e) =>
+                        updateQ(q.id, {
+                          text: e.target.value,
+                        })
+                      }
                       placeholder="Type question in English..."
                       className="resize-none text-sm"
                       rows={3}
                     />
                   </div>
+
                   <div className="space-y-1">
-                    <Label className="text-xs">Question (Assamese)</Label>
+                    <Label className="text-xs">
+                      Question (Assamese)
+                    </Label>
+
                     <Textarea
                       value={q.textAs}
-                      onChange={(e) => updateQ(q.id, { textAs: e.target.value })}
+                      onChange={(e) =>
+                        updateQ(q.id, {
+                          textAs: e.target.value,
+                        })
+                      }
                       placeholder="অসমীয়াত প্ৰশ্ন লিখক..."
                       className="resize-none text-sm"
                       rows={3}
@@ -250,9 +415,12 @@ setTimeout(() => {
                   </div>
                 </div>
 
-                {/* Image upload */}
+                {/* ✅ Updated Image Upload */}
                 <div className="space-y-1">
-                  <Label className="text-xs">Question Image (optional)</Label>
+                  <Label className="text-xs">
+                    Question Image (optional)
+                  </Label>
+
                   {q.imageUrl ? (
                     <div className="relative inline-block">
                       <img
@@ -260,28 +428,45 @@ setTimeout(() => {
                         alt="Question"
                         className="h-32 rounded-lg border border-zinc-200 dark:border-zinc-700 object-contain bg-zinc-50 dark:bg-zinc-800"
                       />
+
                       <button
-                        onClick={() => updateQ(q.id, { imageUrl: null })}
+                        onClick={() =>
+                          updateQ(q.id, {
+                            imageUrl: null,
+                          })
+                        }
                         className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center"
                       >
                         <X className="w-3 h-3" />
                       </button>
                     </div>
+                  ) : q.uploading ? (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 text-sm">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading to Cloudinary...
+                    </div>
                   ) : (
                     <button
-                      onClick={() => fileRefs.current[q.id]?.click()}
+                      onClick={() =>
+                        fileRefs.current[q.id]?.click()
+                      }
                       className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 text-sm hover:border-zinc-400 transition"
                     >
-                      <Image className="w-4 h-4" /> Upload image
+                      <Image className="w-4 h-4" />
+                      Upload image
                     </button>
                   )}
+
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    ref={(el) => { fileRefs.current[q.id] = el; }}
+                    ref={(el) => {
+                      fileRefs.current[q.id] = el;
+                    }}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
+
                       if (file) handleImage(q.id, file);
                     }}
                   />
@@ -289,11 +474,21 @@ setTimeout(() => {
 
                 {/* Options */}
                 <div className="space-y-2">
-                  <Label className="text-xs">Options — click circle to mark correct</Label>
+                  <Label className="text-xs">
+                    Options — click circle to mark correct
+                  </Label>
+
                   {q.options.map((opt, i) => (
-                    <div key={i} className="flex items-center gap-2">
+                    <div
+                      key={i}
+                      className="flex items-center gap-2"
+                    >
                       <button
-                        onClick={() => updateQ(q.id, { correctIndex: i })}
+                        onClick={() =>
+                          updateQ(q.id, {
+                            correctIndex: i,
+                          })
+                        }
                         className={cn(
                           "w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 font-bold text-xs transition",
                           q.correctIndex === i
@@ -301,18 +496,42 @@ setTimeout(() => {
                             : "border-zinc-300 dark:border-zinc-700 text-zinc-500"
                         )}
                       >
-                        {q.correctIndex === i ? <Check className="w-3 h-3" /> : "ABCD"[i]}
+                        {q.correctIndex === i ? (
+                          <Check className="w-3 h-3" />
+                        ) : (
+                          "ABCD"[i]
+                        )}
                       </button>
+
                       <Input
                         value={opt}
-                        onChange={(e) => updateOption(q.id, i, e.target.value, "en")}
-                        placeholder={`Option ${["A","B","C","D"][i]} (English)`}
+                        onChange={(e) =>
+                          updateOption(
+                            q.id,
+                            i,
+                            e.target.value,
+                            "en"
+                          )
+                        }
+                        placeholder={`Option ${
+                          ["A", "B", "C", "D"][i]
+                        } (English)`}
                         className="flex-1 h-9 text-sm"
                       />
+
                       <Input
                         value={q.optionsAs[i]}
-                        onChange={(e) => updateOption(q.id, i, e.target.value, "as")}
-                        placeholder={`বিকল্প ${["ক","খ","গ","ঘ"][i]}`}
+                        onChange={(e) =>
+                          updateOption(
+                            q.id,
+                            i,
+                            e.target.value,
+                            "as"
+                          )
+                        }
+                        placeholder={`বিকল্প ${
+                          ["ক", "খ", "গ", "ঘ"][i]
+                        }`}
                         className="flex-1 h-9 text-sm"
                       />
                     </div>
@@ -325,28 +544,39 @@ setTimeout(() => {
 
         <Button
           variant="outline"
-          onClick={() => setQuestions((qs) => [...qs, makeQuestion()])}
+          onClick={() =>
+            setQuestions((qs) => [...qs, makeQuestion()])
+          }
           className="w-full border-dashed border-zinc-300 dark:border-zinc-700"
         >
-          <Plus className="w-4 h-4 mr-2" /> Add Question
+          <Plus className="w-4 h-4 mr-2" />
+          Add Question
         </Button>
       </div>
 
-      {/* Error + Submit */}
+      {/* Error */}
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
           {error}
         </p>
       )}
+
+      {/* Submit */}
       <Button
         onClick={handleSubmit}
         disabled={saving}
         className="w-full h-12 text-base bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
       >
         {saving ? (
-          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Saving...
+          </>
         ) : saved ? (
-          <><Check className="w-4 h-4 mr-2" /> Test Published!</>
+          <>
+            <Check className="w-4 h-4 mr-2" />
+            Test Published!
+          </>
         ) : (
           `Publish Test · ${questions.length} Questions`
         )}

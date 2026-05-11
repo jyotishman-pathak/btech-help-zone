@@ -18,7 +18,7 @@ import { Button } from "../../ui/button";
 
 import { cn } from "../../../lib/utils";
 import { Badge } from "../../ui/badge";
-import { ScrollArea } from "../../../@/components/ui/scroll-area";
+import { ScrollArea } from "../../ui/scroll-area";
 import { signOut } from "next-auth/react";
 
 interface SidebarProps {

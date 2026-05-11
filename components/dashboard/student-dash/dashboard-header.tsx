@@ -8,11 +8,11 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 
-import { Button } from "../../../components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
-import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { Badge } from "../../ui/badge";
 
-import { Input } from "../../../@/components/ui/input";
+import { Input } from "../../ui/input";
 import { cn } from "../../../lib/utils";
 
 import {
@@ -22,7 +22,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../../@/components/ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 

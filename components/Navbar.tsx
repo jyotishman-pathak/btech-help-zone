@@ -18,12 +18,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../@/components/ui/dropdown-menu";
+} from "./ui/dropdown-menu";
 
 
 const mainNav = [
   { name: "Home", href: "/" },
-  { name: "PYQs", href: "/cee/pyqs" },
+  { name: "PYQs", href: "/cee/pyq" },
   { name: "Mocks", href: "/cee/mock" },
 ];
 

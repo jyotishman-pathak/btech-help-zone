@@ -5,7 +5,7 @@ import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Tick02Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons"
-import { cn } from "../../../lib/utils"
+import { cn } from "../../lib/utils"
 
 function DropdownMenu({
   ...props

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../../@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   Users, FileText, Timer, Settings, TrendingUp, Shield, Copy, Plus, Search,
@@ -18,12 +18,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Button } from "../ui/button";
-import { ScrollArea } from "../../@/components/ui/scroll-area";
-import { Input } from "../../@/components/ui/input";
+import { ScrollArea } from "../ui/scroll-area";
+import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
-import { Label } from "../../@/components/ui/label";
-import { Progress } from "../../@/components/ui/progress";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../../@/components/ui/dropdown-menu";
+import { Label } from "../ui/label";
+import { Progress } from "../ui/progress";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import Link from "next/link";
 
 import { signOut, useSession } from "next-auth/react";

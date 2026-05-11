@@ -6,18 +6,18 @@ import {
   Timer, Globe, Save, Flag, Eraser, Send, AlertCircle, CheckCircle2, XCircle,
   Clock, Trophy, ArrowLeftRight, Info, Play, X, Search, Loader2,
 } from "lucide-react";
-import { Button } from "../../@/components/ui/button";
+import { Button } from "../ui/button";
 
-import { Progress } from "../../@/components/ui/progress";
+import { Progress } from "../ui/progress";
 import { cn } from "../../lib/utils";
-import { ScrollArea } from "../../@/components/ui/scroll-area";
+import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "../../@/components/ui/dialog";
+} from "../ui/dialog";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
