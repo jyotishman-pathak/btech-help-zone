@@ -254,8 +254,8 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
   const hasAttempts = totalAttempts > 0;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-12">
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02]"
+<div className="bg-zinc-50 dark:bg-zinc-950 pb-12">      
+  <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02]"
         style={{ backgroundImage: "radial-gradient(#808080 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
 
       <div className="container mx-auto p-4 md:p-6 max-w-7xl relative">

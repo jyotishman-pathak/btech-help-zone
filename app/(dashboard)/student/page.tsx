@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import prisma from "../../../lib/prisma.client";
 import { auth } from "../../../auth";
 import { DashboardData, DashboardShell } from "../../../components/dashboard/dashboard-shell";
+import { DashboardProvider } from "../../../components/dashboard/student-dash/context";
 
 
 
@@ -234,7 +235,14 @@ export default async function DashboardPage() {
   const data = await getDashboardData(userId);
 
   return (
-    <DashboardShell
+    <DashboardProvider
+  userName={session.user.name ?? null}
+  userImage={session.user.image ?? null}
+  userTier={tier}
+  streak={data.streak}
+>
+
+     <DashboardShell
       user={{
         name: session.user.name,
         email: session.user.email,
@@ -243,5 +251,8 @@ export default async function DashboardPage() {
       tier={tier}
       data={data}
     />
+
+  </DashboardProvider>
+   
   );
 }

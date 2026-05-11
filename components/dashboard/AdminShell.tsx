@@ -324,7 +324,9 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
           <div className="flex items-center gap-2.5">
             <Shield className="h-6 w-6 text-zinc-900 dark:text-white" />
             <div className="flex flex-col leading-tight">
-              <span className="text-base font-black tracking-tight text-zinc-900 dark:text-white">CEE Admin</span>
+              <span className="font-black text-lg text-zinc-900 dark:text-white">
+                CEE<span className="text-amber-500 ml-2">HelpZone</span>
+              </span>
               <span className="text-[10px] font-medium text-zinc-500 -mt-0.5">Assam • PCM Platform</span>
             </div>
           </div>
