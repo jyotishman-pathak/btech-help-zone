@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import prisma from "../../lib/prisma.client";
-import { auth } from "../../auth";
-import { DashboardData, DashboardShell } from "../../components/dashboard/dashboard-shell";
+import prisma from "../../../lib/prisma.client";
+import { auth } from "../../../auth";
+import { DashboardData, DashboardShell } from "../../../components/dashboard/dashboard-shell";
 
 
 

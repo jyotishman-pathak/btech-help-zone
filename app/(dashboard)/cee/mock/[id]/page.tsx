@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { auth } from "../../../../auth";
-import { CBTEngine } from "../../../../components/dashboard/MocksShell";
+import { auth } from "../../../../../auth";
+import { CBTEngine } from "../../../../../components/dashboard/MocksShell";
 
 
 export default async function MockTestPage({

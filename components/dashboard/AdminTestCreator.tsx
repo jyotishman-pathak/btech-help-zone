@@ -10,7 +10,7 @@ import { Badge } from "../ui/badge";
 import { cn } from "../../lib/utils";
 import { Textarea } from "../../@/components/ui/textarea";
 import { Button } from "../../@/components/ui/button";
-
+import { useRouter } from "next/navigation";
 
 interface QuestionDraft {
   id: string;
@@ -54,7 +54,7 @@ export function AdminTestCreator() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-
+  const router = useRouter();
   const updateQ = (id: string, patch: Partial<QuestionDraft>) =>
     setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ...patch } : q)));
 
@@ -97,9 +97,10 @@ export function AdminTestCreator() {
       });
       if (!res.ok) throw new Error(await res.text());
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-      setTitle("");
-      setQuestions([makeQuestion()]);
+
+setTimeout(() => {
+  router.push("/admin");
+}, 1200);
     } catch (e: any) {
       setError(e.message);
     } finally {

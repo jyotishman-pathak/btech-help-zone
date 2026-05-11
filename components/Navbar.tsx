@@ -24,7 +24,7 @@ import {
 const mainNav = [
   { name: "Home", href: "/" },
   { name: "PYQs", href: "/cee/pyqs" },
-  { name: "Mocks", href: "/cee/mocks" },
+  { name: "Mocks", href: "/cee/mock" },
 ];
 
 const subjectNav = [

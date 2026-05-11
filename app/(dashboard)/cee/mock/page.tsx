@@ -2,8 +2,9 @@ import { redirect } from "next/navigation";
 
 import Link from "next/link";
 import { Timer, Lock, ChevronRight, Trophy } from "lucide-react";
-import { auth } from "../../../auth";
-import prisma from "../../../lib/prisma.client";
+import { auth } from "../../../../auth";
+import prisma from "../../../../lib/prisma.client";
+
 
 export default async function MockListPage() {
   const session = await auth();
