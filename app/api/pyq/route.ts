@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../auth";
 import prisma from "../../../lib/prisma.client";
 
+type PyqItem = Awaited<ReturnType<typeof prisma.studyMaterial.findMany<{
+  where: { type: "PYQ"; status: "published" };
+  include: { subject: { select: { name: true } } };
+  orderBy: [{ year: "desc" }, { createdAt: "desc" }];
+}>>>[number];
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -9,7 +14,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const subject = searchParams.get("subject"); // subject name
+  const subject = searchParams.get("subject");
   const year = searchParams.get("year");
   const search = searchParams.get("search") ?? "";
   const userTier = (session.user as any).tier ?? "NORMAL";
@@ -30,8 +35,7 @@ export async function GET(req: NextRequest) {
     orderBy: [{ year: "desc" }, { createdAt: "desc" }],
   });
 
-  // Add access flag without exposing fileUrl for locked items
-  const enriched = pyqs.map((p) => {
+  const enriched = pyqs.map((p: PyqItem) => {
     const required = TIER_LEVEL[p.requiredTier] ?? 0;
     const has = TIER_LEVEL[userTier] ?? 0;
     const canAccess = has >= required;
@@ -43,13 +47,11 @@ export async function GET(req: NextRequest) {
       requiredTier: p.requiredTier,
       downloads: p.downloads,
       canAccess,
-      // Only expose fileUrl if user can access
       fileUrl: canAccess ? p.fileUrl : null,
     };
   });
 
-  // Get unique years for filter
-  const years = [...new Set(pyqs.map((p) => p.year).filter(Boolean))].sort(
+  const years = [...new Set(pyqs.map((p: PyqItem) => p.year).filter(Boolean))].sort(
     (a, b) => (b ?? 0) - (a ?? 0)
   );
 
