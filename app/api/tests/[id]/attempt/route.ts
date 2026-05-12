@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import prisma from "../../../../../lib/prisma.client";
 
+type Question = {
+  id: string;
+  marks: number;
+  negativeMarks: number;
+  correctIndex: number;
+  [key: string]: any;
+};
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -61,7 +69,7 @@ export async function PUT(
   const userId = session.user.id as string;
   const { attemptId, answers } = await req.json();
 
-  const [attempt, questions] = await Promise.all([
+  const [attempt, rawQuestions] = await Promise.all([
     prisma.mockTestAttempt.findFirst({
       where: { id: attemptId, userId, status: "IN_PROGRESS" },
     }),
@@ -71,11 +79,13 @@ export async function PUT(
   if (!attempt)
     return NextResponse.json({ error: "No active attempt" }, { status: 404 });
 
+  const questions = rawQuestions as unknown as Question[];
+
   let score = 0, correct = 0, wrong = 0;
-  const totalMarks = questions.reduce((s: number, q) => s + q.marks, 0);
+  const totalMarks = questions.reduce((s: number, q: Question) => s + q.marks, 0);
   const answersMap = answers as Record<string, number>;
 
-  questions.forEach((q) => {
+  questions.forEach((q: Question) => {
     const selected = answersMap[q.id];
     if (selected === undefined || selected === null) return;
     if (selected === q.correctIndex) { score += q.marks; correct++; }
