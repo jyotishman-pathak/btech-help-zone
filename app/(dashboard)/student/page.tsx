@@ -8,6 +8,9 @@ type SubjectWithTopics = Awaited<ReturnType<typeof prisma.subject.findMany<{
   include: { topics: { include: { progress: true } } }
 }>>>[number];
 
+type TopicWithProgress = SubjectWithTopics["topics"][number];
+type ProgressItem = TopicWithProgress["progress"][number];
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function relativeDate(date: Date | null): string {
@@ -69,12 +72,12 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
   const subjectData = subjects.map((s: SubjectWithTopics) => ({
     name: s.name,
     topicsTotal: s.topics.length,
-    topicsDone: s.topics.filter((t) => t.progress.some((p) => p.completed))
+    topicsDone: s.topics.filter((t: TopicWithProgress) => t.progress.some((p: ProgressItem) => p.completed))
       .length,
     progress:
       s.topics.length > 0
         ? Math.round(
-            (s.topics.filter((t) => t.progress.some((p) => p.completed))
+            (s.topics.filter((t: TopicWithProgress) => t.progress.some((p: ProgressItem) => p.completed))
               .length /
               s.topics.length) *
               100
@@ -170,7 +173,7 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
     const prog =
       s.topics.length > 0
         ? Math.round(
-            (s.topics.filter((t) => t.progress.some((p) => p.completed))
+            (s.topics.filter((t: TopicWithProgress) => t.progress.some((p: ProgressItem) => p.completed))
               .length /
               s.topics.length) *
               100
