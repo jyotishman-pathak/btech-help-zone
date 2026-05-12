@@ -6,52 +6,28 @@ export async function GET(req: NextRequest) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if ((session.user as any).role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
-
   const status = searchParams.get("status");
   const search = searchParams.get("search") ?? "";
 
   const items = await prisma.studyMaterial.findMany({
     where: {
       ...(status ? { status } : {}),
-      ...(search
-        ? {
-            title: {
-              contains: search,
-              mode: "insensitive",
-            },
-          }
-        : {}),
+      ...(search ? { title: { contains: search, mode: "insensitive" } } : {}),
     },
-
-    include: {
-      subject: {
-        select: {
-          name: true,
-        },
-      },
-    },
-
-    orderBy: {
-      createdAt: "desc",
-    },
+    include: { subject: { select: { name: true } } },
+    orderBy: { createdAt: "desc" },
   });
 
   return NextResponse.json(
-    items.map((i) => ({
+    items.map((i: (typeof items)[number]) => ({
       id: i.id,
       title: i.title,
       type: i.type,
@@ -70,42 +46,22 @@ export async function POST(req: NextRequest) {
   const session = await auth();
 
   if (!session?.user) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if ((session.user as any).role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
-
-  const {
-    title,
-    type,
-    fileUrl,
-    subjectId,
-    requiredTier,
-  } = body;
+  const { title, type, fileUrl, subjectId, requiredTier } = body;
 
   if (!title || !fileUrl) {
-    return NextResponse.json(
-      { error: "title and fileUrl required" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "title and fileUrl required" }, { status: 400 });
   }
 
   const subject = subjectId
-    ? await prisma.subject.findUnique({
-        where: {
-          id: subjectId,
-        },
-      })
+    ? await prisma.subject.findUnique({ where: { id: subjectId } })
     : await prisma.subject.findFirst();
 
   if (!subject) {
@@ -125,17 +81,8 @@ export async function POST(req: NextRequest) {
       uploadedBy: (session.user as any).id,
       status: "published",
     },
-
-    include: {
-      subject: {
-        select: {
-          name: true,
-        },
-      },
-    },
+    include: { subject: { select: { name: true } } },
   });
 
-  return NextResponse.json(item, {
-    status: 201,
-  });
+  return NextResponse.json(item, { status: 201 });
 }
