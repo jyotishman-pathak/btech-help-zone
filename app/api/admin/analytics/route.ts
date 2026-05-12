@@ -27,7 +27,7 @@ export async function GET() {
 
   // Group signups by day
   const signupMap: Record<string, number> = {};
-  users.forEach((u) => {
+  users.forEach((u: (typeof users)[number]) => {
     const key = u.createdAt.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
     signupMap[key] = (signupMap[key] ?? 0) + 1;
   });
@@ -42,7 +42,7 @@ export async function GET() {
   // Group revenue by month
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const revenueMap: Record<string, number> = {};
-  subscriptions.forEach((s) => {
+  subscriptions.forEach((s: (typeof subscriptions)[number]) => {
     const key = MONTHS[s.startsAt.getMonth()];
     revenueMap[key] = (revenueMap[key] ?? 0) + s.amount;
   });
