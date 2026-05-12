@@ -3,11 +3,11 @@ import Link from "next/link";
 import { Timer, Lock, ChevronRight, Trophy } from "lucide-react";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
-import { type Prisma } from "@prisma/client"; 
 
-type MockTestWithCount = Prisma.MockTestGetPayload<{
-  include: { _count: { select: { questions: true } } };
-}>;
+type MockTestWithCount = Awaited<ReturnType<typeof prisma.mockTest.findMany<{
+  include: { _count: { select: { questions: true } } }
+}>>>[number];
+
 
 export default async function MockListPage() {
   const session = await auth();
