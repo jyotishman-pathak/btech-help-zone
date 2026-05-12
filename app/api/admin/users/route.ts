@@ -2,13 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
 
+type UserWithIncludes = Awaited<ReturnType<typeof prisma.user.findMany<{
+  include: {
+    mockTestAttempts: { where: { status: "SUBMITTED" }; select: { score: true } };
+    subscription: { select: { tier: true; status: true; expiresAt: true } };
+  };
+}>>>[number];
+
 export async function GET(req: NextRequest) {
   const session = await auth();
   if ((session?.user as any)?.role !== "ADMIN")
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const tier = searchParams.get("tier"); // NORMAL | PREMIUM | SUPER_PREMIUM | null
+  const tier = searchParams.get("tier");
   const search = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = 20;
@@ -35,7 +42,7 @@ export async function GET(req: NextRequest) {
     prisma.user.count({ where }),
   ]);
 
-  const mapped = users.map((u) => {
+  const mapped = users.map((u: UserWithIncludes) => {
     const attempts = u.mockTestAttempts;
     return {
       id: u.id,
@@ -48,7 +55,7 @@ export async function GET(req: NextRequest) {
       createdAt: u.createdAt.toISOString(),
       mocksTaken: attempts.length,
       avgScore: attempts.length
-        ? Math.round(attempts.reduce((s, a) => s + a.score, 0) / attempts.length)
+        ? Math.round(attempts.reduce((s: number, a) => s + a.score, 0) / attempts.length)
         : 0,
       subscription: u.subscription,
     };
