@@ -72,10 +72,13 @@ export async function PUT(
     return NextResponse.json({ error: "No active attempt" }, { status: 404 });
 
   let score = 0, correct = 0, wrong = 0;
-  const totalMarks = questions.reduce((s: number, q) => s + q.marks, 0);
+  const totalMarks = questions.reduce(
+    (s: number, q: { marks: number; [key: string]: any }) => s + q.marks,
+    0
+  );
   const answersMap = answers as Record<string, number>;
 
-  questions.forEach((q) => {
+  questions.forEach((q: { id: string; correctIndex: number; marks: number; negativeMarks: number; [key: string]: any }) => {
     const selected = answersMap[q.id];
     if (selected === undefined || selected === null) return;
     if (selected === q.correctIndex) { score += q.marks; correct++; }
