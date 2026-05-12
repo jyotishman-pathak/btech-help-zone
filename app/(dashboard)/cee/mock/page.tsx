@@ -75,7 +75,7 @@ export default async function MockListPage() {
             </div>
           )}
 
-          {tests.map((t, idx) => {
+          {tests.map((t) => {
             // NORMAL tier: first test free if no prior submissions, else all locked
             const isLocked = user?.tier === "NORMAL" && freeTestUsed;
 
