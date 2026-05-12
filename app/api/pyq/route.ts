@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  const years = [...new Set(pyqs.map((p: PyqItem) => p.year).filter((y: number | null): y is number => !!y))].sort(
+  const years = [...new Set<number>(pyqs.map((p: PyqItem) => p.year).filter((y: number | null): y is number => !!y))].sort(
     (a, b) => b - a
   );
 
