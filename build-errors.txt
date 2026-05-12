@@ -1,0 +1,64 @@
+
+> cee-helpzone@0.0.1 build /home/crafters/Desktop/freelance_gig/cee-helpzone
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 15.9s
+  Running TypeScript ...
+  Finished TypeScript in 11.3s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/31) ...
+  Generating static pages using 7 workers (7/31) 
+  Generating static pages using 7 workers (15/31) 
+  Generating static pages using 7 workers (23/31) 
+✓ Generating static pages using 7 workers (31/31) in 772ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ○ /admin/pyq
+├ ○ /admin/tests/new
+├ ƒ /api/admin/analytics
+├ ƒ /api/admin/codes
+├ ƒ /api/admin/content
+├ ƒ /api/admin/content/[id]
+├ ƒ /api/admin/pyq
+├ ƒ /api/admin/stats
+├ ƒ /api/admin/subjects
+├ ƒ /api/admin/tests
+├ ƒ /api/admin/tests/[id]
+├ ƒ /api/admin/users
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/auth/register
+├ ƒ /api/payment/create-order
+├ ƒ /api/payment/verify
+├ ƒ /api/pyq
+├ ƒ /api/pyq/[id]/download
+├ ƒ /api/tests
+├ ƒ /api/tests/[id]
+├ ƒ /api/tests/[id]/attempt
+├ ƒ /api/upload
+├ ƒ /api/upload/sign
+├ ƒ /api/users/[id]
+├ ƒ /cee/mock
+├ ƒ /cee/mock/[id]
+├ ○ /cee/pyq
+├ ○ /cee/syllabus
+├ ƒ /dashboard
+├ ○ /login
+├ ○ /manifest.webmanifest
+├ ○ /register
+├ ƒ /student
+└ ƒ /student/pricing
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
