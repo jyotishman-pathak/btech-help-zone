@@ -27,6 +27,7 @@ import { cn } from "../../lib/utils";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import { uploadToCloudinary } from "../../lib/cloudinary-upload";
 
 interface QuestionDraft {
   id: string;
@@ -102,36 +103,20 @@ export function AdminTestCreator() {
     );
 
   // ✅ Updated Cloudinary upload function
-  const handleImage = async (qid: string, file: File) => {
-    updateQ(qid, { uploading: true });
-
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("folder", "cee/questions");
-      form.append("resource_type", "image");
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: form,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const { url } = await res.json();
-
-      updateQ(qid, {
-        imageUrl: url,
-        uploading: false,
-      });
-    } catch {
-      updateQ(qid, {
-        uploading: false,
-      });
-
-      setError("Image upload failed. Check Cloudinary credentials.");
-    }
-  };
+ const handleImage = async (qid: string, file: File) => {
+  updateQ(qid, { uploading: true } as any);
+  try {
+    const { url } = await uploadToCloudinary(file, {
+      folder: "cee/questions",
+      resourceType: "image",
+    });
+    updateQ(qid, { imageUrl: url, uploading: false } as any);
+  } catch (err) {
+    console.error("Image upload failed:", err);
+    setError("Image upload failed. Check your internet connection.");
+    updateQ(qid, { uploading: false } as any);
+  }
+};
 
   const handleSubmit = async () => {
     if (!title.trim()) return setError("Test title is required");

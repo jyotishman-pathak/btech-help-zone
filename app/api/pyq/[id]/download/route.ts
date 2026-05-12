@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import prisma from "../../../../../lib/prisma.client";
 
-
 export async function POST(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,11 +24,11 @@ export async function POST(
   if (TIER_LEVEL[userTier] < TIER_LEVEL[material.requiredTier])
     return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
 
-  // Increment download counter
   await prisma.studyMaterial.update({
     where: { id },
     data: { downloads: { increment: 1 } },
   });
 
-  return NextResponse.json({ url: material.fileUrl });
+  const pdfUrl = (material.fileUrl ?? "").replace("/image/upload/", "/raw/upload/");
+  return NextResponse.json({ url: pdfUrl });
 }

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../../components
 import { Label } from "../../../../components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
 import { Input } from "../../../../components/ui/input";
+import { uploadToCloudinary } from "../../../../lib/cloudinary-upload";
 
 interface Subject {
   id: string;
@@ -29,6 +30,7 @@ export default function AdminPYQPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     const loadSubjects = async () => {
@@ -50,58 +52,50 @@ export default function AdminPYQPage() {
     loadSubjects();
   }, []);
 
-  const handleSubmit = async () => {
-    if (!form.title || !form.subjectId || !file) {
-      setError("Title, subject, and PDF are required.");
-      return;
+
+
+// Replace the upload block in handleSubmit with:
+const handleSubmit = async () => {
+  if (!form.title || !form.subjectId || !file) {
+    setError("Title, subject, and PDF are required.");
+    return;
+  }
+  setError("");
+  setUploading(true);
+
+  try {
+    // Upload directly from browser to Cloudinary
+    const { url } = await uploadToCloudinary(file, {
+      folder: "cee/pyq",
+      resourceType: "raw",            // PDFs are "raw" resource type
+      onProgress: (pct) => setUploadProgress(pct),
+    });
+    setUploading(false);
+
+    // Save metadata to your DB
+    setSaving(true);
+    const res = await fetch("/api/admin/pyq", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, fileUrl: url }),
+    });
+    setSaving(false);
+
+    if (res.ok) {
+      setSaved(true);
+      setForm({ title: "", subjectId: "", year: String(new Date().getFullYear()), requiredTier: "NORMAL" });
+      setFile(null);
+      setUploadProgress(0);
+      setTimeout(() => setSaved(false), 3000);
+    } else {
+      setError("Failed to save PYQ.");
     }
-    setError("");
-    setUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "cee/pyq");
-      formData.append("resource_type", "auto");
-
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadRes.ok) throw new Error("Upload failed");
-
-      const { url } = await uploadRes.json();
-      setUploading(false);
-      setSaving(true);
-
-      const res = await fetch("/api/admin/pyq", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, fileUrl: url }),
-      });
-
-      setSaving(false);
-      if (res.ok) {
-        setSaved(true);
-        setForm({
-          title: "",
-          subjectId: "",
-          year: String(new Date().getFullYear()),
-          requiredTier: "NORMAL",
-        });
-        setFile(null);
-        setTimeout(() => setSaved(false), 3000);
-      } else {
-        throw new Error("Save failed");
-      }
-    } catch (err) {
-      console.error("Submission error:", err);
-      setError("Failed to upload or save. Check console for details.");
-      setUploading(false);
-      setSaving(false);
-    }
-  };
+  } catch (err) {
+    setError("Upload failed. Check your internet connection.");
+    setUploading(false);
+    setSaving(false);
+  }
+};
 
   const isLoading = uploading || saving;
 
@@ -256,21 +250,42 @@ export default function AdminPYQPage() {
             )}
 
             {/* Submit */}
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
-            >
-              {uploading ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading PDF...</>
-              ) : saving ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
-              ) : saved ? (
-                <><Check className="w-4 h-4 mr-2" /> Published!</>
-              ) : (
-                <><Upload className="w-4 h-4 mr-2" /> Upload PYQ</>
-              )}
-            </Button>
+          <Button
+  onClick={handleSubmit}
+  disabled={isLoading}
+  className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+>
+  {uploading ? (
+    <div className="w-full space-y-2">
+      <div className="flex items-center justify-center gap-2">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span>Uploading... {uploadProgress}%</span>
+      </div>
+
+      <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-1.5">
+        <div
+          className="bg-zinc-900 dark:bg-white h-1.5 rounded-full transition-all duration-300"
+          style={{ width: `${uploadProgress}%` }}
+        />
+      </div>
+    </div>
+  ) : saving ? (
+    <>
+      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+      Saving...
+    </>
+  ) : saved ? (
+    <>
+      <Check className="w-4 h-4 mr-2" />
+      Published!
+    </>
+  ) : (
+    <>
+      <Upload className="w-4 h-4 mr-2" />
+      Upload PYQ
+    </>
+  )}
+</Button>
 
           </CardContent>
         </Card>

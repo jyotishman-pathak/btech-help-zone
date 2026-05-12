@@ -398,7 +398,12 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                       No subjects added yet. Ask your admin to set up the syllabus.
                     </div>
                   ) : (
-                    subjects.map((sub) => <SubjectCard key={sub.name} sub={sub} />)
+                  subjects.map((sub, index) => (
+  <SubjectCard
+    key={`${sub.name || "subject"}-${index}`}
+    sub={sub}
+  />
+))
                   )}
                 </div>
 

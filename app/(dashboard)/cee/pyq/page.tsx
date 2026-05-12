@@ -63,21 +63,30 @@ export default function PYQPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const handleDownload = async (pyq: PYQ) => {
-    if (!pyq.canAccess) return;
-    setDownloading(pyq.id);
-    try {
-      const res = await fetch(`/api/pyq/${pyq.id}/download`, { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.open(data.url, "_blank");
-        // Optimistically update count
-        setPyqs((prev) => prev.map((p) => p.id === pyq.id ? { ...p, downloads: p.downloads + 1 } : p));
-      }
-    } finally {
-      setDownloading(null);
+ const handleDownload = async (pyq: PYQ) => {
+  if (!pyq.canAccess) return;
+  setDownloading(pyq.id);
+  try {
+    const res = await fetch(`/api/pyq/${pyq.id}/download`, { method: "POST" });
+    const data = await res.json();
+    if (data.url) {
+      const a = document.createElement("a");
+      a.href = data.url;
+      a.download = `${pyq.title}.pdf`;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      setPyqs((prev) =>
+        prev.map((p) => p.id === pyq.id ? { ...p, downloads: p.downloads + 1 } : p)
+      );
     }
-  };
+  } finally {
+    setDownloading(null);
+  }
+};
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
