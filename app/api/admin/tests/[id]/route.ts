@@ -4,32 +4,26 @@ import { auth } from "../../../../../auth";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
   if ((session?.user as any)?.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { id } = await params;
+
   const test = await prisma.mockTest.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
-      questions: {
-        orderBy: { order: "asc" },
-      },
+      questions: { orderBy: { order: "asc" } },
       subject: true,
     },
   });
 
   if (!test) {
-    return NextResponse.json(
-      { error: "Not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   return NextResponse.json(test);
@@ -37,21 +31,19 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
   if ((session?.user as any)?.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { id } = await params;
   const body = await req.json();
 
   const test = await prisma.mockTest.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       title: body.title,
       isActive: body.isActive,
@@ -64,22 +56,17 @@ export async function PATCH(
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
 
   if ((session?.user as any)?.role !== "ADMIN") {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await prisma.mockTest.delete({
-    where: { id: params.id },
-  });
+  const { id } = await params;
 
-  return NextResponse.json({
-    success: true,
-  });
+  await prisma.mockTest.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
 }
