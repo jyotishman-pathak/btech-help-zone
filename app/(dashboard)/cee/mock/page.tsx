@@ -1,10 +1,13 @@
 import { redirect } from "next/navigation";
-
 import Link from "next/link";
 import { Timer, Lock, ChevronRight, Trophy } from "lucide-react";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
+import { Prisma } from "@prisma/client";
 
+type MockTestWithCount = Prisma.MockTestGetPayload<{
+  include: { _count: { select: { questions: true } } };
+}>;
 
 export default async function MockListPage() {
   const session = await auth();
@@ -75,8 +78,7 @@ export default async function MockListPage() {
             </div>
           )}
 
-          {tests.map((t) => {
-            // NORMAL tier: first test free if no prior submissions, else all locked
+          {tests.map((t: MockTestWithCount) => {
             const isLocked = user?.tier === "NORMAL" && freeTestUsed;
 
             return (
