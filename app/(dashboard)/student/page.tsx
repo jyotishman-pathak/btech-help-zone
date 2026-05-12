@@ -11,6 +11,20 @@ type SubjectWithTopics = Awaited<ReturnType<typeof prisma.subject.findMany<{
 type TopicWithProgress = SubjectWithTopics["topics"][number];
 type ProgressItem = TopicWithProgress["progress"][number];
 
+type AttemptItem = {
+  id: string;
+  score: number;
+  percentage: number;
+  completedAt: Date | null;
+  test: { title: string; totalMarks: number };
+};
+
+type TopAttemptItem = {
+  userId: string;
+  user: { id: string; name: string | null };
+  score: number;
+};
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function relativeDate(date: Date | null): string {
@@ -86,14 +100,14 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
   }));
 
   // ── Score history ─────────────────────────────────────────────────────────
-  const scoreHistory = attempts.map((a, i) => ({
+  const scoreHistory = attempts.map((a: AttemptItem, i) => ({
     test: `Mock ${i + 1}`,
     total: a.score,
   }));
 
   // ── Recent tests (last 5, most recent first) ──────────────────────────────
   const reversed = [...attempts].reverse();
-  const recentTests = reversed.slice(0, 5).map((a, i) => {
+  const recentTests = reversed.slice(0, 5).map((a: AttemptItem, i) => {
     const prev = reversed[i + 1];
     return {
       id: a.id,
@@ -108,13 +122,13 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
 
   // ── Leaderboard — deduplicate to best attempt per user ───────────────────
   const seen = new Set<string>();
-  const deduplicated = topAttempts.filter((a) => {
+  const deduplicated = topAttempts.filter((a: TopAttemptItem) => {
     if (seen.has(a.userId)) return false;
     seen.add(a.userId);
     return true;
   });
 
-  const top5 = deduplicated.slice(0, 5).map((a, i) => ({
+  const top5 = deduplicated.slice(0, 5).map((a: TopAttemptItem, i) => ({
     rank: i + 1,
     name: a.userId === userId ? "You" : a.user.name ?? "Anonymous",
     avatar: (a.user.name ?? "??").slice(0, 2).toUpperCase(),
@@ -122,7 +136,7 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
     isUser: a.userId === userId,
   }));
 
-  const userRankIdx = deduplicated.findIndex((a) => a.userId === userId);
+  const userRankIdx = deduplicated.findIndex((a: TopAttemptItem) => a.userId === userId);
   const userRank = userRankIdx >= 0 ? userRankIdx + 1 : undefined;
   if (userRank && userRank > 5) {
     const ua = deduplicated[userRankIdx];
@@ -137,7 +151,7 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
 
   // ── Best score + college predictor ────────────────────────────────────────
   const bestScore = attempts.length
-    ? Math.max(...attempts.map((a) => a.score))
+    ? Math.max(...attempts.map((a: AttemptItem) => a.score))
     : 0;
 
   const CUTOFFS = [
@@ -164,7 +178,7 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
 
   // ── Streak ────────────────────────────────────────────────────────────────
   const attemptDates = attempts
-    .map((a) => a.completedAt)
+    .map((a: AttemptItem) => a.completedAt)
     .filter(Boolean) as Date[];
   const streak = calcStreak(attemptDates);
 
