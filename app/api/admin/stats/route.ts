@@ -2,8 +2,31 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
 
+type AttemptItem = {
+  user: { name: string | null };
+  test: { title: string };
+  score: number;
+  completedAt: Date | null;
+  startedAt: Date | null;
+};
 
+type SubItem = {
+  user: { name: string | null };
+  tier: string;
+  createdAt: Date;
+};
 
+type NewUserItem = {
+  name: string | null;
+  createdAt: Date;
+};
+
+type FeedItem = {
+  user: string;
+  action: string;
+  time: string;
+  type: "success" | "upgrade" | "join";
+};
 
 export async function GET() {
   const session = await auth();
@@ -31,7 +54,6 @@ export async function GET() {
     prisma.user.count({ where: { role: "STUDENT" } }),
     prisma.user.count({ where: { role: "STUDENT", createdAt: { gte: startOfMonth } } }),
     prisma.user.count({ where: { role: "STUDENT", createdAt: { gte: startOfLastMonth, lt: startOfMonth } } }),
-    // "Active today" = users who started a test attempt today
     prisma.mockTestAttempt.count({ where: { startedAt: { gte: startOfToday } } }),
     prisma.mockTestAttempt.count({ where: { status: "SUBMITTED" } }),
     prisma.mockTestAttempt.count({ where: { status: "SUBMITTED", completedAt: { gte: startOfMonth } } }),
@@ -39,7 +61,6 @@ export async function GET() {
     prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] } }, _sum: { amount: true } }),
     prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] }, startsAt: { gte: startOfMonth } }, _sum: { amount: true } }),
     prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] }, startsAt: { gte: startOfLastMonth, lt: startOfMonth } }, _sum: { amount: true } }),
-    // Recent activity feed (last 20 events derived from multiple tables)
     Promise.all([
       prisma.mockTestAttempt.findMany({
         where: { status: "SUBMITTED" },
@@ -64,33 +85,35 @@ export async function GET() {
   const pct = (curr: number, prev: number) =>
     prev === 0 ? 100 : Math.round(((curr - prev) / prev) * 100);
 
-  // Build unified activity feed
-  const [attempts, subs, newUsers] = recentActivity;
-  const feed = [
-    ...attempts.map((a) => ({
+  const [attempts, subs, newUsers] = recentActivity as [AttemptItem[], SubItem[], NewUserItem[]];
+
+  const rawFeed = [
+    ...attempts.map((a: AttemptItem) => ({
       user: a.user.name ?? "Unknown",
       action: `Completed "${a.test.title}" — scored ${a.score}`,
-      time: a.completedAt ?? a.startedAt,
+      time: (a.completedAt ?? a.startedAt) || new Date(),
       type: "success" as const,
     })),
-    ...subs.map((s) => ({
+    ...subs.map((s: SubItem) => ({
       user: s.user.name ?? "Unknown",
       action: `Upgraded to ${s.tier}`,
       time: s.createdAt,
       type: "upgrade" as const,
     })),
-    ...newUsers.map((u) => ({
+    ...newUsers.map((u: NewUserItem) => ({
       user: u.name ?? "Unknown",
       action: "Joined the platform",
       time: u.createdAt,
       type: "join" as const,
     })),
-  ]
-    .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+  ];
+
+  const feed: FeedItem[] = rawFeed
+    .sort((a, b) => b.time.getTime() - a.time.getTime())
     .slice(0, 10)
     .map((item) => ({
       ...item,
-      time: relativeDate(new Date(item.time)),
+      time: relativeDate(item.time),
     }));
 
   return NextResponse.json({
