@@ -11,7 +11,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userTier = (session.user as any).tier ?? "NORMAL";
+  const userTier = session?.user?.tier ?? "NORMAL";
   const TIER_LEVEL: Record<string, number> = { NORMAL: 0, PREMIUM: 1, SUPER_PREMIUM: 2 };
 
   const material = await prisma.studyMaterial.findUnique({

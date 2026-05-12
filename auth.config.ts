@@ -1,4 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
+type Role = "STUDENT" | "ADMIN" | "PARENT";
+type SubscriptionTier = "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
 
 export const authConfig = {
   pages: {
@@ -39,14 +41,9 @@ export const authConfig = {
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id =
-          (token.id as string) || token.sub!;
-
-        (session.user as any).role =
-          (token.role as string) ?? "STUDENT";
-
-        (session.user as any).tier =
-          (token.tier as string) ?? "NORMAL";
+        session.user.id = (token.id as string) || token.sub!;
+        session.user.role = (token.role as Role) ?? "STUDENT";
+        session.user.tier = (token.tier as SubscriptionTier) ?? "NORMAL";
       }
 
       return session;

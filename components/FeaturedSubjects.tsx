@@ -61,20 +61,20 @@ const categories = [
 
 export function CEEFeatured() {
   return (
-    <section className="relative py-24 bg-zinc-50 dark:bg-zinc-950 overflow-hidden">
+    <section className="relative py-24 bg-slate-50 dark:bg-slate-950 overflow-hidden">
       {/* Architectural Grid Background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
       <div className="container relative mx-auto px-4 md:px-6">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <Badge variant="secondary" className="mb-4 bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400 border-none shadow-sm">
+          <Badge variant="secondary" className="mb-4 bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 border-none shadow-sm">
             CEE Assam 2026 • PCM Stream
           </Badge>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
-            Target CEE. <span className="text-zinc-400 dark:text-zinc-600">Master PCM.</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-slate-50">
+            Target CEE. <span className="text-slate-400 dark:text-slate-600">Master PCM.</span>
           </h2>
-          <p className="mt-4 text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
             Class 11 & 12 syllabus mapped to the Assam CEE pattern. PYQs, timed mocks, and revision material—all structured for rank-focused prep.
           </p>
         </div>
@@ -90,7 +90,7 @@ export function CEEFeatured() {
               viewport={{ once: true }}
             >
               <Link href={cat.href} className="block h-full group">
-                <Card className="h-full border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                <Card className="h-full border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                   <CardHeader className="pb-3">
                     <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl border ${cat.accent} transition-transform group-hover:scale-105`}>
                       <cat.icon className="w-6 h-6" />
@@ -98,16 +98,16 @@ export function CEEFeatured() {
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
+                      <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">
                         {cat.title}
                       </CardTitle>
-                      <ArrowUpRight className="w-4 h-4 text-zinc-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
+                      <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
                     </div>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-snug">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
                       {cat.desc}
                     </p>
                     <div className="pt-1">
-                      <span className="text-xs font-semibold tracking-wide uppercase text-zinc-400 dark:text-zinc-500">
+                      <span className="text-xs font-semibold tracking-wide uppercase text-slate-400 dark:text-slate-500">
                         {cat.count}
                       </span>
                     </div>
@@ -128,7 +128,7 @@ export function CEEFeatured() {
         >
           <Link
             href="/cee/syllabus"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-sm font-medium hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
           >
             View Full CEE Syllabus Breakdown
             <ArrowUpRight className="w-3.5 h-3.5" />

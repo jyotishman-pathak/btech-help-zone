@@ -32,7 +32,7 @@ export function Hero() {
 };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-zinc-50 dark:bg-zinc-950">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Premium Grain Overlay */}
       {/* <div className="pointer-events-none absolute inset-0 opacity-[0.035] mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIvPjwvc3ZnPg==')]" /> */}
 {/* Grain Overlay - using inline style to bypass Next.js module resolution */}
@@ -48,8 +48,8 @@ export function Hero() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]" />
 
       {/* Vertical Accent Lines */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-24 bg-zinc-200 dark:bg-zinc-800" />
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-24 bg-zinc-200 dark:bg-zinc-800" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-24 bg-slate-200 dark:bg-slate-800" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-px h-24 bg-slate-200 dark:bg-slate-800" />
 
       <motion.div
         variants={containerVariants}
@@ -61,7 +61,7 @@ export function Hero() {
           {/* Left: Content & CTAs */}
           <div className="lg:col-span-7 space-y-8">
             <motion.div variants={itemVariants}>
-              <Badge variant="secondary" className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 border-none shadow-sm">
+              <Badge variant="secondary" className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 border-none shadow-sm">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
@@ -72,42 +72,42 @@ export function Hero() {
 
             <motion.h1
               variants={itemVariants}
-              className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.05]"
+              className="text-4xl md:text-5xl lg:text-7xl font-black tracking-tight text-slate-900 dark:text-slate-50 leading-[1.05]"
             >
               Master Engineering.
               <br />
-              <span className="text-zinc-400 dark:text-zinc-600">Without the chaos.</span>
+              <span className="text-slate-400 dark:text-slate-600">Without the chaos.</span>
             </motion.h1>
 
             <motion.p
               variants={itemVariants}
-              className="max-w-xl text-lg md:text-xl text-zinc-600 dark:text-zinc-400 leading-relaxed"
+              className="max-w-xl text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed"
             >
               Curated PYQs, structured notes, and timed mock tests. Everything you need to crack exams, organized in one place.
             </motion.p>
 
             <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-4 pt-2">
-              <Button size="lg" className="h-12 px-6 bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 transition-all group" asChild>
+              <Button size="lg" className="h-12 px-6 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-all group" asChild>
                 <Link href="/notes" className="flex items-center gap-2">
                   Browse Notes <BookOpen className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="h-12 px-6 border-zinc-200 bg-white hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800" asChild>
+              <Button size="lg" variant="outline" className="h-12 px-6 border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800" asChild>
                 <Link href="/papers" className="flex items-center gap-2">
                   Past Papers <FileText className="h-4 w-4" />
                 </Link>
               </Button>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="flex items-center gap-4 pt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            <motion.div variants={itemVariants} className="flex items-center gap-4 pt-2 text-sm text-slate-500 dark:text-slate-400">
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-8 w-8 rounded-full border-2 border-zinc-50 bg-zinc-200 dark:border-zinc-950 dark:bg-zinc-800 flex items-center justify-center">
-                    <CheckCircle2 className="h-4 w-4 text-zinc-400 dark:text-zinc-600" />
+                  <div key={i} className="h-8 w-8 rounded-full border-2 border-slate-50 bg-slate-200 dark:border-slate-950 dark:bg-slate-800 flex items-center justify-center">
+                    <CheckCircle2 className="h-4 w-4 text-slate-400 dark:text-slate-600" />
                   </div>
                 ))}
               </div>
-              <p>Trusted by <span className="font-semibold text-zinc-900 dark:text-zinc-200">2,400+</span> engineering students</p>
+              <p>Trusted by <span className="font-semibold text-slate-900 dark:text-slate-200">2,400+</span> engineering students</p>
             </motion.div>
           </div>
 
@@ -125,20 +125,20 @@ export function Hero() {
               <motion.div
                 key={item.title}
                 whileHover={{ y: -4, transition: { type: "spring", stiffness: 300, damping: 20 } }}
-                className="group relative rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col justify-between h-40 shadow-sm hover:shadow-md transition-shadow"
+                className="group relative rounded-2xl p-5 border border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 flex flex-col justify-between h-40 shadow-sm hover:shadow-md transition-shadow"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.1, duration: 0.6, ease: "easeOut" }}
               >
                 <div className="flex items-start justify-between">
-                  <div className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
-                    <item.icon className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
+                  <div className="p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                    <item.icon className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                   </div>
-                  <ArrowUpRight className="h-4 w-4 text-zinc-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
+                  <ArrowUpRight className="h-4 w-4 text-slate-400 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{item.value}</p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{item.title}</p>
+                  <p className="text-2xl font-bold text-slate-900 dark:text-slate-50">{item.value}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{item.title}</p>
                 </div>
               </motion.div>
             ))}
@@ -150,10 +150,10 @@ export function Hero() {
           variants={itemVariants}
           className="mt-16 lg:mt-20 flex justify-center"
         >
-          <Link href="/mock-tests" className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-zinc-900 text-white font-medium hover:bg-zinc-800 transition-all dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
+          <Link href="/mock-tests" className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-all dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
             <span>Take a Free Mock Test</span>
-            <span className="relative w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 dark:bg-zinc-200 transition-transform group-hover:scale-110">
-              <ArrowUpRight className="h-4 w-4 text-white dark:text-zinc-900" />
+            <span className="relative w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 dark:bg-slate-200 transition-transform group-hover:scale-110">
+              <ArrowUpRight className="h-4 w-4 text-white dark:text-slate-900" />
             </span>
           </Link>
         </motion.div>

@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if ((session.user as any).role !== "ADMIN") {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if ((session.user as any).role !== "ADMIN") {
+  if (session?.user?.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       fileUrl,
       subjectId: subject.id,
       requiredTier: requiredTier ?? "NORMAL",
-      uploadedBy: (session.user as any).id,
+      uploadedBy: session?.user?.id,
       status: "published",
     },
     include: { subject: { select: { name: true } } },

@@ -261,18 +261,18 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
 
   // ─── Status colors ────────────────────────────────────────────────────────
   const statusColors: Record<QuestionStatus, string> = {
-    not_visited: "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400",
+    not_visited: "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
     not_answered: "bg-red-500 text-white",
     answered: "bg-emerald-500 text-white",
     marked: "bg-amber-500 text-white",
-    answered_marked: "bg-emerald-500 text-white ring-2 ring-amber-500 ring-offset-2 dark:ring-offset-zinc-950",
+    answered_marked: "bg-emerald-500 text-white ring-2 ring-amber-500 ring-offset-2 dark:ring-offset-slate-950",
   };
 
   // ─── Loading ──────────────────────────────────────────────────────────────
   if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
       </div>
     );
   }
@@ -280,14 +280,14 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
   // ─── Upgrade required ─────────────────────────────────────────────────────
   if (status === "upgrade") {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 shadow-xl">
           <CardContent className="p-8 text-center space-y-4">
             <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto">
               <Trophy className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             </div>
-            <h2 className="text-2xl font-black text-zinc-900 dark:text-zinc-50">Upgrade Required</h2>
-            <p className="text-zinc-500 dark:text-zinc-400">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50">Upgrade Required</h2>
+            <p className="text-slate-500 dark:text-slate-400">
               You have used your free test. Upgrade to Premium to unlock all mock tests.
             </p>
             <Button className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white">
@@ -302,23 +302,23 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
   // ─── Idle / Start screen ──────────────────────────────────────────────────
   if (status === "idle" && test) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+        <Card className="max-w-md w-full border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 shadow-xl">
           <CardContent className="p-8 text-center space-y-6">
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center">
-              <Timer className="w-8 h-8 text-white dark:text-zinc-900" />
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-900 dark:bg-white flex items-center justify-center">
+              <Timer className="w-8 h-8 text-white dark:text-slate-900" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-50">{test.title}</h1>
-              <p className="text-zinc-500 dark:text-zinc-400 mt-2">Bilingual · {test.examType.replace("_", " ")}</p>
+              <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50">{test.title}</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-2">Bilingual · {test.examType.replace("_", " ")}</p>
             </div>
-            <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 p-4 rounded-lg">
+            <div className="space-y-2 text-sm text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
               <div className="flex justify-between"><span>Duration</span><span className="font-semibold">{test.duration} mins</span></div>
               <div className="flex justify-between"><span>Questions</span><span className="font-semibold">{test.questions.length}</span></div>
               <div className="flex justify-between"><span>Total Marks</span><span className="font-semibold">{test.totalMarks}</span></div>
               <div className="flex justify-between"><span>Scheme</span><span className="font-semibold">+4 / −1 / 0</span></div>
             </div>
-            <Button onClick={handleStart} className="w-full h-12 text-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
+            <Button onClick={handleStart} className="w-full h-12 text-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
               <Play className="w-5 h-5 mr-2" /> Start Test
             </Button>
           </CardContent>
@@ -330,14 +330,14 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
   // ─── Results screen ───────────────────────────────────────────────────────
   if (status === "results" && result) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-4 md:p-8 flex flex-col items-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 flex flex-col items-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl w-full space-y-6">
           <div className="text-center space-y-2">
-            <h1 className="text-3xl md:text-4xl font-black text-zinc-900 dark:text-zinc-50">Test Completed</h1>
-            <p className="text-zinc-500 dark:text-zinc-400">Here is your performance breakdown</p>
+            <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-slate-50">Test Completed</h1>
+            <p className="text-slate-500 dark:text-slate-400">Here is your performance breakdown</p>
           </div>
-          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
-            <div className="bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 p-6 text-center">
+          <Card className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 overflow-hidden">
+            <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-6 text-center">
               <p className="text-sm font-medium opacity-80">Total Score</p>
               <p className="text-5xl md:text-6xl font-black">
                 {result.score}<span className="text-2xl opacity-60">/{result.totalMarks}</span>
@@ -345,16 +345,16 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
               <div className="flex items-center justify-center gap-4 mt-3 text-sm flex-wrap">
                 <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 text-emerald-400" /> {result.correct} Correct</span>
                 <span className="flex items-center gap-1"><XCircle className="w-4 h-4 text-red-400" /> {result.wrong} Wrong</span>
-                <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-zinc-400" /> {formatTime(result.timeTaken)}</span>
+                <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-slate-400" /> {formatTime(result.timeTaken)}</span>
               </div>
             </div>
             <CardContent className="p-6 space-y-6">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-zinc-600 dark:text-zinc-400">Accuracy</span>
-                  <span className="font-bold text-zinc-900 dark:text-zinc-100">{result.accuracy}%</span>
+                  <span className="text-slate-600 dark:text-slate-400">Accuracy</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{result.accuracy}%</span>
                 </div>
-                <Progress value={result.accuracy} className="h-3 bg-zinc-100 dark:bg-zinc-800 [&>div]:bg-zinc-900 dark:[&>div]:bg-zinc-100" />
+                <Progress value={result.accuracy} className="h-3 bg-slate-100 dark:bg-slate-800 [&>div]:bg-slate-900 dark:[&>div]:bg-slate-100" />
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 {[
@@ -363,9 +363,9 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                   { label: "Skipped", val: result.unattempted },
                   { label: "Accuracy", val: `${result.accuracy}%` },
                 ].map((x) => (
-                  <div key={x.label} className="p-4 rounded-lg bg-zinc-50 dark:bg-zinc-800">
-                    <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100">{x.val}</p>
-                    <p className="text-xs text-zinc-500">{x.label}</p>
+                  <div key={x.label} className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
+                    <p className="text-2xl font-black text-slate-900 dark:text-slate-100">{x.val}</p>
+                    <p className="text-xs text-slate-500">{x.label}</p>
                   </div>
                 ))}
               </div>
@@ -382,19 +382,19 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col">
       <h1 className="sr-only">Test: {test.title} — {user?.name ?? "Student"}</h1>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-slate-200/70 dark:border-slate-700/50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center">
-              <Trophy className="w-4 h-4 text-white dark:text-zinc-900" />
+            <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-white flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-white dark:text-slate-900" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 leading-tight">{test.title}</h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">{test.questions.length} questions · {test.duration} mins</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50 leading-tight">{test.title}</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{test.questions.length} questions · {test.duration} mins</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -402,16 +402,16 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
               "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold font-mono",
               timeLeft < 300
                 ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 animate-pulse"
-                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
             )}>
               <Timer className="w-4 h-4" /> {formatTime(timeLeft)}
             </div>
             <button
               onClick={() => setLang(lang === "en" ? "as" : "en")}
-              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
             >
-              <Globe className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <Globe className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 {lang === "en" ? "English" : "অসমীয়া"}
               </span>
             </button>
@@ -424,21 +424,21 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
 
         {/* Palette — left */}
         <div className="lg:col-span-3 order-2 lg:order-1">
-          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-20">
+          <Card className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 sticky top-20">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <Search className="w-4 h-4 text-zinc-500" /> Question Palette
+                <Search className="w-4 h-4 text-slate-500" /> Question Palette
               </CardTitle>
               <div className="grid grid-cols-4 gap-1 text-[10px] mt-2">
                 {[
-                  { l: "Not Visited", c: "bg-zinc-200 dark:bg-zinc-800" },
+                  { l: "Not Visited", c: "bg-slate-200 dark:bg-slate-800" },
                   { l: "Not Ans", c: "bg-red-500" },
                   { l: "Answered", c: "bg-emerald-500" },
                   { l: "Marked", c: "bg-amber-500" },
                 ].map((x) => (
                   <div key={x.l} className="flex flex-col items-center gap-1">
                     <div className={`w-4 h-4 rounded ${x.c}`} />
-                    <span className="text-zinc-500 dark:text-zinc-400 text-center leading-tight">{x.l}</span>
+                    <span className="text-slate-500 dark:text-slate-400 text-center leading-tight">{x.l}</span>
                   </div>
                 ))}
               </div>
@@ -453,7 +453,7 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                         key={q.id}
                         onClick={() => goTo(idx)}
                         className={cn(
-                          "w-full aspect-square rounded-lg font-bold text-sm flex items-center justify-center transition-all hover:scale-105 focus:ring-2 focus:ring-zinc-400 focus:outline-none",
+                          "w-full aspect-square rounded-lg font-bold text-sm flex items-center justify-center transition-all hover:scale-105 focus:ring-2 focus:ring-slate-400 focus:outline-none",
                           statusColors[st]
                         )}
                       >
@@ -477,15 +477,15 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.15 }}
             >
-              <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm min-h-[500px] flex flex-col">
-                <CardHeader className="pb-4 border-b border-zinc-100 dark:border-zinc-800">
+              <Card className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 shadow-sm min-h-[500px] flex flex-col">
+                <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                    <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                       {currentQ.section}
                     </Badge>
                     <button
                       onClick={() => setLang(lang === "en" ? "as" : "en")}
-                      className="md:hidden flex items-center gap-2 px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-sm"
+                      className="md:hidden flex items-center gap-2 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-sm"
                     >
                       <Globe className="w-3.5 h-3.5" /> {lang === "en" ? "EN" : "AS"}
                     </button>
@@ -496,12 +496,12 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                     <img
                       src={currentQ.imageUrl}
                       alt="Question diagram"
-                      className="mt-3 max-h-48 object-contain rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800"
+                      className="mt-3 max-h-48 object-contain rounded-lg border border-slate-200/70 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800"
                     />
                   )}
 
-                  <h2 className="text-lg md:text-xl font-semibold text-zinc-900 dark:text-zinc-100 mt-4 leading-relaxed">
-                    <span className="text-zinc-500 dark:text-zinc-400 mr-2">Q{currentIdx + 1}.</span>
+                  <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-slate-100 mt-4 leading-relaxed">
+                    <span className="text-slate-500 dark:text-slate-400 mr-2">Q{currentIdx + 1}.</span>
                     {lang === "en"
                       ? currentQ.text
                       : currentQ.textAs || currentQ.text}
@@ -521,19 +521,19 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                         className={cn(
                           "w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all",
                           isSelected
-                            ? "border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-800/50"
-                            : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/30"
+                            ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800/50"
+                            : "border-slate-200/70 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30"
                         )}
                       >
                         <div className={cn(
                           "w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm shrink-0",
                           isSelected
-                            ? "border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
-                            : "border-zinc-300 dark:border-zinc-700 text-zinc-500"
+                            ? "border-slate-900 dark:border-slate-100 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
+                            : "border-slate-300 dark:border-slate-700 text-slate-500"
                         )}>
                           {["A", "B", "C", "D"][i]}
                         </div>
-                        <span className="text-zinc-800 dark:text-zinc-200 font-medium">{displayOpt}</span>
+                        <span className="text-slate-800 dark:text-slate-200 font-medium">{displayOpt}</span>
                       </button>
                     );
                   })}
@@ -545,9 +545,9 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
 
         {/* Actions — right */}
         <div className="lg:col-span-3 order-3 space-y-4">
-          <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-20">
+          <Card className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 sticky top-20">
             <CardContent className="p-4 space-y-3">
-              <Button onClick={handleSaveNext} className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100">
+              <Button onClick={handleSaveNext} className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
                 <Save className="w-4 h-4 mr-2" /> Save & Next
               </Button>
               <Button
@@ -560,11 +560,11 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
               <Button
                 onClick={handleClear}
                 variant="ghost"
-                className="w-full h-11 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="w-full h-11 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <Eraser className="w-4 h-4 mr-2" /> Clear Response
               </Button>
-              <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   onClick={() => setShowSubmitDialog(true)}
                   variant="destructive"
@@ -572,7 +572,7 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                 >
                   <Send className="w-4 h-4 mr-2" /> Submit Test
                 </Button>
-                <p className="text-xs text-center text-zinc-500 dark:text-zinc-400 mt-2 flex items-center justify-center gap-1">
+                <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-2 flex items-center justify-center gap-1">
                   <Info className="w-3 h-3" /> +4 correct · −1 wrong
                 </p>
               </div>
@@ -583,13 +583,13 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
 
       {/* Submit dialog */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
-        <DialogContent className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <DialogContent className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-zinc-900 dark:text-zinc-50">
+            <DialogTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-50">
               <AlertCircle className="w-5 h-5 text-amber-500" /> Submit Test?
             </DialogTitle>
-            <DialogDescription className="text-zinc-600 dark:text-zinc-400">
-              You have <span className="font-bold text-zinc-900 dark:text-zinc-100">
+            <DialogDescription className="text-slate-600 dark:text-slate-400">
+              You have <span className="font-bold text-slate-900 dark:text-slate-100">
                 {test.questions.length - answeredCount}
               </span> unattempted questions.
             </DialogDescription>
@@ -597,15 +597,15 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
           <div className="grid grid-cols-3 gap-3 py-4 text-center">
             <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
               <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{answeredCount}</p>
-              <p className="text-xs text-zinc-500">Answered</p>
+              <p className="text-xs text-slate-500">Answered</p>
             </div>
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
               <p className="text-xl font-black text-red-600 dark:text-red-400">{test.questions.length - answeredCount}</p>
-              <p className="text-xs text-zinc-500">Not Answered</p>
+              <p className="text-xs text-slate-500">Not Answered</p>
             </div>
             <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20">
               <p className="text-xl font-black text-amber-600 dark:text-amber-400">{marked.size}</p>
-              <p className="text-xs text-zinc-500">Marked</p>
+              <p className="text-xs text-slate-500">Marked</p>
             </div>
           </div>
           <DialogFooter className="flex sm:justify-between gap-2">

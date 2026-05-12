@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   const subject = searchParams.get("subject");
   const year = searchParams.get("year");
   const search = searchParams.get("search") ?? "";
-  const userTier = (session.user as any).tier ?? "NORMAL";
+  const userTier = session?.user?.tier ?? "NORMAL";
 
   const TIER_LEVEL: Record<string, number> = { NORMAL: 0, PREMIUM: 1, SUPER_PREMIUM: 2 };
 

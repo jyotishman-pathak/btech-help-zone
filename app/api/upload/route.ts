@@ -15,7 +15,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if ((session?.user as any)?.role !== "ADMIN")
+  if (session?.user?.role !== "ADMIN")
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {

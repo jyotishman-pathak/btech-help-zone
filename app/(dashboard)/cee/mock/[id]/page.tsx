@@ -31,15 +31,15 @@ export default async function MockTestPage({
 
 function MockTestLoader() {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 gap-4">
-      <div className="w-16 h-16 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center animate-pulse">
-        <svg className="w-8 h-8 text-white dark:text-zinc-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <div className="min-h-screen bg-[#F7F5FF] dark:bg-[#0D0B1A] flex flex-col items-center justify-center p-4 gap-4">
+      <div className="w-16 h-16 rounded-2xl bg-slate-900 dark:bg-white flex items-center justify-center animate-pulse">
+        <svg className="w-8 h-8 text-white dark:text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
         </svg>
       </div>
       <div className="space-y-2 text-center">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Initializing Test Environment</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">Secure connection · Loading questions · Syncing timer</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Initializing Test Environment</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Secure connection · Loading questions · Syncing timer</p>
       </div>
     </div>
   );

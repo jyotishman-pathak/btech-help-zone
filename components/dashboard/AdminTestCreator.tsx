@@ -172,7 +172,7 @@ export function AdminTestCreator() {
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       {/* Test Meta */}
-      <Card className="border-zinc-200 dark:border-zinc-800">
+      <Card className="border-slate-200/70 dark:border-slate-700/50">
         <CardHeader>
           <CardTitle className="text-lg">Test Details</CardTitle>
         </CardHeader>
@@ -256,7 +256,7 @@ export function AdminTestCreator() {
         {questions.map((q, idx) => (
           <Card
             key={q.id}
-            className="border-zinc-200 dark:border-zinc-800"
+            className="border-slate-200/70 dark:border-slate-700/50"
           >
             {/* Header */}
             <div
@@ -272,11 +272,11 @@ export function AdminTestCreator() {
                   {idx + 1}
                 </Badge>
 
-                <Badge className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs">
+                <Badge className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs">
                   {q.section}
                 </Badge>
 
-                <span className="text-sm text-zinc-600 dark:text-zinc-400 truncate max-w-xs">
+                <span className="text-sm text-slate-600 dark:text-slate-400 truncate max-w-xs">
                   {q.text || "New question"}
                 </span>
               </div>
@@ -290,15 +290,15 @@ export function AdminTestCreator() {
                       qs.filter((x) => x.id !== q.id)
                     );
                   }}
-                  className="p-1.5 rounded text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                  className="p-1.5 rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
 
                 {q.expanded ? (
-                  <ChevronUp className="w-4 h-4 text-zinc-400" />
+                  <ChevronUp className="w-4 h-4 text-slate-400" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 text-zinc-400" />
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
                 )}
               </div>
             </div>
@@ -411,7 +411,7 @@ export function AdminTestCreator() {
                       <img
                         src={q.imageUrl}
                         alt="Question"
-                        className="h-32 rounded-lg border border-zinc-200 dark:border-zinc-700 object-contain bg-zinc-50 dark:bg-zinc-800"
+                        className="h-32 rounded-lg border border-slate-200/70 dark:border-slate-700/50 object-contain bg-slate-50 dark:bg-slate-800"
                       />
 
                       <button
@@ -426,7 +426,7 @@ export function AdminTestCreator() {
                       </button>
                     </div>
                   ) : q.uploading ? (
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 text-sm">
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 text-sm">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Uploading to Cloudinary...
                     </div>
@@ -435,7 +435,7 @@ export function AdminTestCreator() {
                       onClick={() =>
                         fileRefs.current[q.id]?.click()
                       }
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 text-sm hover:border-zinc-400 transition"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 text-sm hover:border-slate-400 transition"
                     >
                       <Image className="w-4 h-4" />
                       Upload image
@@ -478,7 +478,7 @@ export function AdminTestCreator() {
                           "w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 font-bold text-xs transition",
                           q.correctIndex === i
                             ? "border-emerald-500 bg-emerald-500 text-white"
-                            : "border-zinc-300 dark:border-zinc-700 text-zinc-500"
+                            : "border-slate-300 dark:border-slate-700 text-slate-500"
                         )}
                       >
                         {q.correctIndex === i ? (
@@ -532,7 +532,7 @@ export function AdminTestCreator() {
           onClick={() =>
             setQuestions((qs) => [...qs, makeQuestion()])
           }
-          className="w-full border-dashed border-zinc-300 dark:border-zinc-700"
+          className="w-full border-dashed border-slate-300 dark:border-slate-700"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Question
@@ -550,7 +550,7 @@ export function AdminTestCreator() {
       <Button
         onClick={handleSubmit}
         disabled={saving}
-        className="w-full h-12 text-base bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+        className="w-full h-12 text-base bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900"
       >
         {saving ? (
           <>
