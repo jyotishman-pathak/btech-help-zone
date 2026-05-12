@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-
-import { Prisma } from "@prisma/client";
 import { auth } from "../../../../../auth";
 import prisma from "../../../../../lib/prisma.client";
 
@@ -46,7 +44,7 @@ export async function PATCH(
 
   await prisma.mockTestAttempt.update({
     where: { id: attemptId },
-    data: { answers: answers as Prisma.InputJsonValue },
+    data: { answers: answers as any },
   });
   return NextResponse.json({ saved: true });
 }
@@ -89,7 +87,7 @@ export async function PUT(
   const updated = await prisma.mockTestAttempt.update({
     where: { id: attemptId },
     data: {
-      answers: answers as Prisma.InputJsonValue,
+      answers: answers as any,
       score,
       percentage: totalMarks > 0 ? (score / totalMarks) * 100 : 0,
       status: "SUBMITTED",
