@@ -1,9 +1,9 @@
+// app/(dashboard)/student/pricing/UpgradeButton.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Zap } from "lucide-react";
-import { Button } from "../../../../components/ui/button";
+import { Loader2, Zap, CheckCircle2 } from "lucide-react";
 
 interface Props {
   tier: "PREMIUM" | "SUPER_PREMIUM";
@@ -41,7 +41,6 @@ export function UpgradeButton({ tier, label, className, userEmail, userName }: P
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) throw new Error("Failed to load payment gateway");
 
-      // Create order
       const orderRes = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,7 +49,6 @@ export function UpgradeButton({ tier, label, className, userEmail, userName }: P
       if (!orderRes.ok) throw new Error("Failed to create order");
       const { orderId, amount, currency, keyId } = await orderRes.json();
 
-      // Open Razorpay
       await new Promise<void>((resolve, reject) => {
         const rzp = new window.Razorpay({
           key: keyId,
@@ -61,7 +59,7 @@ export function UpgradeButton({ tier, label, className, userEmail, userName }: P
           description: `${tier === "PREMIUM" ? "Premium" : "Elite"} Subscription — 1 Month`,
           image: "/logo.png",
           prefill: { email: userEmail ?? "", name: userName ?? "" },
-          theme: { color: "#18181b" },
+          theme: { color: "#4f46e5" },
           modal: {
             ondismiss: () => reject(new Error("Payment cancelled")),
           },
@@ -70,7 +68,6 @@ export function UpgradeButton({ tier, label, className, userEmail, userName }: P
             razorpay_order_id: string;
             razorpay_signature: string;
           }) => {
-            // Verify payment server-side
             const verifyRes = await fetch("/api/payment/verify", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -107,19 +104,34 @@ export function UpgradeButton({ tier, label, className, userEmail, userName }: P
 
   if (success) {
     return (
-      <Button disabled className={className}>
-        ✓ Upgraded successfully! Redirecting...
-      </Button>
+      <button
+        disabled
+        className={`${className} flex items-center justify-center gap-2 opacity-90`}
+      >
+        <CheckCircle2 className="w-4 h-4" />
+        Upgraded! Redirecting…
+      </button>
     );
   }
 
   return (
     <div className="space-y-2">
-      <Button onClick={handlePayment} disabled={loading} className={className}>
-        {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
-          : <><Zap className="w-4 h-4 mr-2" /> {label ?? "Upgrade Now"}</>}
-      </Button>
-      {error && <p className="text-xs text-red-600 dark:text-red-400 text-center">{error}</p>}
+      <button
+        onClick={handlePayment}
+        disabled={loading}
+        className={`${className} flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed`}
+      >
+        {loading ? (
+          <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</>
+        ) : (
+          <><Zap className="w-4 h-4" /> {label ?? "Upgrade Now"}</>
+        )}
+      </button>
+      {error && (
+        <p className="text-xs text-red-500 dark:text-red-400 text-center bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-xl">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

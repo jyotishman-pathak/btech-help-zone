@@ -1,3 +1,5 @@
+//app/(dashboard)/student/page.tsx
+
 import { redirect } from "next/navigation";
 import prisma from "../../../lib/prisma.client";
 import { auth } from "../../../auth";
@@ -91,11 +93,11 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
     progress:
       s.topics.length > 0
         ? Math.round(
-            (s.topics.filter((t: TopicWithProgress) => t.progress.some((p: ProgressItem) => p.completed))
-              .length /
-              s.topics.length) *
-              100
-          )
+          (s.topics.filter((t: TopicWithProgress) => t.progress.some((p: ProgressItem) => p.completed))
+            .length /
+            s.topics.length) *
+          100
+        )
         : 0,
   }));
 
@@ -167,8 +169,8 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
       bestScore >= c.cutoff
         ? "Safe"
         : bestScore >= c.cutoff - 20
-        ? "Close"
-        : "Needs Work",
+          ? "Close"
+          : "Needs Work",
     safe: bestScore >= c.cutoff,
     color:
       bestScore >= c.cutoff
@@ -187,11 +189,11 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
     const prog =
       s.topics.length > 0
         ? Math.round(
-            (s.topics.filter((t: TopicWithProgress) => t.progress.some((p: ProgressItem) => p.completed))
-              .length /
-              s.topics.length) *
-              100
-          )
+          (s.topics.filter((t: TopicWithProgress) => t.progress.some((p: ProgressItem) => p.completed))
+            .length /
+            s.topics.length) *
+          100
+        )
         : 0;
     if (s.name === "Physics")
       return [

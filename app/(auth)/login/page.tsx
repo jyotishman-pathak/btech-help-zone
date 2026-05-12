@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Lock,  Mail } from "lucide-react";
+import { ArrowRight, Lock, Mail, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "../../../components/ui/card";
 
@@ -18,23 +19,45 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsPending(true);
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    const toastId = toast.loading("Logging you in...");
 
-    if (res?.ok) {
-      router.push("/dashboard");
-    } else {
-      setError("Invalid email or password");
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.ok) {
+        toast.success("Login successful!", {
+          id: toastId,
+          description: "Redirecting to your dashboard...",
+        });
+        router.push("/dashboard");
+      } else {
+        setError("Invalid email or password");
+        toast.error("Login failed", {
+          id: toastId,
+          description: "Invalid email or password. Please try again.",
+        });
+        setIsPending(false);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      toast.error("Error", {
+        id: toastId,
+        description: "Something went wrong. Please try again later.",
+      });
+      setIsPending(false);
     }
   };
 
@@ -115,10 +138,20 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
+                disabled={isPending}
                 className="w-full h-12 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 font-medium group"
               >
-                Login
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  <>
+                    Login
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
               </Button>
             </form>
 

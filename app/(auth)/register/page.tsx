@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, Mail, User } from "lucide-react";
+import { ArrowRight, Lock, Mail, User, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Card, CardContent } from "../../../components/ui/card";
 
@@ -18,6 +19,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
   const router = useRouter();
 
@@ -25,25 +27,46 @@ export default function RegisterPage() {
     e.preventDefault();
 
     setError("");
+    setIsPending(true);
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        email,
-        password,
-      }),
-    });
+    const toastId = toast.loading("Creating your account...");
 
-    if (res.ok) {
-      router.push("/login");
-    } else {
-      const data = await res.json();
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
 
-      setError(data.error || "Registration failed");
+      if (res.ok) {
+        toast.success("Account created successfully!", {
+          id: toastId,
+          description: "Please login with your new credentials.",
+        });
+        router.push("/login");
+      } else {
+        const data = await res.json();
+        const errorMessage = data.error || "Registration failed";
+        setError(errorMessage);
+        toast.error("Registration failed", {
+          id: toastId,
+          description: errorMessage,
+        });
+        setIsPending(false);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      toast.error("Error", {
+        id: toastId,
+        description: "Something went wrong. Please try again later.",
+      });
+      setIsPending(false);
     }
   };
 
@@ -140,11 +163,20 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
+                disabled={isPending}
                 className="w-full h-12 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200 font-medium group"
               >
-                Create Account
-
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                {isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  <>
+                    Create Account
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
               </Button>
             </form>
 

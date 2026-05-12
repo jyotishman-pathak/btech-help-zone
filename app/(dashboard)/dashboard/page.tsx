@@ -1,4 +1,4 @@
-// app/dashboard/page.tsx
+//app/(dashboard)/dashboard/page.tsx
 import { redirect } from "next/navigation";
 import { auth } from "../../../auth";
 
@@ -13,6 +13,6 @@ export default async function DashboardRouter() {
   if (role === "ADMIN") redirect("/admin");
   if (role === "PARENT") redirect("/parent");
 
-  
-  redirect("/onboarding"); 
+
+  redirect("/onboarding");
 }

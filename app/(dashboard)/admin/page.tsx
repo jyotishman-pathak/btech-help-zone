@@ -1,3 +1,4 @@
+// app/(dashboard)/admin/page.tsx
 import { redirect } from "next/navigation";
 import { auth } from "../../../auth";
 import { AdminShell } from "../../../components/dashboard/AdminShell";

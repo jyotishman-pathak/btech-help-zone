@@ -1,3 +1,5 @@
+// app/(dashboard)/cee/mock/[id]/page.tsx
+
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "../../../../../auth";
