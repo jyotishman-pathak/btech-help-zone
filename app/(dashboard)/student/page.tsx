@@ -4,7 +4,9 @@ import { auth } from "../../../auth";
 import { DashboardData, DashboardShell } from "../../../components/dashboard/dashboard-shell";
 import { DashboardProvider } from "../../../components/dashboard/student-dash/context";
 
-
+type SubjectWithTopics = Awaited<ReturnType<typeof prisma.subject.findMany<{
+  include: { topics: { include: { progress: true } } }
+}>>>[number];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -40,7 +42,6 @@ function calcStreak(dates: Date[]): number {
 
 async function getDashboardData(userId: string): Promise<DashboardData> {
   const [subjects, attempts, topAttempts] = await Promise.all([
-    // Subjects + topic completion for this user
     prisma.subject.findMany({
       include: {
         topics: {
@@ -51,15 +52,11 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
       },
       orderBy: { weightage: "desc" },
     }),
-
-    // All of this user's submitted attempts
     prisma.mockTestAttempt.findMany({
       where: { userId, status: "SUBMITTED" },
       include: { test: { select: { title: true, totalMarks: true } } },
       orderBy: { completedAt: "asc" },
     }),
-
-    // Top attempts for leaderboard (best per user)
     prisma.mockTestAttempt.findMany({
       where: { status: "SUBMITTED" },
       include: { user: { select: { id: true, name: true } } },
@@ -69,7 +66,7 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
   ]);
 
   // ── Subjects ──────────────────────────────────────────────────────────────
-  const subjectData = subjects.map((s) => ({
+  const subjectData = subjects.map((s: SubjectWithTopics) => ({
     name: s.name,
     topicsTotal: s.topics.length,
     topicsDone: s.topics.filter((t) => t.progress.some((p) => p.completed))
@@ -122,7 +119,6 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
     isUser: a.userId === userId,
   }));
 
-  // If user is not in top 5, find their rank and append
   const userRankIdx = deduplicated.findIndex((a) => a.userId === userId);
   const userRank = userRankIdx >= 0 ? userRankIdx + 1 : undefined;
   if (userRank && userRank > 5) {
@@ -169,8 +165,8 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
     .filter(Boolean) as Date[];
   const streak = calcStreak(attemptDates);
 
-  // ── Radar — derived from subject progress + recency weighting ────────────
-  const radarData = subjects.flatMap((s) => {
+  // ── Radar ─────────────────────────────────────────────────────────────────
+  const radarData = subjects.flatMap((s: SubjectWithTopics) => {
     const prog =
       s.topics.length > 0
         ? Math.round(
@@ -180,7 +176,6 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
               100
           )
         : 0;
-    // Each subject contributes 2 radar entries for visual richness
     if (s.name === "Physics")
       return [
         { subject: "Mechanics", score: Math.min(100, prog + 8) },
@@ -236,23 +231,20 @@ export default async function DashboardPage() {
 
   return (
     <DashboardProvider
-  userName={session.user.name ?? null}
-  userImage={session.user.image ?? null}
-  userTier={tier}
-  streak={data.streak}
->
-
-     <DashboardShell
-      user={{
-        name: session.user.name,
-        email: session.user.email,
-        image: session.user.image,
-      }}
-      tier={tier}
-      data={data}
-    />
-
-  </DashboardProvider>
-   
+      userName={session.user.name ?? null}
+      userImage={session.user.image ?? null}
+      userTier={tier}
+      streak={data.streak}
+    >
+      <DashboardShell
+        user={{
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+        }}
+        tier={tier}
+        data={data}
+      />
+    </DashboardProvider>
   );
 }
