@@ -72,7 +72,7 @@ export async function PUT(
     return NextResponse.json({ error: "No active attempt" }, { status: 404 });
 
   let score = 0, correct = 0, wrong = 0;
-  const totalMarks = questions.reduce((s, q) => s + q.marks, 0);
+  const totalMarks = questions.reduce((s: number, q) => s + q.marks, 0);
   const answersMap = answers as Record<string, number>;
 
   questions.forEach((q) => {
