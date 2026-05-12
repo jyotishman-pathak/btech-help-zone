@@ -2,22 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { auth } from "../../../../auth";
 
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
-
-// Monthly prices in paise (₹ × 100)
 const TIER_PRICES: Record<string, number> = {
-  PREMIUM: 49900,        // ₹499
-  SUPER_PREMIUM: 99900,  // ₹999
+  PREMIUM: 49900,
+  SUPER_PREMIUM: 99900,
 };
 
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID!,
+    key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  });
 
   const { tier } = await req.json();
   const amount = TIER_PRICES[tier];
