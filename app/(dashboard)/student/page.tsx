@@ -100,14 +100,14 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
   }));
 
   // ── Score history ─────────────────────────────────────────────────────────
-  const scoreHistory = attempts.map((a: AttemptItem, i) => ({
+  const scoreHistory = attempts.map((a: AttemptItem, i: number) => ({
     test: `Mock ${i + 1}`,
     total: a.score,
   }));
 
   // ── Recent tests (last 5, most recent first) ──────────────────────────────
   const reversed = [...attempts].reverse();
-  const recentTests = reversed.slice(0, 5).map((a: AttemptItem, i) => {
+  const recentTests = reversed.slice(0, 5).map((a: AttemptItem, i: number) => {
     const prev = reversed[i + 1];
     return {
       id: a.id,
@@ -128,7 +128,7 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
     return true;
   });
 
-  const top5 = deduplicated.slice(0, 5).map((a: TopAttemptItem, i) => ({
+  const top5 = deduplicated.slice(0, 5).map((a: TopAttemptItem, i: number) => ({
     rank: i + 1,
     name: a.userId === userId ? "You" : a.user.name ?? "Anonymous",
     avatar: (a.user.name ?? "??").slice(0, 2).toUpperCase(),
