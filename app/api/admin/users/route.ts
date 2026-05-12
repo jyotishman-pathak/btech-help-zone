@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
 
+type AttemptItem = { score: number };
+
 type UserWithIncludes = Awaited<ReturnType<typeof prisma.user.findMany<{
   include: {
     mockTestAttempts: { where: { status: "SUBMITTED" }; select: { score: true } };
@@ -43,7 +45,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   const mapped = users.map((u: UserWithIncludes) => {
-    const attempts = u.mockTestAttempts;
+    const attempts = u.mockTestAttempts as AttemptItem[];
     return {
       id: u.id,
       name: u.name,
@@ -55,7 +57,7 @@ export async function GET(req: NextRequest) {
       createdAt: u.createdAt.toISOString(),
       mocksTaken: attempts.length,
       avgScore: attempts.length
-        ? Math.round(attempts.reduce((s: number, a) => s + a.score, 0) / attempts.length)
+        ? Math.round(attempts.reduce((s: number, a: AttemptItem) => s + a.score, 0) / attempts.length)
         : 0,
       subscription: u.subscription,
     };
