@@ -13,7 +13,7 @@ export async function GET() {
     orderBy: { id: "desc" },
   });
 
-  return NextResponse.json(tests.map((t) => ({
+  return NextResponse.json(tests.map((t: (typeof tests)[number]) => ({
     id: t.id,
     accessCode: t.accessCode,
     title: t.title,
