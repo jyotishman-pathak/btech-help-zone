@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  const years = [...new Set(pyqs.map((p: PyqItem) => p.year).filter(Boolean))].sort(
-    (a, b) => (b ?? 0) - (a ?? 0)
+  const years = [...new Set(pyqs.map((p: PyqItem) => p.year).filter((y): y is number => !!y))].sort(
+    (a: number, b: number) => b - a
   );
 
   return NextResponse.json({ pyqs: enriched, years });
