@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useOptimistic, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, RadarChart, PolarGrid,
@@ -14,7 +14,7 @@ import {
   LayoutDashboard, BarChart3, Star, Play, CheckCheck,
   ChevronDown, ChevronUp, Minus, Sparkles, Users,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
@@ -22,14 +22,12 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
-
 import Link from "next/link";
 
 import { toggleTopicCompletion } from "../../actions/topic.actions";
 import { cn } from "../../lib/utils";
 import { ScrollArea } from "../ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../@/components/ui/collapsible";
-
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -128,18 +126,24 @@ function CountdownBlock() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-0.5 sm:gap-2 flex-nowrap justify-center sm:justify-start w-full whitespace-nowrap">
       {[
-        { val: time.days, label: "Days" },
-        { val: time.hours, label: "Hrs" },
-        { val: time.minutes, label: "Min" },
-        { val: time.seconds, label: "Sec" },
+        { val: time.days, label: "D" },
+        { val: time.hours, label: "H" },
+        { val: time.minutes, label: "M" },
+        { val: time.seconds, label: "S" },
       ].map(({ val, label }, i) => (
-        <div key={label} className="flex items-center gap-2">
-          {i > 0 && <span className="text-lg font-bold text-zinc-500">:</span>}
-          <div className="flex flex-col items-center bg-white/10 dark:bg-zinc-900/10 rounded-lg px-3 py-2 min-w-[60px]">
-            <span className="text-2xl font-black tabular-nums">{String(val).padStart(2, "0")}</span>
-            <span className="text-[10px] uppercase tracking-wider opacity-70">{label}</span>
+        <div key={label} className="flex items-center gap-0.5 shrink-0">
+          {i > 0 && (
+            <span className="text-xs sm:text-lg font-bold text-zinc-500 shrink-0 select-none">:</span>
+          )}
+          <div className="flex flex-col items-center bg-white/10 dark:bg-zinc-900/10 rounded-md sm:rounded-lg px-1.5 sm:px-3 py-1 sm:py-2 min-w-[36px] sm:min-w-[60px] shrink-0">
+            <span className="text-sm sm:text-xl lg:text-2xl font-black tabular-nums leading-none">
+              {String(val).padStart(2, "0")}
+            </span>
+            <span className="text-[7px] sm:text-[10px] uppercase tracking-wider opacity-70 mt-0.5">
+              {label}
+            </span>
           </div>
         </div>
       ))}
@@ -154,10 +158,10 @@ function StatMini({
   icon: React.ElementType; color: string; bg: string;
 }) {
   return (
-    <div className={cn("p-4 rounded-xl", bg)}>
+    <div className={cn("p-3 sm:p-4 rounded-xl", bg)}>
       <Icon className={cn("w-4 h-4 mb-2", color)} />
-      <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100">{value}</p>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{sub ?? label}</p>
+      <p className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-zinc-100">{value}</p>
+      <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{sub ?? label}</p>
     </div>
   );
 }
@@ -188,7 +192,7 @@ function TopicRow({
         {topic.completed && <CheckCheck className="w-3 h-3 text-white" />}
       </div>
       <span className={cn(
-        "text-sm transition-colors",
+        "text-sm transition-colors truncate min-w-0",
         topic.completed
           ? "text-zinc-400 dark:text-zinc-600 line-through"
           : "text-zinc-700 dark:text-zinc-300 font-medium"
@@ -196,7 +200,7 @@ function TopicRow({
         {topic.name}
       </span>
       {!topic.completed && (
-        <span className="ml-auto text-[10px] text-zinc-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="ml-auto text-[10px] text-zinc-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
           Click to complete
         </span>
       )}
@@ -215,7 +219,7 @@ function TierGate({
 
   return (
     <Card className="border-dashed border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-      <CardContent className="p-6 text-center space-y-3">
+      <CardContent className="p-4 sm:p-6 text-center space-y-3">
         <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto">
           <Lock className="w-5 h-5 text-zinc-400" />
         </div>
@@ -311,124 +315,160 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-16">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-16 overflow-x-hidden">
       {/* Subtle dot grid */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.025]"
         style={{ backgroundImage: "radial-gradient(#555 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
 
-      <div className="container mx-auto px-4 md:px-6 py-6 max-w-7xl relative space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 max-w-7xl relative space-y-4 sm:space-y-6">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
         >
-          <div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 truncate">
               Hey, {user?.name?.split(" ")[0] || "Warrior"} 👋
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              {hasActiveEnrollments ? "Continue from where you left off." : "CEE 2027 — let's get that rank."}
+            <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-xs sm:text-sm flex items-center gap-2">
+              <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span className="truncate">
+                {hasActiveEnrollments ? "Continue from where you left off." : "CEE 2027 — let's get that rank."}
+              </span>
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {streak > 0 && (
-              <div className="flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 px-3 py-1.5 rounded-full text-sm font-semibold">
+              <div className="flex items-center gap-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold">
                 <Flame className="w-3.5 h-3.5" /> {streak}d streak
               </div>
             )}
             {hasActiveEnrollments && (
-              <Link href="/my-batches">
-                <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-full text-sm font-semibold">
+              <Link href="/student/batches">
+                <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold">
                   <CheckCircle2 className="w-3.5 h-3.5" /> My Batches
                 </div>
               </Link>
             )}
-            <Avatar className="h-10 w-10 border-2 border-white dark:border-zinc-900 shadow-sm">
+            <Avatar className="h-9 w-9 sm:h-10 sm:w-10 border-2 border-white dark:border-zinc-900 shadow-sm shrink-0">
               <AvatarImage src={user?.image ?? ""} />
-              <AvatarFallback className="bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-sm">
+              <AvatarFallback className="bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs sm:text-sm">
                 {user?.name?.slice(0, 2).toUpperCase() ?? "ST"}
               </AvatarFallback>
             </Avatar>
           </div>
         </motion.div>
 
-        {/* ── Hero Grid ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Countdown */}
-          <Card className="md:col-span-2 bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
-            <CardContent className="p-6 space-y-4">
+        {/* ── RESPONSIVE HERO SECTION ──────────────────────────────────────── */}
+        <div className="space-y-3 sm:space-y-4">
+          {/* Countdown — Compact and responsive */}
+          <Card className="bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
+            <CardContent className="p-3 sm:p-6 space-y-2 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-zinc-400 dark:text-zinc-600 flex items-center gap-1.5 mb-1">
-                    <Target className="w-3.5 h-3.5" /> Assam CEE 2027
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs font-medium text-zinc-400 dark:text-zinc-600 flex items-center gap-1 mb-0.5 sm:mb-1">
+                    <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Assam CEE 2027
                   </p>
-                  <h2 className="text-xl font-bold">Final Countdown</h2>
+                  <h2 className="text-base sm:text-xl font-bold leading-tight">Final Countdown</h2>
                 </div>
-                <Calendar className="w-5 h-5 text-zinc-400 dark:text-zinc-600" />
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 dark:text-zinc-600 shrink-0" />
               </div>
               <CountdownBlock />
-              <p className="text-[11px] text-zinc-500 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" /> May 15, 2027 · 9:00 AM IST
+              <p className="text-[9px] sm:text-[11px] text-zinc-500 flex items-center gap-1">
+                <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> May 15, 2027 · 9:00 AM IST
               </p>
             </CardContent>
           </Card>
 
-          {/* Rank card */}
-          <Card className="bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
-            <CardContent className="p-6 flex flex-col justify-between h-full gap-3">
-              <div className="flex justify-between items-start">
-                <div className="bg-white/10 dark:bg-zinc-900/10 p-2 rounded-lg">
-                  <Activity className="w-4 h-4" />
+          {/* Stats Grid — Mobile: 2 col, Desktop: 4 col */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            {/* Rank card */}
+            <Card className="bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
+              <CardContent className="p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="bg-white/10 dark:bg-zinc-900/10 p-1.5 sm:p-2 rounded-lg">
+                    <Activity className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </div>
+                  {userRank && userRank <= 10 && (
+                    <span className="text-[8px] sm:text-[10px] font-bold bg-amber-400 text-amber-900 px-1.5 sm:px-2 py-0.5 rounded-full whitespace-nowrap">
+                      Top {userRank}
+                    </span>
+                  )}
                 </div>
-                {userRank && userRank <= 10 && (
-                  <span className="text-[10px] font-bold bg-amber-400 text-amber-900 px-2 py-0.5 rounded-full">
-                    Top {userRank}
-                  </span>
-                )}
-              </div>
-              <div>
-                <p className="text-3xl font-black">{userRank ? `#${userRank}` : "—"}</p>
-                <p className="text-sm text-zinc-400 dark:text-zinc-600">
-                  {hasAttempts ? "Platform Rank" : "No attempts yet"}
+                <div>
+                  <p className="text-lg sm:text-3xl font-black leading-tight">{userRank ? `#${userRank}` : "—"}</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-600 leading-tight">
+                    {hasAttempts ? "Rank" : "—"}
+                  </p>
+                </div>
+                <p className="text-[8px] sm:text-xs text-zinc-500 flex items-center gap-0.5">
+                  <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" />
+                  <span className="truncate">{totalAttempts} test{totalAttempts !== 1 ? "s" : ""}</span>
                 </p>
-              </div>
-              <p className="text-xs text-zinc-500 flex items-center gap-1">
-                <ArrowUpRight className="w-3 h-3" /> {totalAttempts} test{totalAttempts !== 1 ? "s" : ""} completed
-              </p>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Accuracy card */}
-          <Card className="bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
-            <CardContent className="p-6 flex flex-col justify-between h-full gap-3">
-              <div className="bg-white/10 dark:bg-zinc-900/10 p-2 rounded-lg w-fit">
-                <BrainCircuit className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-3xl font-black">{hasAttempts ? `${avgAccuracy}%` : "—"}</p>
-                <p className="text-sm text-zinc-400 dark:text-zinc-600">Avg Accuracy</p>
-              </div>
-              <div className="w-full bg-white/10 dark:bg-zinc-900/10 rounded-full h-1.5">
-                <div
-                  className="bg-white dark:bg-zinc-900 h-1.5 rounded-full transition-all"
-                  style={{ width: `${hasAttempts ? avgAccuracy : 0}%` }}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            {/* Accuracy card */}
+            <Card className="bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
+              <CardContent className="p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+                <div className="bg-white/10 dark:bg-zinc-900/10 p-1.5 sm:p-2 rounded-lg w-fit">
+                  <BrainCircuit className="w-3 h-3 sm:w-4 sm:h-4" />
+                </div>
+                <div>
+                  <p className="text-lg sm:text-3xl font-black leading-tight">{hasAttempts ? `${avgAccuracy}%` : "—"}</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-600 leading-tight">Accuracy</p>
+                </div>
+                <div className="w-full bg-white/10 dark:bg-zinc-900/10 rounded-full h-1">
+                  <div
+                    className="bg-white dark:bg-zinc-900 h-1 rounded-full transition-all"
+                    style={{ width: `${hasAttempts ? avgAccuracy : 0}%` }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Streak card */}
+            {streak > 0 && (
+              <Card className="bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
+                <CardContent className="p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+                  <div className="bg-white/10 dark:bg-zinc-900/10 p-1.5 sm:p-2 rounded-lg w-fit">
+                    <Flame className="w-3 h-3 sm:w-4 sm:h-4" />
+                  </div>
+                  <div>
+                    <p className="text-lg sm:text-3xl font-black leading-tight">{streak}d</p>
+                    <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-600 leading-tight">Streak</p>
+                  </div>
+                  <p className="text-[8px] sm:text-xs text-zinc-500 font-medium">On fire! 🔥</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Best Score card */}
+            <Card className="bg-zinc-900 dark:bg-zinc-100 border-none shadow-xl text-white dark:text-zinc-900">
+              <CardContent className="p-2.5 sm:p-4 space-y-2 sm:space-y-3">
+                <div className="bg-white/10 dark:bg-zinc-900/10 p-1.5 sm:p-2 rounded-lg w-fit">
+                  <Trophy className="w-3 h-3 sm:w-4 sm:h-4" />
+                </div>
+                <div>
+                  <p className="text-lg sm:text-3xl font-black leading-tight">{bestScore || "—"}</p>
+                  <p className="text-[10px] sm:text-xs text-zinc-400 dark:text-zinc-600 leading-tight">Best</p>
+                </div>
+                <p className="text-[8px] sm:text-xs text-zinc-500">All-time high</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* ── Main Layout ─────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
           {/* Left: tabs */}
           <div className="lg:col-span-2 space-y-4">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full grid grid-cols-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 h-12 rounded-xl">
+              <TabsList className="w-full grid grid-cols-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 h-10 sm:h-12 rounded-xl">
                 {[
                   { value: "overview", icon: LayoutDashboard, label: "Overview" },
                   { value: "analytics", icon: BarChart3, label: "Analytics" },
@@ -437,25 +477,26 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                   <TabsTrigger
                     key={value}
                     value={value}
-                    className="gap-1.5 text-sm font-semibold data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900 transition-all rounded-lg"
+                    className="gap-1 sm:gap-1.5 text-xs sm:text-sm font-semibold data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900 transition-all rounded-lg px-1 sm:px-3"
                   >
-                    <Icon className="w-3.5 h-3.5" /> {label}
+                    <Icon className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{label}</span>
+                    <span className="sm:hidden">{label.slice(0, 3)}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
 
               {/* ── OVERVIEW ────────────────────────────────────────────── */}
-              <TabsContent value="overview" className="mt-4 space-y-4 animate-in fade-in-0 slide-in-from-bottom-2">
+              <TabsContent value="overview" className="mt-3 sm:mt-4 space-y-3 sm:space-y-4 animate-in fade-in-0 slide-in-from-bottom-2">
 
                 {/* Overall progress bar */}
                 <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Overall Syllabus Progress</p>
-                      <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{overallProgress}%</span>
+                      <p className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300">Overall Syllabus Progress</p>
+                      <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100">{overallProgress}%</span>
                     </div>
                     <Progress value={overallProgress} className="h-2 bg-zinc-100 dark:bg-zinc-800 [&>div]:bg-zinc-900 dark:[&>div]:bg-zinc-100" />
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
+                    <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-2">
                       {subjectsState.reduce((s, sub) => s + sub.topicsDone, 0)} of{" "}
                       {subjectsState.reduce((s, sub) => s + sub.topicsTotal, 0)} topics completed
                     </p>
@@ -465,7 +506,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                 {/* Subject mini cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {subjectsState.length === 0 ? (
-                    <div className="col-span-3 py-10 text-center text-zinc-400 dark:text-zinc-600 text-sm">
+                    <div className="col-span-1 sm:col-span-3 py-10 text-center text-zinc-400 dark:text-zinc-600 text-sm">
                       No subjects yet — ask admin to add the syllabus.
                     </div>
                   ) : (
@@ -478,16 +519,16 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                           className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
                           onClick={() => { setActiveTab("syllabus"); setOpenSubjects(new Set([sub.name])); }}
                         >
-                          <CardContent className="p-4 space-y-3">
+                          <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                             <div className="flex items-center justify-between">
                               <div className={cn("p-2 rounded-lg", meta.bg)}>
                                 <Icon className={cn("w-4 h-4", meta.accent)} />
                               </div>
-                              <span className="text-lg font-black text-zinc-900 dark:text-zinc-100">{sub.progress}%</span>
+                              <span className="text-lg sm:text-xl font-black text-zinc-900 dark:text-zinc-100">{sub.progress}%</span>
                             </div>
                             <div>
                               <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">{sub.name}</p>
-                              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                              <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
                                 {sub.topicsDone}/{sub.topicsTotal} topics
                               </p>
                             </div>
@@ -501,19 +542,19 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
 
                 {/* Mock Tests */}
                 <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-3 px-3 sm:px-6 pt-4 sm:pt-6">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                      <CardTitle className="text-sm sm:text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
                         <Timer className="w-4 h-4 text-zinc-500" /> Mock Tests
                       </CardTitle>
                       <Link href={hasActiveEnrollments ? "/my-batches" : "/cee/mock"}>
-                        <Button variant="ghost" size="sm" className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 gap-1">
+                        <Button variant="ghost" size="sm" className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 gap-1 h-8 px-2">
                           View all <ChevronRight className="w-3 h-3" />
                         </Button>
                       </Link>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent className="space-y-2 px-3 sm:px-6 pb-4 sm:pb-6">
                     {hasActiveEnrollments ? (
                       // Show enrolled batch tests
                       enrolledTests.length === 0 ? (
@@ -526,7 +567,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                           {enrolledTests.slice(0, 4).map((bt) => (
                             <div
                               key={bt.testId}
-                              className="flex items-center gap-3 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                              className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
                             >
                               <div className={cn(
                                 "w-9 h-9 rounded-full flex items-center justify-center shrink-0",
@@ -541,7 +582,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{bt.testTitle}</p>
-                                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">
                                   {bt.batchName} · {bt.duration}m · {bt.totalMarks} marks
                                 </p>
                               </div>
@@ -561,7 +602,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                             </div>
                           ))}
                           {enrolledTests.length > 4 && (
-                            <Link href="/my-batches">
+                            <Link href="student/my-batches">
                               <Button variant="outline" className="w-full h-9 text-sm border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500">
                                 +{enrolledTests.length - 4} more tests in My Batches
                               </Button>
@@ -589,7 +630,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                       ) : (
                         <>
                           {recentTests.slice(0, 3).map((test) => (
-                            <div key={test.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                            <div key={test.id} className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                               <div className={cn(
                                 "w-9 h-9 rounded-full flex items-center justify-center shrink-0",
                                 test.trend === "up" ? "bg-emerald-50 dark:bg-emerald-900/20" : "bg-red-50 dark:bg-red-900/20"
@@ -601,7 +642,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{test.name}</p>
-                                <p className="text-xs text-zinc-500 dark:text-zinc-400">{test.date} · {test.accuracy}% accuracy</p>
+                                <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400">{test.date} · {test.accuracy}% accuracy</p>
                               </div>
                               <div className="text-right shrink-0">
                                 <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">
@@ -631,13 +672,11 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                 {/* Quick Actions */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
-                    { href: "/cee/pyq", icon: BookOpen, label: "PYQ Papers" },
-                    { href: "/cee/mock", icon: Zap, label: "Mock Test" },
                     { href: "/batches", icon: Users, label: "Batches" },
-                    { href: "/my-batches", icon: Target, label: "My Batches" },
+                    { href: "/student/my-batches", icon: Target, label: "My Batches" },
                   ].map(({ href, icon: Icon, label }) => (
                     <Link key={href} href={href}>
-                      <Button className="w-full h-auto py-4 flex-col gap-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                      <Button className="w-full h-auto py-3 sm:py-4 flex-col gap-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 shadow-sm">
                         <Icon className="w-5 h-5" />
                         <span className="text-xs font-semibold">{label}</span>
                       </Button>
@@ -647,7 +686,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
               </TabsContent>
 
               {/* ── ANALYTICS ───────────────────────────────────────────── */}
-              <TabsContent value="analytics" className="mt-4 space-y-4 animate-in fade-in-0 slide-in-from-bottom-2">
+              <TabsContent value="analytics" className="mt-3 sm:mt-4 space-y-3 sm:space-y-4 animate-in fade-in-0 slide-in-from-bottom-2">
 
                 {/* Stat row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -676,11 +715,11 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                   <>
                     {/* Score Trajectory */}
                     <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Score Trajectory</CardTitle>
-                        <CardDescription className="text-xs">Your score across all attempts</CardDescription>
+                      <CardHeader className="pb-2 px-3 sm:px-6 pt-4 sm:pt-6">
+                        <CardTitle className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300">Score Trajectory</CardTitle>
+                        <CardDescription className="text-[11px] sm:text-xs">Your score across all attempts</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="px-2 sm:px-6 pb-4 sm:pb-6">
                         <ResponsiveContainer width="100%" height={220}>
                           <AreaChart data={scoreHistory} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                             <defs>
@@ -707,11 +746,11 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
 
                     {/* Accuracy trend */}
                     <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Accuracy Trend</CardTitle>
-                        <CardDescription className="text-xs">% correct across attempts</CardDescription>
+                      <CardHeader className="pb-2 px-3 sm:px-6 pt-4 sm:pt-6">
+                        <CardTitle className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300">Accuracy Trend</CardTitle>
+                        <CardDescription className="text-[11px] sm:text-xs">% correct across attempts</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="px-2 sm:px-6 pb-4 sm:pb-6">
                         <ResponsiveContainer width="100%" height={200}>
                           <BarChart data={scoreHistory.slice(-8)} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" vertical={false} />
@@ -727,20 +766,20 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                     {/* Subject Strength Radar */}
                     {radarData.length > 0 && (
                       <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                        <CardHeader className="pb-2">
+                        <CardHeader className="pb-2 px-3 sm:px-6 pt-4 sm:pt-6">
                           <div className="flex items-center justify-between">
                             <div>
-                              <CardTitle className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                              <CardTitle className="text-xs sm:text-sm font-semibold text-zinc-700 dark:text-zinc-300">
                                 Subject Strength Map
                               </CardTitle>
-                              <CardDescription className="text-xs">Based on topic completion rate</CardDescription>
+                              <CardDescription className="text-[11px] sm:text-xs">Based on topic completion rate</CardDescription>
                             </div>
                             <Badge variant="secondary" className="text-[10px] bg-zinc-100 dark:bg-zinc-800">
                               <Sparkles className="w-3 h-3 mr-1" /> Live
                             </Badge>
                           </div>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="px-2 sm:px-6 pb-4 sm:pb-6">
                           <ResponsiveContainer width="100%" height={260}>
                             <RadarChart data={radarData}>
                               <PolarGrid stroke="#e4e4e7" />
@@ -761,17 +800,17 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
               </TabsContent>
 
               {/* ── SYLLABUS ─────────────────────────────────────────────── */}
-              <TabsContent value="syllabus" className="mt-4 space-y-3 animate-in fade-in-0 slide-in-from-bottom-2">
+              <TabsContent value="syllabus" className="mt-3 sm:mt-4 space-y-3 animate-in fade-in-0 slide-in-from-bottom-2">
 
                 {/* Overall */}
                 <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 sm:p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Total Progress</p>
-                      <span className="text-sm font-black text-zinc-900 dark:text-zinc-100">{overallProgress}%</span>
+                      <p className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100">Total Progress</p>
+                      <span className="text-sm sm:text-base font-black text-zinc-900 dark:text-zinc-100">{overallProgress}%</span>
                     </div>
                     <Progress value={overallProgress} className="h-2 bg-zinc-100 dark:bg-zinc-800 [&>div]:bg-zinc-900 dark:[&>div]:bg-zinc-100" />
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
+                    <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-2">
                       {subjectsState.reduce((s, sub) => s + sub.topicsDone, 0)} /{" "}
                       {subjectsState.reduce((s, sub) => s + sub.topicsTotal, 0)} topics marked complete
                     </p>
@@ -798,13 +837,13 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                       <Card key={sub.name} className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
                         <Collapsible open={isOpen} onOpenChange={() => toggleSubject(sub.name)}>
                           <CollapsibleTrigger asChild>
-                            <button className="w-full p-4 flex items-center gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-left">
+                            <button className="w-full p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-left">
                               <div className={cn("p-2 rounded-lg shrink-0", meta.bg)}>
                                 <Icon className={cn("w-4 h-4", meta.accent)} />
                               </div>
                               <div className="flex-1 min-w-0 space-y-1.5">
                                 <div className="flex items-center justify-between">
-                                  <p className="font-bold text-zinc-900 dark:text-zinc-100">{sub.name}</p>
+                                  <p className="font-bold text-zinc-900 dark:text-zinc-100 text-sm sm:text-base">{sub.name}</p>
                                   <div className="flex items-center gap-2">
                                     <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{sub.progress}%</span>
                                     {isOpen ? (
@@ -815,15 +854,15 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                                   </div>
                                 </div>
                                 <Progress value={sub.progress} className={cn("h-1.5 bg-zinc-100 dark:bg-zinc-800", meta.bar)} />
-                                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                  {sub.topicsDone}/{sub.topicsTotal} topics · click to {isOpen ? "collapse" : "expand"}
+                                <p className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400">
+                                  {sub.topicsDone}/{sub.topicsTotal} topics · tap to {isOpen ? "collapse" : "expand"}
                                 </p>
                               </div>
                             </button>
                           </CollapsibleTrigger>
 
                           <CollapsibleContent>
-                            <div className="px-4 pb-4 border-t border-zinc-100 dark:border-zinc-800 pt-2">
+                            <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-zinc-100 dark:border-zinc-800 pt-2">
                               {sub.topics.length === 0 ? (
                                 <p className="text-sm text-zinc-400 dark:text-zinc-600 py-4 text-center italic">
                                   No topics added for {sub.name} yet.
@@ -841,7 +880,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                               )}
 
                               {/* Subject stats footer */}
-                              <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
+                              <div className="mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[10px] sm:text-xs text-zinc-500">
                                 <span>{sub.topicsDone} done · {sub.topicsTotal - sub.topicsDone} remaining</span>
                                 {sub.topicsDone === sub.topicsTotal && sub.topicsTotal > 0 && (
                                   <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -865,15 +904,15 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
 
             {/* Daily Goals — dynamic */}
             <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+              <CardHeader className="pb-3 px-3 sm:px-6 pt-4 sm:pt-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
                   <Target className="w-4 h-4 text-zinc-500" /> Today's Goals
                 </CardTitle>
-                <CardDescription className="text-xs text-zinc-500">
+                <CardDescription className="text-[11px] sm:text-xs text-zinc-500">
                   {dynamicGoals.filter((g) => g.done).length}/{dynamicGoals.length} completed
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-2 px-3 sm:px-6 pb-4 sm:pb-6">
                 {dynamicGoals.length === 0 ? (
                   <div className="py-4 text-center">
                     <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
@@ -885,7 +924,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                     const GoalIcon = GOAL_ICONS[goal.type] ?? Target;
                     const inner = (
                       <div className={cn(
-                        "flex items-start gap-3 p-3 rounded-xl transition-colors",
+                        "flex items-start gap-3 p-2.5 sm:p-3 rounded-xl transition-colors",
                         goal.done
                           ? "bg-emerald-50 dark:bg-emerald-900/10"
                           : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50",
@@ -901,7 +940,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                           }
                         </div>
                         <p className={cn(
-                          "text-sm leading-snug",
+                          "text-sm leading-snug min-w-0",
                           goal.done
                             ? "text-zinc-400 dark:text-zinc-600 line-through"
                             : "text-zinc-700 dark:text-zinc-300 font-medium"
@@ -942,15 +981,15 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
               upsellDescription="See which Assam colleges you qualify for based on your mock scores."
             >
               <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                <CardHeader className="pb-3 px-3 sm:px-6 pt-4 sm:pt-6">
+                  <CardTitle className="text-sm sm:text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
                     <GraduationCap className="w-4 h-4 text-zinc-500" /> College Predictor
                   </CardTitle>
-                  <CardDescription className="text-xs text-zinc-500">
+                  <CardDescription className="text-[11px] sm:text-xs text-zinc-500">
                     {bestScore > 0 ? `Based on your best score (${bestScore})` : "Take a mock test to activate"}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-3 sm:px-6 pb-4 sm:pb-6">
                   {collegePredictor.map((col) => (
                     <div key={col.name} className="space-y-1.5">
                       <div className="flex justify-between text-sm">
@@ -973,24 +1012,24 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
 
             {/* Leaderboard */}
             <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+              <CardHeader className="pb-3 px-3 sm:px-6 pt-4 sm:pt-6">
+                <CardTitle className="text-sm sm:text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
                   <Crown className="w-4 h-4 text-amber-500" /> Leaderboard
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {leaderboard.length === 0 ? (
-                  <p className="px-6 pb-4 text-sm text-zinc-400 dark:text-zinc-600 text-center">
+                  <p className="px-3 sm:px-6 pb-4 text-sm text-zinc-400 dark:text-zinc-600 text-center">
                     No attempts yet — be first!
                   </p>
                 ) : (
-                  <ScrollArea className="h-[220px] px-6 pb-4">
+                  <ScrollArea className="h-[220px] px-3 sm:px-6 pb-4">
                     <div className="space-y-3 pt-1">
                       {leaderboard.map((entry, idx) => (
                         <div
                           key={idx}
                           className={cn(
-                            "flex items-center gap-3 p-2 rounded-xl transition-colors",
+                            "flex items-center gap-3 p-2 sm:p-2 rounded-xl transition-colors",
                             entry.isUser
                               ? "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
                               : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -1029,12 +1068,12 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
             {/* Earned Badges */}
             {earnedBadges.length > 0 && (
               <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
+                <CardHeader className="pb-3 px-3 sm:px-6 pt-4 sm:pt-6">
+                  <CardTitle className="text-sm sm:text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
                     <Star className="w-4 h-4 text-amber-500" /> Badges Earned
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
                   <div className="grid grid-cols-2 gap-2">
                     {earnedBadges.map((badge) => {
                       const Icon = BADGE_ICONS[badge.key] ?? Star;
