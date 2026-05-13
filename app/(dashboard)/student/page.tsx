@@ -180,7 +180,7 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
   const CUTOFFS = [
     { name: "AEC Guwahati", cutoff: 420 },
     { name: "JEC Jorhat", cutoff: 380 },
-    { name: "BBEC Kokrajhar", cutoff: 340 },
+    { name: "JIST Jorhat", cutoff: 340 },
   ];
   const collegePredictor = CUTOFFS.map((c) => ({
     name: c.name,

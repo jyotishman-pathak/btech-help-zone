@@ -97,10 +97,11 @@ export function useDashboard() {
 
 const PRIMARY_NAV = [
     { title: "Dashboard", href: "/student", icon: LayoutDashboard, badge: null, proOnly: false },
-    { title: "Syllabus", href: "/student/cee/syllabus", icon: BookOpen, badge: null, proOnly: false },
+    { title: "My Batches", href: "/student/my-batches", icon: BoxIcon, badge: null, proOnly: false },
+
     { title: "PYQ Bank", href: "/student/cee/pyq", icon: Target, badge: null, proOnly: false },
     { title: "Leaderboard", href: "/student/cee/leaderboard", icon: Trophy, badge: null, proOnly: false },
-    { title: "My Batches", href: "/student/my-batches", icon: BoxIcon, badge: null, proOnly: false },
+    { title: "Syllabus", href: "/student/cee/syllabus", icon: BookOpen, badge: null, proOnly: false },
 ];
 
 // These appear in sidebar on desktop + "More" sheet on mobile

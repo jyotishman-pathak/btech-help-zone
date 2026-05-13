@@ -370,7 +370,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
               <div className="flex items-center justify-between">
                 <div className="min-w-0">
                   <p className="text-[10px] sm:text-xs font-medium text-zinc-400 dark:text-zinc-600 flex items-center gap-1 mb-0.5 sm:mb-1">
-                    <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Assam CEE 2027
+                    <Target className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" /> Assam CEE 2026
                   </p>
                   <h2 className="text-base sm:text-xl font-bold leading-tight">Final Countdown</h2>
                 </div>
@@ -378,7 +378,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
               </div>
               <CountdownBlock />
               <p className="text-[9px] sm:text-[11px] text-zinc-500 flex items-center gap-1">
-                <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> May 15, 2027 · 9:00 AM IST
+                <AlertCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" /> 14 May 2026 · 10:00 AM IST
               </p>
             </CardContent>
           </Card>
