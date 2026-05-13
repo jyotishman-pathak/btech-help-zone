@@ -40,39 +40,38 @@ export async function GET() {
 
   return NextResponse.json(pyqs);
 }
+// app/api/admin/pyq/route.ts — just the POST handler
 
 export async function POST(req: NextRequest) {
   const session = (await auth()) as Session | null;
-
-  if (!isAdmin(session)) {
+  if (!isAdmin(session))
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
-  const { title, subjectId, year, requiredTier, fileUrl, batchIds = [] } =
+  const { title, subjectName, year, requiredTier, fileUrl, batchIds = [] } =
     await req.json();
 
-  if (!title || !fileUrl || !subjectId) {
+  if (!title || !fileUrl || !subjectName)
     return NextResponse.json(
-      { error: "title, subjectId, and fileUrl required" },
+      { error: "title, subjectName, and fileUrl required" },
       { status: 400 }
     );
-  }
 
-  const subject = await prisma.subject.findUnique({
-    where: { id: subjectId },
+  const uploadedBy = session?.user?.id;
+  if (!uploadedBy)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Find or create subject by name
+  let subject = await prisma.subject.findFirst({
+    where: { name: { equals: subjectName.trim(), mode: "insensitive" } },
   });
 
   if (!subject) {
-    return NextResponse.json(
-      { error: "Subject not found" },
-      { status: 400 }
-    );
-  }
-
-  const uploadedBy = session?.user?.id;
-
-  if (!uploadedBy) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    subject = await prisma.subject.create({
+      data: {
+        name: subjectName.trim(),
+        category: "General",
+      },
+    });
   }
 
   const material = await prisma.$transaction(async (tx) => {
@@ -81,7 +80,7 @@ export async function POST(req: NextRequest) {
         title,
         type: "PYQ",
         fileUrl,
-        subjectId,
+        subjectId: subject!.id,
         year: year ? parseInt(year) : null,
         requiredTier: requiredTier ?? "NORMAL",
         uploadedBy,

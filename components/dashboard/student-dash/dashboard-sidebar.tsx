@@ -8,7 +8,8 @@ import {
   LayoutDashboard, BookOpen, Zap, Trophy, Settings,
   LogOut, ChevronLeft, ChevronRight, Bell, Search,
   GraduationCap, Target, BrainCircuit, HelpCircle,
-  ChevronDown, User, Crown, Flame, Package, Layers
+  ChevronDown, User, Crown, Flame, Package, Layers,
+  BoxIcon
 } from "lucide-react";
 
 
@@ -43,12 +44,12 @@ const NAV_ITEMS = [
     icon: BookOpen,
     badge: null,
   },
-  {
-    title: "Mock Tests",
-    href: "/student/cee/mock",
-    icon: Zap,
-    badge: "New",
-  },
+  // {
+  //   title: "Mock Tests",
+  //   href: "/cee/mock",
+  //   icon: Zap,
+  //   badge: "New",
+  // },
   {
     title: "PYQ Bank",
     href: "/student/cee/pyq",
@@ -68,9 +69,15 @@ const NAV_ITEMS = [
     icon: Trophy,
     badge: null,
   },
-  
+
   {
     title: "My Batches",
+    href: "/student/my-batches",
+    icon: BoxIcon,
+    badge: null,
+  },
+  {
+    title: "Browse Batches",
     href: "/student/batches",
     icon: Layers,
     badge: null,

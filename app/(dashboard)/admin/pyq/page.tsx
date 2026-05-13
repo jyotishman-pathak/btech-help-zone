@@ -2,25 +2,27 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Upload, FileText, Check, Loader2, X, ChevronLeft, Cloud, Sparkles, BookOpen } from "lucide-react";
+import { Upload, FileText, Check, Loader2, X, ChevronLeft, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { uploadToCloudinary } from "../../../../lib/cloudinary-upload";
 
-import { Select, SelectContent, SelectItem,  SelectTrigger, SelectValue } from "../../../../components/ui/select";
-import {  Label } from "../../../../components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../../components/ui/select";
+import { Label } from "../../../../components/ui/label";
 import { Input } from "../../../../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { Badge } from "../../../../components/ui/badge";
 import { cn } from "../../../../lib/utils";
 import { Button } from "../../../../components/ui/button";
-interface Subject { id: string; name: string; }
+
 interface Batch { id: string; name: string; type: string; }
 
 export default function AdminPYQPage() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
   const [form, setForm] = useState({
-    title: "", subjectId: "", year: String(new Date().getFullYear()), requiredTier: "NORMAL",
+    title: "",
+    subjectName: "",
+    year: String(new Date().getFullYear()),
+    requiredTier: "NORMAL",
   });
   const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -32,20 +34,17 @@ export default function AdminPYQPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/subjects").then((r) => r.json()),
-      fetch("/api/admin/batches").then((r) => r.json()),
-    ]).then(([s, b]) => {
-      setSubjects(Array.isArray(s) ? s : []);
-      setBatches(Array.isArray(b) ? b : []);
-    });
+    fetch("/api/admin/batches")
+      .then((r) => r.json())
+      .then((b) => setBatches(Array.isArray(b) ? b : []));
   }, []);
 
   const handleSubmit = async () => {
-    if (!form.title || !form.subjectId || !file) {
+    if (!form.title || !form.subjectName || !file) {
       setError("Title, subject, and PDF are required.");
       return;
     }
+
     setError("");
     setUploading(true);
 
@@ -67,7 +66,7 @@ export default function AdminPYQPage() {
 
       if (res.ok) {
         setSaved(true);
-        setForm({ title: "", subjectId: "", year: String(new Date().getFullYear()), requiredTier: "NORMAL" });
+        setForm({ title: "", subjectName: "", year: String(new Date().getFullYear()), requiredTier: "NORMAL" });
         setFile(null);
         setSelectedBatchIds([]);
         setUploadProgress(0);
@@ -103,23 +102,30 @@ export default function AdminPYQPage() {
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label>Title *</Label>
-              <Input placeholder="Assam CEE Physics 2024 Solved" value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              <Input
+                placeholder="Assam CEE Physics 2024 Solved"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Subject *</Label>
-                <Select value={form.subjectId} onValueChange={(v) => setForm({ ...form, subjectId: v })}>
-                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Input
+                  placeholder="e.g. Physics, Chemistry, Mathematics"
+                  value={form.subjectName}
+                  onChange={(e) => setForm({ ...form, subjectName: e.target.value })}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Exam Year</Label>
-                <Input type="number" min="2000" max="2030" value={form.year}
-                  onChange={(e) => setForm({ ...form, year: e.target.value })} />
+                <Input
+                  type="number"
+                  min="2000"
+                  max="2030"
+                  value={form.year}
+                  onChange={(e) => setForm({ ...form, year: e.target.value })}
+                />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -149,15 +155,22 @@ export default function AdminPYQPage() {
                   </button>
                 </div>
               ) : (
-                <button onClick={() => fileRef.current?.click()}
-                  className="w-full flex flex-col items-center gap-2 p-8 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 transition text-zinc-500">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="w-full flex flex-col items-center gap-2 p-8 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 transition text-zinc-500"
+                >
                   <Upload className="w-8 h-8" />
                   <span className="text-sm font-medium">Click to upload PDF</span>
                   <span className="text-xs text-zinc-400">Max 20MB</span>
                 </button>
               )}
-              <input type="file" accept="application/pdf" className="hidden" ref={fileRef}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                ref={fileRef}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }}
+              />
             </div>
           </CardContent>
         </Card>
