@@ -66,7 +66,7 @@ export interface DashboardData {
 
 // ─── Static maps ─────────────────────────────────────────────────────────────
 
-const CEE_DATE = "2027-05-15T09:00:00";
+const CEE_DATE = "2026-06-14T10:00:00";
 
 const SUBJECT_META: Record<string, { icon: React.ElementType; accent: string; bg: string; bar: string }> = {
   Physics: {
