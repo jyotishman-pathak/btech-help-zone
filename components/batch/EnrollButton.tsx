@@ -7,6 +7,7 @@ import { Loader2, Zap, Lock } from "lucide-react";
 import { LeadCaptureForm } from "./LeadCaptureForm";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import Link from "next/link";
 
 interface EnrollButtonProps {
   batchId: string;
@@ -49,9 +50,11 @@ export function EnrollButton({
 
   if (isEnrolled) {
     return (
-      <Button className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => router.push(`/batches/${batchSlug}`)}>
-        ✓ Continue Learning
-      </Button>
+      <Link href={`/student/my-batches`}>
+        <Button className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700 text-white" >
+          ✓ Continue Learning
+        </Button>
+      </Link>
     );
   }
 
