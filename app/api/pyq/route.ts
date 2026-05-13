@@ -2,24 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../auth";
 import prisma from "../../../lib/prisma.client";
 
-type PyqItem = Awaited<ReturnType<typeof prisma.studyMaterial.findMany<{
-  where: { type: "PYQ"; status: "published" };
-  include: { subject: { select: { name: true } } };
-  orderBy: [{ year: "desc" }, { createdAt: "desc" }];
-}>>>[number];
-
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const userId = session.user.id as string;
+  const role = (session.user as any).role;
+  const isAdmin = ["ADMIN", "SUPER_ADMIN"].includes(role);
+
   const { searchParams } = new URL(req.url);
   const subject = searchParams.get("subject");
   const year = searchParams.get("year");
   const search = searchParams.get("search") ?? "";
-  const userTier = session?.user?.tier ?? "NORMAL";
-
-  const TIER_LEVEL: Record<string, number> = { NORMAL: 0, PREMIUM: 1, SUPER_PREMIUM: 2 };
 
   const pyqs = await prisma.studyMaterial.findMany({
     where: {
@@ -35,10 +30,29 @@ export async function GET(req: NextRequest) {
     orderBy: [{ year: "desc" }, { createdAt: "desc" }],
   });
 
-  const enriched = pyqs.map((p: PyqItem) => {
-    const required = TIER_LEVEL[p.requiredTier] ?? 0;
-    const has = TIER_LEVEL[userTier] ?? 0;
-    const canAccess = has >= required;
+  // Get all batch pyq IDs the user is enrolled in (one query, not N queries)
+  const enrolledBatchPyqs = isAdmin
+    ? null
+    : await prisma.batchPYQ.findMany({
+      where: {
+        batch: {
+          deletedAt: null,
+          enrollments: { some: { userId, status: "ACTIVE" } },
+        },
+      },
+      select: { pyqId: true },
+    });
+
+  const accessiblePyqIds = isAdmin
+    ? null
+    : new Set(enrolledBatchPyqs!.map((b) => b.pyqId));
+
+  const enriched = pyqs.map((p) => {
+    const canAccess =
+      isAdmin ||
+      p.requiredTier === "NORMAL" ||
+      accessiblePyqIds!.has(p.id);
+
     return {
       id: p.id,
       title: p.title,
@@ -51,9 +65,11 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  const years = [...new Set<number>(pyqs.map((p: PyqItem) => p.year).filter((y: number | null): y is number => !!y))].sort(
-    (a, b) => b - a
-  );
+  const years = [
+    ...new Set<number>(
+      pyqs.map((p) => p.year).filter((y): y is number => !!y)
+    ),
+  ].sort((a, b) => b - a);
 
   return NextResponse.json({ pyqs: enriched, years });
 }

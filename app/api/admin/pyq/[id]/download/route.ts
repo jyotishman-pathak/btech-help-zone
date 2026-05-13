@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "../../../../../auth";
-import prisma from "../../../../../lib/prisma.client";
+import { auth } from "../../../../../../auth";
+import prisma from "../../../../../../lib/prisma.client";
 
 export async function POST(
   _: NextRequest,
@@ -10,26 +10,27 @@ export async function POST(
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id } = await params;
   const userId = session.user.id as string;
+  const { id } = await params;
   const role = (session.user as any).role;
 
   const material = await prisma.studyMaterial.findUnique({
     where: { id, type: "PYQ" },
     select: { fileUrl: true, title: true, requiredTier: true },
   });
-
   if (!material) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Admins always have access
-  if (["ADMIN", "SUPER_ADMIN"].includes(role)) {
-    const pdfUrl = (material.fileUrl ?? "").replace("/image/upload/", "/raw/upload/");
-    return NextResponse.json({ url: pdfUrl });
-  }
+  // Admins always can download
+  if (!["ADMIN", "SUPER_ADMIN"].includes(role)) {
+    // Map Role enum to a tier level since User has no separate tier field
+    const ROLE_TIER: Record<string, number> = { STUDENT: 0, PREMIUM_STUDENT: 1, ADMIN: 2, SUPER_ADMIN: 2 };
+    const MATERIAL_TIER: Record<string, number> = { NORMAL: 0, PREMIUM: 1, SUPER_PREMIUM: 2 };
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    const hasDirectAccess =
+      (ROLE_TIER[user?.role ?? "STUDENT"] ?? 0) >= (MATERIAL_TIER[material.requiredTier] ?? 0);
 
-  // If material requires premium, check active enrollment
-  if (material.requiredTier !== "NORMAL") {
-    const enrollment = await prisma.enrollment.findFirst({
+    // Check batch enrollment
+    const batchAccess = await prisma.enrollment.findFirst({
       where: {
         userId,
         status: "ACTIVE",
@@ -40,7 +41,7 @@ export async function POST(
       },
     });
 
-    if (!enrollment)
+    if (!hasDirectAccess && !batchAccess)
       return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
   }
 
@@ -49,6 +50,5 @@ export async function POST(
     data: { downloads: { increment: 1 } },
   });
 
-  const pdfUrl = (material.fileUrl ?? "").replace("/image/upload/", "/raw/upload/");
-  return NextResponse.json({ url: pdfUrl });
+  return NextResponse.json({ url: material.fileUrl });
 }

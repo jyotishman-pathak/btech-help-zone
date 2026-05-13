@@ -4,29 +4,25 @@ import prisma from "../../../../lib/prisma.client";
 
 type AttemptItem = { score: number };
 
-type UserWithIncludes = Awaited<ReturnType<typeof prisma.user.findMany<{
-  include: {
-    mockTestAttempts: { where: { status: "SUBMITTED" }; select: { score: true } };
-    subscription: { select: { tier: true; status: true; expiresAt: true } };
-  };
-}>>>[number];
-
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN")
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const tier = searchParams.get("tier");
   const search = searchParams.get("search") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = 20;
 
   const where = {
     role: "STUDENT" as const,
-    ...(tier ? { tier: tier as any } : {}),
     ...(search
-      ? { OR: [{ name: { contains: search, mode: "insensitive" as const } }, { email: { contains: search, mode: "insensitive" as const } }] }
+      ? {
+        OR: [
+          { name: { contains: search, mode: "insensitive" as const } },
+          { email: { contains: search, mode: "insensitive" as const } },
+        ],
+      }
       : {}),
   };
 
@@ -44,22 +40,24 @@ export async function GET(req: NextRequest) {
     prisma.user.count({ where }),
   ]);
 
-  const mapped = users.map((u: UserWithIncludes) => {
+  const mapped = users.map((u) => {
     const attempts = u.mockTestAttempts as AttemptItem[];
     return {
       id: u.id,
       name: u.name,
       email: u.email,
       image: u.image,
-      tier: u.tier,
       role: u.role,
       suspended: u.suspended,
       createdAt: u.createdAt.toISOString(),
       mocksTaken: attempts.length,
       avgScore: attempts.length
-        ? Math.round(attempts.reduce((s: number, a: AttemptItem) => s + a.score, 0) / attempts.length)
+        ? Math.round(
+          attempts.reduce((s: number, a: AttemptItem) => s + a.score, 0) /
+          attempts.length
+        )
         : 0,
-      subscription: u.subscription,
+      subscription: u.subscription, // has tier, status, expiresAt from Subscription model
     };
   });
 

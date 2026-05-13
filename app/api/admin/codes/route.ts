@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
 
-
 export async function GET() {
   const session = await auth();
   if (session?.user?.role !== "ADMIN")
@@ -13,15 +12,17 @@ export async function GET() {
     orderBy: { id: "desc" },
   });
 
-  return NextResponse.json(tests.map((t: (typeof tests)[number]) => ({
-    id: t.id,
-    accessCode: t.accessCode,
-    title: t.title,
-    isActive: t.isActive,
-    requiredTier: t.requiredTier,
-    duration: t.duration,
-    totalMarks: t.totalMarks,
-    questionsCount: t._count.questions,
-    attemptsCount: t._count.attempts,
-  })));
+  return NextResponse.json(
+    tests.map((t) => ({
+      id: t.id,
+      accessCode: t.accessCode,
+      title: t.title,
+      isActive: t.isActive,
+      // requiredTier: t.requiredTier,   ← removed (not in schema)
+      duration: t.duration,
+      totalMarks: t.totalMarks,
+      questionsCount: t._count.questions,
+      attemptsCount: t._count.attempts,
+    }))
+  );
 }

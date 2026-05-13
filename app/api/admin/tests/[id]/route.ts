@@ -1,72 +1,70 @@
+// app/api/admin/tests/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../../lib/prisma.client";
 import { auth } from "../../../../../auth";
+import prisma from "../../../../../lib/prisma.client";
 
 export async function GET(
   _: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
-
-  if (session?.user?.role !== "ADMIN") {
+  if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   const { id } = await params;
+  const userId = session.user.id as string;
+  const role = (session.user as any).role;
 
-  const test = await prisma.mockTest.findUnique({
-    where: { id },
-    include: {
-      questions: { orderBy: { order: "asc" } },
-      subject: true,
-    },
-  });
-
-  if (!test) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // Admins always have access
+  if (["ADMIN", "SUPER_ADMIN"].includes(role)) {
+    const test = await prisma.mockTest.findUnique({
+      where: { id },
+      include: { questions: { orderBy: { order: "asc" } } },
+    });
+    if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const safeQuestions = test.questions.map(({ correctIndex: _ci, ...q }) => q);
+    return NextResponse.json({ ...test, questions: safeQuestions });
   }
 
-  return NextResponse.json(test);
-}
+  const [test, batchAccess, submittedCount] = await Promise.all([
+    prisma.mockTest.findUnique({
+      where: { id, isActive: true },
+      include: { questions: { orderBy: { order: "asc" } } },
+    }),
+    // Check if user is enrolled in any batch that contains this test
+    prisma.enrollment.findFirst({
+      where: {
+        userId,
+        status: "ACTIVE",
+        batch: {
+          deletedAt: null,
+          tests: { some: { testId: id } },
+        },
+      },
+    }),
+    // Legacy tier-based count (keep for backward compat)
+    prisma.mockTestAttempt.count({ where: { userId, status: "SUBMITTED" } }),
+  ]);
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
+  if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Access granted if: enrolled in a batch that has this test
+  if (batchAccess) {
+    const safeQuestions = test.questions.map(({ correctIndex: _ci, ...q }) => q);
+    return NextResponse.json({ ...test, questions: safeQuestions });
   }
 
-  const { id } = await params;
-  const body = await req.json();
-
-  const test = await prisma.mockTest.update({
-    where: { id },
-    data: {
-      title: body.title,
-      isActive: body.isActive,
-      requiredTier: body.requiredTier,
-    },
-  });
-
-  return NextResponse.json(test);
-}
-
-export async function DELETE(
-  _: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth();
-
-  if (session?.user?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Legacy: free tier (STUDENT role) gets 1 test
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (user?.role === "STUDENT") {
+    const alreadyAttemptedThis = await prisma.mockTestAttempt.findFirst({
+      where: { userId, testId: id },
+    });
+    if (!alreadyAttemptedThis && submittedCount >= 1)
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
   }
 
-  const { id } = await params;
-
-  await prisma.mockTest.delete({ where: { id } });
-
-  return NextResponse.json({ success: true });
+  const safeQuestions = test.questions.map(({ correctIndex: _ci, ...q }) => q);
+  return NextResponse.json({ ...test, questions: safeQuestions });
 }

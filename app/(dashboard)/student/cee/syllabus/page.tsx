@@ -1,6 +1,6 @@
-import { auth } from "../../../../auth";
+import { auth } from "../../../../../auth";
 import { redirect } from "next/navigation";
-import { StaticSyllabus } from "../../../../components/dashboard/static-syllabus";
+import { StaticSyllabus } from "../../../../../components/dashboard/static-syllabus";
 
 export const metadata = {
   title: "Syllabus | CEE HelpZone",

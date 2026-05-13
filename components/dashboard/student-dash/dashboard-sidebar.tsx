@@ -39,45 +39,45 @@ const NAV_ITEMS = [
   },
   {
     title: "Syllabus",
-    href: "/cee/syllabus",
+    href: "/student/cee/syllabus",
     icon: BookOpen,
     badge: null,
   },
   {
     title: "Mock Tests",
-    href: "/cee/mock",
+    href: "/student/cee/mock",
     icon: Zap,
     badge: "New",
   },
   {
     title: "PYQ Bank",
-    href: "/cee/pyq",
+    href: "/student/cee/pyq",
     icon: Target,
     badge: null,
   },
   {
     title: "Analytics",
-    href: "/cee/analytics",
+    href: "/student/cee/analytics",
     icon: BrainCircuit,
     badge: "Pro",
     proOnly: true,
   },
   {
     title: "Leaderboard",
-    href: "/cee/leaderboard",
+    href: "/student/cee/leaderboard",
     icon: Trophy,
     badge: null,
   },
   
   {
     title: "My Batches",
-    href: "/batches",
+    href: "/student/batches",
     icon: Layers,
     badge: null,
   },
   {
     title: "College Predictor",
-    href: "/cee/colleges",
+    href: "/student/cee/colleges",
     icon: GraduationCap,
     badge: "Pro",
     proOnly: true,
@@ -85,8 +85,8 @@ const NAV_ITEMS = [
 ];
 
 const BOTTOM_ITEMS = [
-  { title: "Settings", href: "/cee/settings", icon: Settings },
-  { title: "Help & Support", href: "/cee/support", icon: HelpCircle },
+  { title: "Settings", href: "/student/cee/settings", icon: Settings },
+  { title: "Help & Support", href: "/student/cee/support", icon: HelpCircle },
 ];
 
 export function DashboardSidebar({

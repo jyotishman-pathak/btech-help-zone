@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Plus,
   Trash2,
@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Loader2,
   Check,
+  BookOpen,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -28,6 +29,7 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 import { uploadToCloudinary } from "../../lib/cloudinary-upload";
+
 
 interface QuestionDraft {
   id: string;
@@ -74,9 +76,18 @@ export function AdminTestCreator() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [availableBatches, setAvailableBatches] = useState<{ id: string; name: string; type: string }[]>([]);
+  const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/admin/batches")
+      .then((r) => r.json())
+      .then((data) => setAvailableBatches(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   const updateQ = (id: string, patch: Partial<QuestionDraft>) =>
     setQuestions((qs) =>
@@ -102,21 +113,20 @@ export function AdminTestCreator() {
       })
     );
 
-  // ✅ Updated Cloudinary upload function
- const handleImage = async (qid: string, file: File) => {
-  updateQ(qid, { uploading: true } as any);
-  try {
-    const { url } = await uploadToCloudinary(file, {
-      folder: "cee/questions",
-      resourceType: "image",
-    });
-    updateQ(qid, { imageUrl: url, uploading: false } as any);
-  } catch (err) {
-    console.error("Image upload failed:", err);
-    setError("Image upload failed. Check your internet connection.");
-    updateQ(qid, { uploading: false } as any);
-  }
-};
+  const handleImage = async (qid: string, file: File) => {
+    updateQ(qid, { uploading: true } as any);
+    try {
+      const { url } = await uploadToCloudinary(file, {
+        folder: "cee/questions",
+        resourceType: "image",
+      });
+      updateQ(qid, { imageUrl: url, uploading: false } as any);
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      setError("Image upload failed. Check your internet connection.");
+      updateQ(qid, { uploading: false } as any);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim()) return setError("Test title is required");
@@ -142,13 +152,12 @@ export function AdminTestCreator() {
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           title,
           duration,
           requiredTier,
           examType,
-
+          batchIds: selectedBatchIds,
           questions: questions.map(
             ({ id, expanded, uploading, ...q }) => q
           ),
@@ -400,7 +409,7 @@ export function AdminTestCreator() {
                   </div>
                 </div>
 
-                {/* ✅ Updated Image Upload */}
+                {/* Image Upload */}
                 <div className="space-y-1">
                   <Label className="text-xs">
                     Question Image (optional)
@@ -539,12 +548,127 @@ export function AdminTestCreator() {
         </Button>
       </div>
 
+      {/* Batch Assignment */}
+      <Card className="border-slate-200/70 dark:border-slate-700/50">
+        <CardHeader>
+          <CardTitle className="text-lg">Assign to Batches</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {availableBatches.length === 0 ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No batches available
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {availableBatches.map((batch) => {
+                const isSelected = selectedBatchIds.includes(batch.id);
+                return (
+                  <button
+                    key={batch.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedBatchIds((prev) =>
+                        isSelected
+                          ? prev.filter((id) => id !== batch.id)
+                          : [...prev, batch.id]
+                      );
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-sm font-medium border transition",
+                      isSelected
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                        : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+                    )}
+                  >
+                    {batch.name}
+                    <span className="ml-1.5 text-xs opacity-70">
+                      ({batch.type})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {selectedBatchIds.length > 0 && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+              {selectedBatchIds.length} batch{selectedBatchIds.length > 1 ? "es" : ""} selected
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Error */}
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
           {error}
         </p>
       )}
+
+{/* Batch Assignment */}
+<Card className="border-zinc-200 dark:border-zinc-800">
+  <CardHeader>
+    <div className="flex items-center justify-between">
+      <CardTitle className="text-base flex items-center gap-2">
+        <BookOpen className="w-4 h-4 text-zinc-500" />
+        Assign to Batches
+      </CardTitle>
+      <span className="text-xs text-zinc-500">
+        {selectedBatchIds.length} selected
+      </span>
+    </div>
+    <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">
+      Students enrolled in selected batches will see this test.
+    </p>
+  </CardHeader>
+  <CardContent>
+    {availableBatches.length === 0 ? (
+      <p className="text-sm text-zinc-400 dark:text-zinc-600 italic">
+        No batches created yet.{" "}
+        <a href="/admin/batches/new" className="underline text-zinc-600 dark:text-zinc-300">
+          Create one first.
+        </a>
+      </p>
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {availableBatches.map((batch) => {
+          const isSelected = selectedBatchIds.includes(batch.id);
+          return (
+            <button
+              key={batch.id}
+              type="button"
+              onClick={() =>
+                setSelectedBatchIds((prev) =>
+                  isSelected ? prev.filter((id) => id !== batch.id) : [...prev, batch.id]
+                )
+              }
+              className={cn(
+                "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                isSelected
+                  ? "border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-800"
+                  : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+              )}
+            >
+              <div className={cn(
+                "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
+                isSelected
+                  ? "border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100"
+                  : "border-zinc-300 dark:border-zinc-700"
+              )}>
+                {isSelected && <Check className="w-3 h-3 text-white dark:text-zinc-900" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                  {batch.name}
+                </p>
+                <p className="text-xs text-zinc-500">{batch.type.replace("_", " ")}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    )}
+  </CardContent>
+</Card>
 
       {/* Submit */}
       <Button

@@ -50,6 +50,7 @@ enum ExamType {
 }
 
 // ─── Auth (keep as-is) ────────────────────────────────────────────────────────
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -59,24 +60,21 @@ model User {
   emailVerified DateTime?
   image         String?
   suspended     Boolean   @default(false)
-  deletedAt     DateTime?
+  deletedAt     DateTime? // soft delete
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-tier  String @default("NORMAL")
+
   accounts         Account[]
   sessions         Session[]
   enrollments      Enrollment[]
   mockTestAttempts MockTestAttempt[]
   payments         Payment[]
-
-  topicProgress UserTopicProgress[]
-
-  notifications   Notification[]
-  auditLogs       AuditLog[]       @relation("AuditActor")
-  certificates    Certificate[]
-  leadSubmissions LeadSubmission[]
-
-  subscription Subscription?
+  notifications    Notification[]
+  auditLogs        AuditLog[]          @relation("AuditActor")
+  certificates     Certificate[]
+  leadSubmissions  LeadSubmission[]
+  topicProgress    UserTopicProgress[] // ← ADD THIS
+  subscription     Subscription?
 
   @@index([email])
   @@index([role])
@@ -149,17 +147,16 @@ model Subject {
   id         String  @id @default(cuid())
   name       String
   code       String?
-  category   String // "CORE" | "ELECTIVE" | "LAB"
+  category   String
   weightage  Int     @default(0)
   branchId   String?
   semesterId Int?
 
-  branch   Branch?         @relation(fields: [branchId], references: [id])
-  semester Semester?       @relation(fields: [semesterId], references: [id])
-  topics   Topic[]
-  notes    StudyMaterial[] @relation("SubjectNotes")
-  pyqs     StudyMaterial[] @relation("SubjectPYQs")
-  tests    MockTest[]
+  branch    Branch?         @relation(fields: [branchId], references: [id])
+  semester  Semester?       @relation(fields: [semesterId], references: [id])
+  topics    Topic[]
+  materials StudyMaterial[] // ← REPLACED notes + pyqs
+  tests     MockTest[]
 
   @@index([branchId])
 }
@@ -217,7 +214,6 @@ model Batch {
   enrollments Enrollment[]
   leadForm    LeadForm?
   coupons     Coupon[]
-  payments    Payment[]
 
   @@index([slug])
   @@index([isActive, isPublished])
@@ -327,27 +323,21 @@ model LeadSubmission {
 // ─── Content ──────────────────────────────────────────────────────────────────
 
 model StudyMaterial {
-  id      String      @id @default(cuid())
-  title   String
-  type    ContentType
-  fileUrl String
-
-  noteSubjectId String?
-  pyqSubjectId  String?
-
+  id           String      @id @default(cuid())
+  title        String
+  type         ContentType
+  fileUrl      String
+  subjectId    String?
   year         Int?
-  requiredTier String @default("NORMAL")
-  downloads    Int    @default(0)
+  requiredTier String      @default("NORMAL")
+  downloads    Int         @default(0)
   uploadedBy   String
-  status       String @default("published")
+  status       String      @default("published")
+  deletedAt    DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  noteSubject Subject? @relation("SubjectNotes", fields: [noteSubjectId], references: [id])
-  pyqSubject  Subject? @relation("SubjectPYQs", fields: [pyqSubjectId], references: [id])
-
+  subject   Subject?    @relation(fields: [subjectId], references: [id]) // ← REMOVED "SubjectNotes"
   batchNote BatchNote[]
   batchPYQ  BatchPYQ[]
 
@@ -368,8 +358,9 @@ model MockTest {
   accessCode  String    @unique
   isActive    Boolean   @default(false)
   totalMarks  Int
-  scheduledAt DateTime? // for scheduled tests ← NEW
-  endsAt      DateTime? // ← NEW
+  requiredTier String   @default("NORMAL")   // ✅ ADD THIS
+  scheduledAt DateTime?
+  endsAt      DateTime?
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
 
@@ -418,38 +409,28 @@ model MockTestAttempt {
 // ─── Payments ─────────────────────────────────────────────────────────────────
 
 model Payment {
-  id           String  @id @default(cuid())
-  userId       String
-  batchId      String?
-  enrollmentId String? @unique
-
-  amount   Int
-  currency String        @default("INR")
-  status   PaymentStatus @default(PENDING)
-
-  razorpayOrderId   String? @unique
+  id                String        @id @default(cuid())
+  userId            String
+  batchId           String?
+  enrollmentId      String?       @unique
+  amount            Int // paise
+  currency          String        @default("INR")
+  status            PaymentStatus @default(PENDING)
+  razorpayOrderId   String?       @unique
   razorpayPaymentId String?
   razorpaySignature String?
+  couponId          String?
+  discountAmount    Int?
+  invoiceUrl        String?
+  refundId          String?
+  refundedAt        DateTime?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  couponId       String?
-  discountAmount Int?
-
-  invoiceUrl String?
-  refundId   String?
-  refundedAt DateTime?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id])
-
-  batch Batch? @relation(fields: [batchId], references: [id])
-
+  user       User        @relation(fields: [userId], references: [id])
   enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
-
-  coupon Coupon? @relation(fields: [couponId], references: [id])
+  coupon     Coupon?     @relation(fields: [couponId], references: [id])
 
   @@index([userId])
   @@index([status])

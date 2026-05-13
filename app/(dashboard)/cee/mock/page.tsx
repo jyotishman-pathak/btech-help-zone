@@ -2,8 +2,10 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Timer, Lock, ChevronRight, Trophy, Sparkles, Clock, Target } from "lucide-react";
-import { auth } from "../../../../auth";
+
+import { Role } from "@prisma/client";  // if you need the enum for typing
 import prisma from "../../../../lib/prisma.client";
+import { auth } from "../../../../auth";
 
 type MockTestWithCount = Awaited<ReturnType<typeof prisma.mockTest.findMany<{
   include: { _count: { select: { questions: true } } }
@@ -23,14 +25,16 @@ export default async function MockListPage() {
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { tier: true, name: true },
+      select: { role: true, name: true },   // ✅ changed tier → role
     }),
     prisma.mockTestAttempt.count({
       where: { userId, status: "SUBMITTED" },
     }),
   ]);
 
-  const freeTestUsed = user?.tier === "NORMAL" && submittedCount > 0;
+  // Map new roles to old tier logic:
+  // STUDENT = free tier, PREMIUM_STUDENT = premium
+  const freeTestUsed = user?.role === "STUDENT" && submittedCount > 0;
 
   return (
     <div className="min-h-screen bg-[#F7F5FF] dark:bg-[#0D0B1A] p-4 md:p-8">
@@ -71,7 +75,7 @@ export default async function MockListPage() {
         </div>
 
         {/* Tier notice */}
-        {user?.tier === "NORMAL" && (
+        {user?.role === "STUDENT" && (   // ✅ was user?.tier === "NORMAL"
           <div className="flex items-center gap-4 px-5 py-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800/50">
             <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -79,7 +83,7 @@ export default async function MockListPage() {
             <p className="text-sm text-amber-800 dark:text-amber-300 flex-1 font-medium">
               {freeTestUsed
                 ? "You've used your free test. Upgrade to Premium for unlimited access."
-                : `You have 1 free test remaining, ${user.name?.split(" ")[0] ?? "student"}.`}
+                : `You have 1 free test remaining, ${user?.name?.split(" ")[0] ?? "student"}.`}
             </p>
             {freeTestUsed && (
               <Link
@@ -103,7 +107,7 @@ export default async function MockListPage() {
           )}
 
           {tests.map((t: MockTestWithCount, idx: number) => {
-            const isLocked = user?.tier === "NORMAL" && freeTestUsed;
+            const isLocked = user?.role === "STUDENT" && freeTestUsed;   // ✅ was user?.tier === "NORMAL"
 
             return (
               <div

@@ -1,36 +1,85 @@
-import { testCreationSchema } from "../../../../lib/validations";
+// app/api/admin/tests/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
 
+type Session = {
+  user?: {
+    role?: string;
+    id?: string;
+  };
+};
+
+function isAdmin(session: Session | null) {
+  return (
+    session?.user?.role &&
+    ["ADMIN", "SUPER_ADMIN"].includes(session.user.role)
+  );
+}
 
 export async function GET() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN")
+  const session = (await auth()) as Session | null;
+
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const tests = await prisma.mockTest.findMany({
-    include: { _count: { select: { questions: true, attempts: true } }, subject: true },
+    where: { deletedAt: null },
+    include: {
+      _count: { select: { questions: true, attempts: true } },
+      subject: true,
+      batchTests: {
+        include: {
+          batch: { select: { id: true, name: true } },
+        },
+      },
+    },
     orderBy: { id: "desc" },
   });
+
   return NextResponse.json(tests);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN")
+  const session = (await auth()) as Session | null;
+
+  if (!isAdmin(session)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const body = await req.json();
-  const { title, description, subjectId, examType, duration, requiredTier, questions } = body;
+  const {
+    title,
+    description,
+    subjectId,
+    examType,
+    duration,
+    requiredTier,
+    questions,
+    batchIds = [],
+  } = body;
 
-  if (!questions?.length)
-    return NextResponse.json({ error: "At least one question required" }, { status: 400 });
+  if (!questions?.length) {
+    return NextResponse.json(
+      { error: "At least one question required" },
+      { status: 400 }
+    );
+  }
 
-  const accessCode = Math.random().toString(36).slice(2, 8).toUpperCase();
-  const totalMarks = questions.reduce((s: number, q: any) => s + (q.marks ?? 4), 0);
+  const accessCode = Math.random()
+    .toString(36)
+    .slice(2, 8)
+    .toUpperCase();
 
-  const test = await prisma.mockTest.create({
+  const totalMarks = questions.reduce(
+    (s: number, q: any) => s + (q.marks ?? 4),
+    0
+  );
+
+  // ⚡ IMPORTANT: transaction only for atomic DB ops (no heavy logic inside)
+  const newTest = await prisma.mockTest.create({
     data: {
       title,
       description,
@@ -59,5 +108,17 @@ export async function POST(req: NextRequest) {
     include: { questions: true },
   });
 
-  return NextResponse.json(test, { status: 201 });
+  // separate step = avoids transaction timeout (P2028 fix)
+  if (batchIds.length > 0) {
+    await prisma.batchTest.createMany({
+      data: batchIds.map((batchId: string, index: number) => ({
+        batchId,
+        testId: newTest.id,
+        order: index,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  return NextResponse.json(newTest, { status: 201 });
 }

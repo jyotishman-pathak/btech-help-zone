@@ -75,17 +75,17 @@ export interface DashboardData {
 // ─── Static mappings (icons can't be serialized from server) ─────────────────
 
 const SUBJECT_META: Record<string, { icon: React.ElementType; color: string; light: string }> = {
-  Physics:     { icon: Atom,       color: "text-slate-700 dark:text-slate-300", light: "bg-slate-100 dark:bg-slate-800" },
-  Chemistry:   { icon: Microscope, color: "text-slate-700 dark:text-slate-300", light: "bg-slate-100 dark:bg-slate-800" },
+  Physics: { icon: Atom, color: "text-slate-700 dark:text-slate-300", light: "bg-slate-100 dark:bg-slate-800" },
+  Chemistry: { icon: Microscope, color: "text-slate-700 dark:text-slate-300", light: "bg-slate-100 dark:bg-slate-800" },
   Mathematics: { icon: Calculator, color: "text-slate-700 dark:text-slate-300", light: "bg-slate-100 dark:bg-slate-800" },
 };
 
 const FALLBACK_META = { icon: BookOpen, color: "text-slate-700 dark:text-slate-300", light: "bg-slate-100 dark:bg-slate-800" };
 
 const BADGE_ICONS: Record<string, React.ElementType> = {
-  streak:     Flame,
-  rank:       Trophy,
-  veteran:    Star,
+  streak: Flame,
+  rank: Trophy,
+  veteran: Star,
   firstblood: Zap,
 };
 
@@ -171,7 +171,7 @@ function TierGate({ tier, required, fallback = "blur", children, upsellTitle, up
         <Lock className="w-8 h-8 mx-auto text-slate-400 mb-3" />
         <h4 className="font-semibold text-slate-900 dark:text-slate-100">{upsellTitle ?? "Premium Feature"}</h4>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{upsellDescription ?? "Upgrade to unlock."}</p>
-        <Link href="/student/pricing">
+        <Link href="/pricing">
           <Button size="sm" className="mt-4 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900">
             Upgrade to {required}
           </Button>
@@ -254,8 +254,8 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
   const hasAttempts = totalAttempts > 0;
 
   return (
-<div className="bg-[#F7F5FF] dark:bg-[#0D0B1A] pb-12">      
-  <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02]"
+    <div className="bg-[#F7F5FF] dark:bg-[#0D0B1A] pb-12">
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02]"
         style={{ backgroundImage: "radial-gradient(#808080 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
 
       <div className="container mx-auto p-4 md:p-6 max-w-7xl relative">
@@ -398,12 +398,12 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                       No subjects added yet. Ask your admin to set up the syllabus.
                     </div>
                   ) : (
-                  subjects.map((sub, index) => (
-  <SubjectCard
-    key={`${sub.name || "subject"}-${index}`}
-    sub={sub}
-  />
-))
+                    subjects.map((sub, index) => (
+                      <SubjectCard
+                        key={`${sub.name || "subject"}-${index}`}
+                        sub={sub}
+                      />
+                    ))
                   )}
                 </div>
 
@@ -425,7 +425,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                     {recentTests.length === 0 ? (
                       <div className="text-center py-8 space-y-3">
                         <p className="text-slate-500 dark:text-slate-400 text-sm">No tests taken yet.</p>
-                        <Link href="/cee/mock">
+                        <Link href="student/cee/mock">
                           <Button className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900">
                             <Zap className="w-4 h-4 mr-2" /> Take Your First Mock
                           </Button>

@@ -6,7 +6,7 @@ import {
   BookOpen, Download, Lock, Search, Loader2,
   FileText, Atom, Microscope, Calculator, Filter, ChevronDown
 } from "lucide-react";
-import { cn } from "../../../../lib/utils";
+import { cn } from "../../../../../lib/utils";
 
 interface PYQ {
   id: string;

@@ -1,3 +1,5 @@
+// app/api/tests/route.ts
+
 import { NextResponse } from "next/server";
 import { auth } from "../../../auth";
 import prisma from "../../../lib/prisma.client";
@@ -23,7 +25,7 @@ export async function GET() {
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { tier: true },
+      select: { role: true },
     }),
     prisma.mockTestAttempt.count({
       where: { userId, status: "SUBMITTED" },
@@ -31,16 +33,16 @@ export async function GET() {
   ]);
 
   const tests = rawTests as unknown as MockTest[];
-  const freeTestUsed = user?.tier === "NORMAL" && attemptCount > 0;
+  const isStudent = user?.role === "STUDENT";
+  const freeTestUsed = isStudent && attemptCount > 0;
 
   const enriched = tests.map((t: MockTest, idx: number) => ({
     ...t,
-    locked:
-      user?.tier === "NORMAL" && t.requiredTier !== "NORMAL"
-        ? true
-        : user?.tier === "NORMAL" && freeTestUsed && idx > 0,
-    canAttempt: user?.tier !== "NORMAL" || !freeTestUsed,
+    locked: isStudent && t.requiredTier !== "NORMAL"
+      ? true
+      : isStudent && freeTestUsed && idx > 0,
+    canAttempt: !isStudent || !freeTestUsed,
   }));
 
-  return NextResponse.json({ tests: enriched, userTier: user?.tier, freeTestUsed });
+  return NextResponse.json({ tests: enriched, userTier: user?.role, freeTestUsed });
 }

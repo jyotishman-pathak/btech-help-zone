@@ -1,10 +1,11 @@
+// app/api/tests/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
 
-
-export async function POST(
-  request: NextRequest,
+export async function GET(
+  _: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -13,97 +14,58 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = session.user.id as string;
+  const role = (session.user as any).role;
 
-  const existing = await prisma.mockTestAttempt.findFirst({
-    where: { userId, testId: id, status: "IN_PROGRESS" },
-  });
-  if (existing) return NextResponse.json(existing);
+  // Admins get full access including correctIndex
+  if (["ADMIN", "SUPER_ADMIN"].includes(role)) {
+    const test = await prisma.mockTest.findUnique({
+      where: { id },
+      include: { questions: { orderBy: { order: "asc" } } },
+    });
+    if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(test);
+  }
 
-  const attempt = await prisma.mockTestAttempt.create({
-    data: { userId, testId: id },
-  });
-  return NextResponse.json(attempt, { status: 201 });
-}
-
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const session = await auth();
-  if (!session?.user?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const userId = session.user.id as string;
-  const { attemptId, answers } = await req.json();
-
-  const attempt = await prisma.mockTestAttempt.findFirst({
-    where: { id: attemptId, userId, status: "IN_PROGRESS" },
-  });
-  if (!attempt)
-    return NextResponse.json({ error: "No active attempt" }, { status: 404 });
-
-  await prisma.mockTestAttempt.update({
-    where: { id: attemptId },
-    data: { answers: answers as any },
-  });
-  return NextResponse.json({ saved: true });
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const session = await auth();
-  if (!session?.user?.id)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const userId = session.user.id as string;
-  const { attemptId, answers } = await req.json();
-
-  const [attempt, questions] = await Promise.all([
-    prisma.mockTestAttempt.findFirst({
-      where: { id: attemptId, userId, status: "IN_PROGRESS" },
+  const [test, batchAccess, submittedCount] = await Promise.all([
+    prisma.mockTest.findUnique({
+      where: { id, isActive: true },
+      include: { questions: { orderBy: { order: "asc" } } },
     }),
-    prisma.mockTestQuestion.findMany({ where: { testId: id } }),
+    prisma.enrollment.findFirst({
+      where: {
+        userId,
+        status: "ACTIVE",
+        batch: {
+          deletedAt: null,
+          tests: { some: { testId: id } },
+        },
+      },
+    }),
+    prisma.mockTestAttempt.count({ where: { userId, status: "SUBMITTED" } }),
   ]);
 
-  if (!attempt)
-    return NextResponse.json({ error: "No active attempt" }, { status: 404 });
+  if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  let score = 0, correct = 0, wrong = 0;
-  const totalMarks = questions.reduce(
-    (s: number, q: { marks: number; [key: string]: any }) => s + q.marks,
-    0
-  );
-  const answersMap = answers as Record<string, number>;
+  // Strip correct answers before sending to client
+  const safeQuestions = test.questions.map(({ correctIndex: _ci, ...q }) => q);
+  const safeTest = { ...test, questions: safeQuestions };
 
-  questions.forEach((q: { id: string; correctIndex: number; marks: number; negativeMarks: number; [key: string]: any }) => {
-    const selected = answersMap[q.id];
-    if (selected === undefined || selected === null) return;
-    if (selected === q.correctIndex) { score += q.marks; correct++; }
-    else { score -= q.negativeMarks; wrong++; }
+  // Enrolled in a batch containing this test → full access
+  if (batchAccess) return NextResponse.json(safeTest);
+
+  // Legacy free tier: 1 free attempt total
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
   });
 
-  score = Math.max(0, score);
+  if (user?.role === "STUDENT") {
+    const alreadyAttemptedThis = await prisma.mockTestAttempt.findFirst({
+      where: { userId, testId: id },
+    });
+    if (!alreadyAttemptedThis && submittedCount >= 1)
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+  }
 
-  const updated = await prisma.mockTestAttempt.update({
-    where: { id: attemptId },
-    data: {
-      answers: answers as any,
-      score,
-      percentage: totalMarks > 0 ? (score / totalMarks) * 100 : 0,
-      status: "SUBMITTED",
-      completedAt: new Date(),
-    },
-  });
-
-  return NextResponse.json({
-    ...updated,
-    correct,
-    wrong,
-    unattempted: questions.length - correct - wrong,
-    totalMarks,
-  });
+  return NextResponse.json(safeTest);
 }

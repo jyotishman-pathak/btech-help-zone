@@ -3,7 +3,6 @@ import crypto from "crypto";
 import { auth } from "../../../../auth";
 import prisma from "../../../../lib/prisma.client";
 
-
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
@@ -24,15 +23,26 @@ export async function POST(req: NextRequest) {
 
   const payment = await prisma.payment.findFirst({
     where: { razorpayOrderId: razorpay_order_id },
-    include: { batch: true },
+    include: {
+      enrollment: {
+        include: { batch: true },
+      },
+      coupon: true,
+    },
   });
 
   if (!payment) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
 
+  const batch = payment.enrollment?.batch;
+
   await prisma.$transaction(async (tx) => {
     await tx.payment.update({
       where: { id: payment.id },
-      data: { status: "CAPTURED", razorpayPaymentId: razorpay_payment_id, razorpaySignature: razorpay_signature },
+      data: {
+        status: "CAPTURED",
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature,
+      },
     });
 
     await tx.enrollment.upsert({
@@ -42,29 +52,30 @@ export async function POST(req: NextRequest) {
         batchId: payment.batchId!,
         status: "ACTIVE",
         source: "payment",
-        expiresAt: payment.batch?.validDays
-          ? new Date(Date.now() + payment.batch.validDays * 86400000)
+        expiresAt: batch?.validDays
+          ? new Date(Date.now() + batch.validDays * 86400000)
           : null,
       },
       update: { status: "ACTIVE" },
     });
 
-    // Increment coupon usage
     if (payment.couponId) {
-      await tx.coupon.update({ where: { id: payment.couponId }, data: { used: { increment: 1 } } });
+      await tx.coupon.update({
+        where: { id: payment.couponId },
+        data: { used: { increment: 1 } },
+      });
     }
 
-    // Send notification
     await tx.notification.create({
       data: {
         userId,
-        title: `Enrolled in ${payment.batch?.name ?? "batch"}!`,
+        title: `Enrolled in ${batch?.name ?? "batch"}!`,
         body: "Your payment was successful. Start learning now.",
         type: "PAYMENT",
-        link: `/batches/${payment.batch?.slug}`,
+        link: `/batches/${batch?.slug}`,
       },
     });
   });
 
-  return NextResponse.json({ success: true, batchSlug: payment.batch?.slug });
+  return NextResponse.json({ success: true, batchSlug: batch?.slug });
 }

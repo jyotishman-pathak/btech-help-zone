@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { auth } from "../../../../auth";
-import prisma from "../../../../lib/prisma.client";
-import { LeaderboardClient } from "../../../../components/dashboard/leaderboard-client";
+import { auth } from "../../../../../auth";
+import prisma from "../../../../../lib/prisma.client";
+import { LeaderboardClient } from "../../../../../components/dashboard/leaderboard-client";
 
 export const metadata = {
   title: "Leaderboard | CEE HelpZone",

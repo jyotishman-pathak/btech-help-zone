@@ -2,55 +2,43 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Upload, FileText, Check, Loader2, X, ChevronLeft, Cloud, Sparkles } from "lucide-react";
+import { Upload, FileText, Check, Loader2, X, ChevronLeft, Cloud, Sparkles, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { uploadToCloudinary } from "../../../../lib/cloudinary-upload";
 
-interface Subject {
-  id: string;
-  name: string;
-}
-
-const SUBJECT_COLORS: Record<string, string> = {
-  Physics: "from-blue-500 to-indigo-600",
-  Chemistry: "from-violet-500 to-purple-600",
-  Mathematics: "from-emerald-500 to-teal-600",
-};
+import { Select, SelectContent, SelectItem,  SelectTrigger, SelectValue } from "../../../../components/ui/select";
+import {  Label } from "../../../../components/ui/label";
+import { Input } from "../../../../components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
+import { Badge } from "../../../../components/ui/badge";
+import { cn } from "../../../../lib/utils";
+import { Button } from "../../../../components/ui/button";
+interface Subject { id: string; name: string; }
+interface Batch { id: string; name: string; type: string; }
 
 export default function AdminPYQPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [form, setForm] = useState({
-    title: "",
-    subjectId: "",
-    year: String(new Date().getFullYear()),
-    requiredTier: "NORMAL",
+    title: "", subjectId: "", year: String(new Date().getFullYear()), requiredTier: "NORMAL",
   });
+  const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
-    const loadSubjects = async () => {
-      try {
-        setError("");
-        const res = await fetch("/api/admin/subjects");
-        if (!res.ok) {
-          const err = await res.json();
-          setError(`Error ${res.status}: ${err.error ?? "Unknown"}`);
-          return;
-        }
-        const data = await res.json();
-        setSubjects(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError("Failed to load subjects");
-      }
-    };
-    loadSubjects();
+    Promise.all([
+      fetch("/api/admin/subjects").then((r) => r.json()),
+      fetch("/api/admin/batches").then((r) => r.json()),
+    ]).then(([s, b]) => {
+      setSubjects(Array.isArray(s) ? s : []);
+      setBatches(Array.isArray(b) ? b : []);
+    });
   }, []);
 
   const handleSubmit = async () => {
@@ -65,15 +53,15 @@ export default function AdminPYQPage() {
       const { url } = await uploadToCloudinary(file, {
         folder: "cee/pyq",
         resourceType: "raw",
-        onProgress: (pct) => setUploadProgress(pct),
+        onProgress: setUploadProgress,
       });
       setUploading(false);
-
       setSaving(true);
+
       const res = await fetch("/api/admin/pyq", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, fileUrl: url }),
+        body: JSON.stringify({ ...form, fileUrl: url, batchIds: selectedBatchIds }),
       });
       setSaving(false);
 
@@ -81,231 +69,185 @@ export default function AdminPYQPage() {
         setSaved(true);
         setForm({ title: "", subjectId: "", year: String(new Date().getFullYear()), requiredTier: "NORMAL" });
         setFile(null);
+        setSelectedBatchIds([]);
         setUploadProgress(0);
         setTimeout(() => setSaved(false), 3000);
       } else {
         setError("Failed to save PYQ.");
       }
-    } catch (err) {
+    } catch {
       setError("Upload failed. Check your internet connection.");
       setUploading(false);
       setSaving(false);
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const f = e.dataTransfer.files?.[0];
-    if (f && f.type === "application/pdf") setFile(f);
-  };
-
   const isLoading = uploading || saving;
-  const selectedSubject = subjects.find((s) => s.id === form.subjectId);
-
-  const tiers = [
-    { value: "NORMAL", label: "Free", desc: "All users" },
-    { value: "PREMIUM", label: "Premium", desc: "₹499/mo" },
-    { value: "SUPER_PREMIUM", label: "Elite", desc: "₹999/mo" },
-  ];
 
   return (
-    <div className="min-h-screen bg-[#F7F5FF] dark:bg-[#0D0B1A] p-4 md:p-8">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-4 md:p-8">
       <div className="max-w-2xl mx-auto space-y-6">
-
-        {/* Header */}
         <div className="flex items-center gap-3">
           <Link href="/admin">
-            <button className="w-9 h-9 rounded-xl bg-white dark:bg-[#12101F] border border-slate-200/70 dark:border-slate-700/50 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-sm">
-              <ChevronLeft className="w-4 h-4 text-slate-500" />
-            </button>
+            <Button variant="ghost" size="icon"><ChevronLeft className="w-4 h-4" /></Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50">Upload PYQ</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Add a previous year question paper</p>
+            <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-50">Upload PYQ</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Add previous year question paper</p>
           </div>
         </div>
 
-        {/* Form Card */}
-        <div className="rounded-3xl bg-white dark:bg-[#12101F] border border-slate-200/70 dark:border-slate-700/50 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center">
-              <FileText className="w-4 h-4 text-white" />
+        {/* Paper Details */}
+        <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          <CardHeader><CardTitle className="text-base">Paper Details</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Title *</Label>
+              <Input placeholder="Assam CEE Physics 2024 Solved" value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })} />
             </div>
-            <p className="font-bold text-slate-900 dark:text-slate-100">Paper Details</p>
-          </div>
-
-          <div className="p-6 space-y-6">
-
-            {/* Title */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Title <span className="text-red-400">*</span></label>
-              <input
-                placeholder="e.g., Assam CEE Physics 2024 Solved"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 dark:focus:border-indigo-600 transition font-medium"
-              />
-            </div>
-
-            {/* Subject */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Subject <span className="text-red-400">*</span></label>
-              <div className="flex flex-wrap gap-2">
-                {subjects.length > 0 ? (
-                  subjects.map((s) => {
-                    const isSelected = form.subjectId === s.id;
-                    const gradient = SUBJECT_COLORS[s.name] ?? "from-slate-500 to-slate-600";
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setForm((prev) => ({ ...prev, subjectId: s.id }))}
-                        className={`px-5 py-2.5 rounded-2xl text-sm font-bold transition-all border ${isSelected
-                            ? `bg-gradient-to-r ${gradient} text-white border-transparent shadow-md`
-                            : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700"
-                          }`}
-                      >
-                        {s.name}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Loading subjects…
-                  </div>
-                )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Subject *</Label>
+                <Select value={form.subjectId} onValueChange={(v) => setForm({ ...form, subjectId: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Exam Year</Label>
+                <Input type="number" min="2000" max="2030" value={form.year}
+                  onChange={(e) => setForm({ ...form, year: e.target.value })} />
               </div>
             </div>
-
-            {/* Year + Tier row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Exam Year</label>
-                <input
-                  type="number"
-                  min="2000"
-                  max="2030"
-                  value={form.year}
-                  onChange={(e) => setForm({ ...form, year: e.target.value })}
-                  className="w-full h-11 px-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 dark:focus:border-indigo-600 transition font-bold"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Access Tier</label>
-                <div className="flex gap-2">
-                  {tiers.map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => setForm({ ...form, requiredTier: t.value })}
-                      className={`flex-1 py-2 rounded-2xl text-xs font-bold transition-all border ${form.requiredTier === t.value
-                          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-transparent shadow-md"
-                          : "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700"
-                        }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="space-y-1.5">
+              <Label>Access Tier</Label>
+              <Select value={form.requiredTier} onValueChange={(v) => setForm({ ...form, requiredTier: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NORMAL">Free for all</SelectItem>
+                  <SelectItem value="PREMIUM">Premium required</SelectItem>
+                  <SelectItem value="SUPER_PREMIUM">Elite required</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* PDF Upload */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300">PDF File <span className="text-red-400">*</span></label>
+            <div className="space-y-1.5">
+              <Label>PDF File *</Label>
               {file ? (
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700/40">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5 text-white" />
-                  </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                  <FileText className="w-5 h-5 text-zinc-500 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{file.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {(file.size / 1024 / 1024).toFixed(1)} MB · PDF
-                    </p>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{file.name}</p>
+                    <p className="text-xs text-zinc-500">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setFile(null)}
-                    className="w-8 h-8 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-500 hover:bg-red-200 dark:hover:bg-red-900/50 transition"
-                  >
+                  <button onClick={() => setFile(null)} className="p-1 rounded text-zinc-400 hover:text-red-500">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={handleDrop}
-                  className={`w-full flex flex-col items-center gap-3 p-10 rounded-2xl border-2 border-dashed transition-all ${dragOver
-                      ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20"
-                      : "border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700 bg-slate-50 dark:bg-slate-900/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10"
-                    }`}
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-900/40 dark:to-violet-900/40 flex items-center justify-center">
-                    <Cloud className="w-6 h-6 text-indigo-500 dark:text-indigo-400" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-bold text-slate-700 dark:text-slate-300">Click to upload or drag & drop</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">PDF only · Max 20 MB</p>
-                  </div>
+                <button onClick={() => fileRef.current?.click()}
+                  className="w-full flex flex-col items-center gap-2 p-8 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 transition text-zinc-500">
+                  <Upload className="w-8 h-8" />
+                  <span className="text-sm font-medium">Click to upload PDF</span>
+                  <span className="text-xs text-zinc-400">Max 20MB</span>
                 </button>
               )}
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                ref={fileRef}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) setFile(f);
-                }}
-              />
+              <input type="file" accept="application/pdf" className="hidden" ref={fileRef}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }} />
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Error */}
-            {error && (
-              <div className="px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50">
-                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{error}</p>
-              </div>
-            )}
-
-            {/* Upload progress */}
-            {uploading && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
-                  <span>Uploading to Cloudinary…</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full h-12 rounded-2xl font-bold text-sm text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-indigo-200/50 dark:shadow-indigo-900/30 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
-            >
-              {saving ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Saving…</>
-              ) : saved ? (
-                <><Check className="w-4 h-4" /> Published successfully!</>
-              ) : (
-                <><Upload className="w-4 h-4" /> Upload PYQ</>
+        {/* Batch Assignment */}
+        <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-zinc-500" /> Assign to Batches
+              </CardTitle>
+              {selectedBatchIds.length > 0 && (
+                <Badge variant="secondary" className="bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                  {selectedBatchIds.length} selected
+                </Badge>
               )}
-            </button>
-          </div>
-        </div>
+            </div>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">
+              Students enrolled in selected batches can access this PYQ.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {batches.length === 0 ? (
+              <p className="text-sm text-zinc-400 italic">
+                No batches yet.{" "}
+                <Link href="/admin/batches/new" className="underline text-zinc-600 dark:text-zinc-300">
+                  Create one first.
+                </Link>
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {batches.map((batch) => {
+                  const isSelected = selectedBatchIds.includes(batch.id);
+                  return (
+                    <button
+                      key={batch.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedBatchIds((prev) =>
+                          isSelected ? prev.filter((id) => id !== batch.id) : [...prev, batch.id]
+                        )
+                      }
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                        isSelected
+                          ? "border-zinc-900 dark:border-zinc-100 bg-zinc-50 dark:bg-zinc-800"
+                          : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0",
+                        isSelected
+                          ? "border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-100"
+                          : "border-zinc-300 dark:border-zinc-700"
+                      )}>
+                        {isSelected && <Check className="w-3 h-3 text-white dark:text-zinc-900" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{batch.name}</p>
+                        <p className="text-xs text-zinc-500">{batch.type.replace("_", " ")}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {error && (
+          <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-lg">
+            {error}
+          </p>
+        )}
+
+        <Button onClick={handleSubmit} disabled={isLoading} className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900">
+          {uploading ? (
+            <div className="w-full space-y-1">
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" /> Uploading... {uploadProgress}%
+              </div>
+            </div>
+          ) : saving ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+          ) : saved ? (
+            <><Check className="w-4 h-4 mr-2" /> Published!</>
+          ) : (
+            <><Upload className="w-4 h-4 mr-2" /> Upload PYQ</>
+          )}
+        </Button>
       </div>
     </div>
   );
