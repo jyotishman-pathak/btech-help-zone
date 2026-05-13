@@ -37,17 +37,24 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      if (res?.ok) {
+      // NextAuth v5 beta: signIn with redirect:false returns
+      // { error: string | undefined, url: string | undefined }
+      // If there's an error field, auth failed.
+      if (res && !res.error) {
         toast.success("Login successful!", {
           id: toastId,
           description: "Redirecting to your dashboard...",
         });
         router.push("/dashboard");
+        router.refresh();
       } else {
-        setError("Invalid email or password");
+        const msg = res?.error === "CredentialsSignin"
+          ? "Invalid email or password"
+          : res?.error || "Invalid email or password";
+        setError(msg);
         toast.error("Login failed", {
           id: toastId,
-          description: "Invalid email or password. Please try again.",
+          description: msg + ". Please try again.",
         });
         setIsPending(false);
       }

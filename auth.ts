@@ -70,7 +70,6 @@ export const {
           name: user.name,
           image: user.image,
           role: user.role,
-          tier: user.tier,
         };
       },
     }),

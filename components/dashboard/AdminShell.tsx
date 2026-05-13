@@ -14,6 +14,8 @@ import {
   LayoutDashboard,
   User,
   LogOut,
+  Tag,
+  BookOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -28,9 +30,19 @@ import Link from "next/link";
 
 import { signOut, useSession } from "next-auth/react";
 
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type AdminTab = "dashboard" | "users" | "content" | "codes" | "analytics" | "settings";
+type AdminTab =
+  | "dashboard"
+  | "users"
+  | "content"
+  | "codes"
+  | "analytics"
+  | "batches"
+  | "coupons"
+  | "audit"
+  | "settings";
 type Tier = "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
 
 interface AdminUser {
@@ -340,6 +352,11 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
               { id: "content", label: "Content", icon: FileText },
               { id: "codes", label: "Mock Tests", icon: Code },
               { id: "analytics", label: "Analytics", icon: PieChart },
+
+              { id: "batches", label: "Batches", icon: BookOpen },
+              { id: "coupons", label: "Coupons", icon: Tag },
+              { id: "audit", label: "Audit Logs", icon: Shield },
+
               { id: "pyq", label: "Upload PYQ", icon: Upload, href: "/admin/pyq" },
               { id: "settings", label: "Settings", icon: Settings },
             ] as const).map((item) => {
@@ -977,6 +994,48 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
                 ) : (
                   <div className="text-center py-16 text-slate-400">No analytics data available yet.</div>
                 )}
+              </motion.div>
+            )}
+
+            {/* ── BATCHES ─────────────────────────────────────────────────── */}
+            {activeTab === "batches" && (
+              <motion.div key="batches" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">Batch Manager</h1>
+                <div className="flex items-center justify-center h-64">
+                  <Link href="/admin/batches">
+                    <Button className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900">
+                      Open Batch Manager →
+                    </Button>
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── COUPONS ─────────────────────────────────────────────────── */}
+            {activeTab === "coupons" && (
+              <motion.div key="coupons" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">Coupon Manager</h1>
+                <div className="flex items-center justify-center h-64">
+                  <Link href="/admin/coupons">
+                    <Button className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900">
+                      Open Coupon Manager →
+                    </Button>
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ── AUDIT LOGS ──────────────────────────────────────────────── */}
+            {activeTab === "audit" && (
+              <motion.div key="audit" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">Audit Logs</h1>
+                <div className="flex items-center justify-center h-64">
+                  <Link href="/admin/audit-logs">
+                    <Button className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900">
+                      Open Audit Logs →
+                    </Button>
+                  </Link>
+                </div>
               </motion.div>
             )}
 

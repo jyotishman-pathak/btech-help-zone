@@ -10,5 +10,6 @@ export const config = {
     "/dashboard/:path*",
     "/cee/:path*",
     "/admin/:path*",
+    "/super-admin/:path*",
   ],
 };

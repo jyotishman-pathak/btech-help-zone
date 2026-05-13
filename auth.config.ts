@@ -1,6 +1,10 @@
 import type { NextAuthConfig } from "next-auth";
-type Role = "STUDENT" | "ADMIN" | "PARENT";
-type SubscriptionTier = "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
+
+type Role =
+  | "STUDENT"
+  | "PREMIUM_STUDENT"
+  | "ADMIN"
+  | "SUPER_ADMIN";
 
 export const authConfig = {
   pages: {
@@ -8,32 +12,51 @@ export const authConfig = {
   },
 
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
+   authorized({ auth, request: { nextUrl } }) {
+  const isLoggedIn = !!auth?.user;
+  const role = auth?.user?.role;
 
-      const isPublic = ["/", "/login", "/register"].includes(
-        nextUrl.pathname
-      );
+  const pathname = nextUrl.pathname;
 
-      const isApiAuth =
-        nextUrl.pathname.startsWith("/api/auth");
+  const isPublic = ["/", "/login", "/register"].includes(
+    pathname
+  );
 
-      const isStatic =
-        nextUrl.pathname.startsWith("/_next") ||
-        nextUrl.pathname.includes(".");
+  const isApiAuth =
+    pathname.startsWith("/api/auth");
 
-      if (isPublic || isApiAuth || isStatic) {
-        return true;
-      }
+  const isStatic =
+    pathname.startsWith("/_next") ||
+    pathname.includes(".");
 
-      return isLoggedIn;
-    },
+  if (isPublic || isApiAuth || isStatic) {
+    return true;
+  }
 
+  // SUPER ADMIN routes
+  if (pathname.startsWith("/super-admin")) {
+    return isLoggedIn && role === "SUPER_ADMIN";
+  }
+
+  // ADMIN routes
+  if (pathname.startsWith("/admin")) {
+    return (
+      isLoggedIn &&
+      (role === "ADMIN" ||
+        role === "SUPER_ADMIN")
+    );
+  }
+
+  // Protected routes
+  return isLoggedIn;
+},
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role ?? "STUDENT";
-        token.tier = (user as any).tier ?? "NORMAL";
+
+        // tier removed
+        // access now comes from Enrollment table
       }
 
       return token;
@@ -41,9 +64,13 @@ export const authConfig = {
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.id as string) || token.sub!;
-        session.user.role = (token.role as Role) ?? "STUDENT";
-        session.user.tier = (token.tier as SubscriptionTier) ?? "NORMAL";
+        session.user.id =
+          (token.id as string) || token.sub!;
+
+        session.user.role =
+          (token.role as Role) ?? "STUDENT";
+
+        // tier removed
       }
 
       return session;

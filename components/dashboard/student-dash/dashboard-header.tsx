@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Search, Bell, Menu, Sun, Moon, Settings, User, LogOut,
+  Search, Menu, Sun, Moon, Settings, User, LogOut,
   ChevronDown, Zap, Crown
 } from "lucide-react";
+import { NotificationsBell } from "../../shared/NotificationsBell";
 import { useTheme } from "next-themes";
 
 import { Button } from "../../ui/button";
@@ -99,31 +100,7 @@ export function DashboardHeader({
           </Button>
 
           {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-zinc-950" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="py-2 px-1 space-y-1">
-                {[
-                  { title: "New Mock Test Available", desc: "CEE 2027 Pattern Test #12", time: "2h ago" },
-                  { title: "Streak Milestone!", desc: "You've studied 7 days in a row 🔥", time: "1d ago" },
-                  { title: "Weak Area Alert", desc: "Organic Chemistry needs attention", time: "2d ago" },
-                ].map((notif, i) => (
-                  <DropdownMenuItem key={i} className="flex flex-col items-start p-3 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900">
-                    <p className="font-medium text-sm text-zinc-900 dark:text-white">{notif.title}</p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{notif.desc}</p>
-                    <p className="text-[10px] text-zinc-400 mt-1">{notif.time}</p>
-                  </DropdownMenuItem>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationsBell />
 
           {/* User Menu */}
         

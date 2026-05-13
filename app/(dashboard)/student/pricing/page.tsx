@@ -16,75 +16,65 @@ const PLANS = [
     badge: null,
     icon: Star,
     features: [
-      { text: "1 full mock test", included: true },
-      { text: "Basic PYQs (Physics only)", included: true },
-      { text: "CEE countdown timer", included: true },
-      { text: "Subject progress tracker", included: true },
-      { text: "All mock tests", included: false },
-      { text: "All PYQs — all subjects", included: false },
-      { text: "Score analytics & charts", included: false },
-      { text: "Leaderboard access", included: false },
-      { text: "College predictor", included: false },
-      { text: "AI topic radar", included: false },
-      { text: "1v1 Battle Arena", included: false },
+      { text: "1 CEE PYQ paper", included: true },
+      { text: "No notes provided", included: true },
+      { text: "1 Full Mock Test", included: true },
+      { text: "Community doubt board", included: true },
+      { text: "Syllabus section", included: true },
+      { text: "Unlimited PYQs", included: false },
+      { text: "Dashboard performance", included: false },
+      { text: "Email support", included: false },
+      { text: "Live weekend doubt sessions", included: false },
     ],
   },
   {
     id: "PREMIUM",
-    name: "Premium",
-    price: 499,
+    name: "Intensive",
+    price: 399,
     description: "Everything you need to crack CEE",
     accent: "from-indigo-500 to-violet-600",
     border: "border-indigo-400 dark:border-indigo-500",
     badge: "Most Popular",
     icon: Zap,
     features: [
-      { text: "Unlimited mock tests", included: true },
-      { text: "All PYQs — all subjects & years", included: true },
-      { text: "CEE countdown timer", included: true },
-      { text: "Subject progress tracker", included: true },
-      { text: "Score trajectory charts", included: true },
-      { text: "Leaderboard access", included: true },
-      { text: "College predictor (AEC, JEC, BBEC)", included: true },
-      { text: "Bilingual (English + Assamese)", included: true },
-      { text: "AI topic radar", included: false },
-      { text: "1v1 Battle Arena", included: false },
-      { text: "Priority support", included: false },
+      { text: "Unlimited CEE PYQs & solutions", included: true },
+      { text: "No formula sheets", included: true },
+      { text: "5 Mock Tests / month", included: true },
+      { text: "Dashboard performance", included: true },
+      { text: "Email support", included: true },
+      { text: "Live weekend doubt sessions", included: false },
+      { text: "Personalized weekly study planner", included: false },
+      { text: "1:1 strategy call with toppers", included: false },
     ],
   },
   {
     id: "SUPER_PREMIUM",
     name: "Elite",
-    price: 999,
+    price: 899,
     description: "For students serious about top ranks",
     accent: "from-amber-400 to-orange-500",
     border: "border-amber-400 dark:border-amber-500",
     badge: "All Features",
     icon: Crown,
     features: [
-      { text: "Everything in Premium", included: true },
-      { text: "AI-powered topic strength radar", included: true },
-      { text: "Weakness prediction engine", included: true },
-      { text: "1v1 live Battle Arena", included: true },
-      { text: "Personalised study plan", included: true },
-      { text: "Priority WhatsApp support", included: true },
-      { text: "Early access to new content", included: true },
-      { text: "Doubt solving sessions (2/month)", included: true },
-      { text: "All future features free", included: true },
-      { text: "Performance report PDF", included: true },
-      { text: "Parent dashboard access", included: true },
+      { text: "Everything in Intensive", included: true },
+      { text: "Live weekend doubt sessions", included: true },
+      { text: "Personalized weekly study planner", included: true },
+      { text: "1:1 strategy call with toppers", included: true },
+      { text: "Priority doubt resolution (<6 hrs)", included: true },
+      { text: "College counseling guide", included: true },
     ],
   },
 ] as const;
 
 const COMPARISON_FEATURES = [
-  { name: "Mock Tests", free: "1", premium: "Unlimited", elite: "Unlimited" },
-  { name: "PYQs Access", free: "Limited", premium: "All subjects", elite: "All subjects" },
-  { name: "Analytics", free: "—", premium: "Charts + trajectory", elite: "AI-powered" },
-  { name: "Leaderboard", free: "—", premium: "✓", elite: "✓" },
-  { name: "College Predictor", free: "—", premium: "✓", elite: "✓" },
-  { name: "Battle Arena", free: "—", premium: "—", elite: "✓" },
-  { name: "Support", free: "Community", premium: "Email", elite: "WhatsApp Priority" },
+  { name: "Mock Tests", free: "1", intensive: "Unlimited", elite: "Unlimited" },
+  { name: "PYQs Access", free: "Limited", intensive: "All subjects", elite: "All subjects" },
+  { name: "Analytics", free: "—", intensive: "Dashboard performance", elite: "AI-powered" },
+  { name: "Leaderboard", free: "—", intensive: "✓", elite: "✓" },
+  { name: "College Predictor", free: "—", intensive: "✓", elite: "✓" },
+  { name: "Battle Arena", free: "—", intensive: "—", elite: "✓" },
+  { name: "Support", free: "Community", intensive: "Email", elite: "WhatsApp Priority" },
 ];
 
 const FAQS = [
@@ -181,7 +171,7 @@ export default async function PricingPage() {
                       <span className={`text-5xl font-black bg-gradient-to-r ${plan.accent} text-transparent bg-clip-text`}>
                         {plan.price.toLocaleString("en-IN")}
                       </span>
-                      <span className="text-slate-400 text-sm">/month</span>
+                      <span className="text-slate-400 text-sm">/semester</span>
                     </div>
                   )}
                 </div>
@@ -279,7 +269,7 @@ export default async function PricingPage() {
                   <th className="text-left px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">Feature</th>
                   {[
                     { label: "Free", color: "text-slate-500" },
-                    { label: "Premium", color: "text-indigo-600 dark:text-indigo-400" },
+                    { label: "Intensive", color: "text-indigo-600 dark:text-indigo-400" },
                     { label: "Elite", color: "text-amber-600 dark:text-amber-400" },
                   ].map(({ label, color }) => (
                     <th key={label} className={`text-center px-6 py-4 text-sm font-black ${color}`}>{label}</th>
@@ -291,7 +281,7 @@ export default async function PricingPage() {
                   <tr key={row.name} className={`border-b border-slate-100 dark:border-slate-800/60 last:border-0 ${i % 2 === 0 ? "" : "bg-slate-50/40 dark:bg-slate-800/10"}`}>
                     <td className="px-6 py-3.5 text-sm text-slate-700 dark:text-slate-300 font-semibold">{row.name}</td>
                     <td className="px-6 py-3.5 text-sm text-center text-slate-400 dark:text-slate-500">{row.free}</td>
-                    <td className="px-6 py-3.5 text-sm text-center text-indigo-600 dark:text-indigo-400 font-semibold">{row.premium}</td>
+                    <td className="px-6 py-3.5 text-sm text-center text-indigo-600 dark:text-indigo-400 font-semibold">{row.intensive}</td>
                     <td className="px-6 py-3.5 text-sm text-center text-amber-600 dark:text-amber-400 font-semibold">{row.elite}</td>
                   </tr>
                 ))}
@@ -336,7 +326,7 @@ export default async function PricingPage() {
             ) : userTier === "NORMAL" ? (
               <UpgradeButton
                 tier="PREMIUM"
-                label="Upgrade to Premium — ₹499/mo"
+                label="Upgrade to Intensive — ₹399/semester"
                 userEmail={userEmail}
                 userName={userName}
                 className="h-13 px-10 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 font-black text-base hover:from-amber-300 hover:to-orange-400 transition shadow-xl shadow-amber-900/30"

@@ -44,14 +44,15 @@ export default function RegisterPage() {
         }),
       });
 
-      if (res.ok) {
-        toast.success("Account created successfully!", {
+      const data = await res.json();
+
+      if (res.ok && !data.error) {
+        toast.success("Account created! 🎉", {
           id: toastId,
-          description: "Please login with your new credentials.",
+          description: "Now login with your credentials below.",
         });
         router.push("/login");
       } else {
-        const data = await res.json();
         const errorMessage = data.error || "Registration failed";
         setError(errorMessage);
         toast.error("Registration failed", {

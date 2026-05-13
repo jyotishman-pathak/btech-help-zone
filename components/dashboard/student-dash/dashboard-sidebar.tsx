@@ -8,7 +8,7 @@ import {
   LayoutDashboard, BookOpen, Zap, Trophy, Settings,
   LogOut, ChevronLeft, ChevronRight, Bell, Search,
   GraduationCap, Target, BrainCircuit, HelpCircle,
-  ChevronDown, User, Crown, Flame
+  ChevronDown, User, Crown, Flame, Package, Layers
 } from "lucide-react";
 
 
@@ -66,6 +66,13 @@ const NAV_ITEMS = [
     title: "Leaderboard",
     href: "/cee/leaderboard",
     icon: Trophy,
+    badge: null,
+  },
+  
+  {
+    title: "My Batches",
+    href: "/batches",
+    icon: Layers,
     badge: null,
   },
   {
@@ -127,22 +134,22 @@ export function DashboardSidebar({
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
           "fixed lg:sticky top-0 left-0 h-screen z-50",
-          "bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800",
+          "bg-[#F7F5FF] dark:bg-[#0D0B1A] border-r border-slate-200/70 dark:border-slate-700/50",
           "flex flex-col shadow-xl lg:shadow-none",
           isMobile ? "w-64" : ""
         )}
       >
         {/* Logo & Collapse Toggle */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
           <motion.div
             animate={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : "auto" }}
             className="overflow-hidden whitespace-nowrap"
           >
             <Link href="/student" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-zinc-900 to-zinc-700 dark:from-white dark:to-zinc-300 flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-white dark:text-zinc-900" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 flex items-center justify-center">
+                <GraduationCap className="w-5 h-5 text-white dark:text-slate-900" />
               </div>
-              <span className="font-black text-lg text-zinc-900 dark:text-white ">
+              <span className="font-black text-lg text-slate-900 dark:text-white ">
                 CEE <span className="text-amber-500 ml-2">HelpZone</span>
               </span>
             </Link>
@@ -162,11 +169,11 @@ export function DashboardSidebar({
         </div>
 
         {/* User Profile Section */}
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-            <Avatar className="h-10 w-10 ring-2 ring-zinc-200 dark:ring-zinc-800">
+            <Avatar className="h-10 w-10 ring-2 ring-slate-200 dark:ring-slate-800">
               <AvatarImage src={userImage || ""} />
-              <AvatarFallback className="bg-zinc-100 dark:bg-zinc-800 font-bold">
+              <AvatarFallback className="bg-slate-100 dark:bg-slate-800 font-bold">
                 {userName?.slice(0, 2).toUpperCase() || "ST"}
               </AvatarFallback>
             </Avatar>
@@ -174,7 +181,7 @@ export function DashboardSidebar({
               animate={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : "auto" }}
               className="overflow-hidden"
             >
-              <p className="font-semibold text-sm truncate text-zinc-900 dark:text-white">
+              <p className="font-semibold text-sm truncate text-slate-900 dark:text-white">
                 {userName || "Student"}
               </p>
               <div className="flex items-center gap-1.5">
@@ -213,8 +220,8 @@ export function DashboardSidebar({
                   className={cn(
                     "group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                     isActive
-                      ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-sm"
-                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white",
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/20 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-[#12101F]/60 hover:text-slate-900 dark:hover:text-white",
                     isLocked && "opacity-60 cursor-not-allowed",
                     collapsed && "justify-center px-2"
                   )}
@@ -222,7 +229,7 @@ export function DashboardSidebar({
                   <item.icon
                     className={cn(
                       "w-5 h-5 shrink-0",
-                      isActive ? "text-white dark:text-zinc-900" : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"
+                      isActive ? "text-white dark:text-slate-900" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                     )}
                   />
                   <motion.span
@@ -252,13 +259,13 @@ export function DashboardSidebar({
         </ScrollArea>
 
         {/* Bottom Section */}
-        <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
           {BOTTOM_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-white transition-colors",
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-[#12101F]/60 hover:text-slate-900 dark:hover:text-white transition-colors",
                 collapsed && "justify-center px-2"
               )}
             >
@@ -273,29 +280,29 @@ export function DashboardSidebar({
           ))}
 
           {/* Logout */}
-         <button
-  onClick={() =>
-    signOut({
-      callbackUrl: "/login",
-    })
-  }
-  className={cn(
-    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors",
-    collapsed && "justify-center px-2"
-  )}
->
-  <LogOut className="w-5 h-5 shrink-0" />
+          <button
+            onClick={() =>
+              signOut({
+                callbackUrl: "/login",
+              })
+            }
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors",
+              collapsed && "justify-center px-2"
+            )}
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
 
-  <motion.span
-    animate={{
-      opacity: collapsed ? 0 : 1,
-      width: collapsed ? 0 : "auto",
-    }}
-    className="overflow-hidden whitespace-nowrap"
-  >
-    Sign Out
-  </motion.span>
-</button>
+            <motion.span
+              animate={{
+                opacity: collapsed ? 0 : 1,
+                width: collapsed ? 0 : "auto",
+              }}
+              className="overflow-hidden whitespace-nowrap"
+            >
+              Sign Out
+            </motion.span>
+          </button>
 
           {/* Collapse Toggle (Mobile) */}
           {isMobile && (
