@@ -37,13 +37,11 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-2.5">
           <div className="relative w-8 h-8">
             <Shield className="w-8 h-8 text-orange-500 fill-orange-500/20 stroke-[2.5]" />
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">B</span>
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">C HZ</span>
           </div>
           <div className="flex flex-col leading-none">
-            <span className="text-white font-black text-sm tracking-wider">TEAM B</span>
-            <span className="text-orange-500 text-[9px] font-bold tracking-[0.15em] uppercase">
-              Tech Help Zone
-            </span>
+            <span className="text-white font-black text-sm tracking-wider">CEE  HelpZone</span>
+
           </div>
         </Link>
 
