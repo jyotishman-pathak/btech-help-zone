@@ -1,12 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-
 import { Atom, FlaskConical, Sigma, FileCheck, Timer, BookOpenCheck, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-
-import { Badge } from "./ui/badge";
 
 const categories = [
   {
@@ -14,7 +10,8 @@ const categories = [
     icon: Atom,
     count: "420+ Questions",
     desc: "Mechanics, Optics, Electromagnetism & Modern Physics",
-    accent: "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/20 dark:border-amber-500/30",
+    accent: "from-amber-600 to-orange-600",
+    glow: "rgba(217,119,6,0.15)",
     href: "/cee/physics",
   },
   {
@@ -22,7 +19,8 @@ const categories = [
     icon: FlaskConical,
     count: "380+ Questions",
     desc: "Physical, Organic & Inorganic (Class 11–12 Syllabus)",
-    accent: "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20 dark:border-emerald-500/30",
+    accent: "from-emerald-600 to-teal-600",
+    glow: "rgba(16,185,129,0.15)",
     href: "/cee/chemistry",
   },
   {
@@ -30,7 +28,8 @@ const categories = [
     icon: Sigma,
     count: "510+ Questions",
     desc: "Calculus, Algebra, Coordinate Geometry & Vectors",
-    accent: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border-blue-500/20 dark:border-blue-500/30",
+    accent: "from-blue-600 to-indigo-600",
+    glow: "rgba(59,130,246,0.15)",
     href: "/cee/maths",
   },
   {
@@ -38,7 +37,8 @@ const categories = [
     icon: FileCheck,
     count: "10 Years",
     desc: "Official past papers with step-by-step solutions & analysis",
-    accent: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border-purple-500/20 dark:border-purple-500/30",
+    accent: "from-fuchsia-700 to-violet-700",
+    glow: "rgba(124,58,237,0.15)",
     href: "/cee/pyqs",
   },
   {
@@ -46,7 +46,8 @@ const categories = [
     icon: Timer,
     count: "45+ Sets",
     desc: "CEE-pattern simulations with auto-grading & time tracking",
-    accent: "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border-rose-500/20 dark:border-rose-500/30",
+    accent: "from-rose-600 to-pink-600",
+    glow: "rgba(244,63,94,0.15)",
     href: "/cee/mocks",
   },
   {
@@ -54,33 +55,45 @@ const categories = [
     icon: BookOpenCheck,
     count: "Formula Sheets",
     desc: "High-yield notes, shortcuts & last-minute cram guides",
-    accent: "bg-cyan-500/10 text-cyan-600 dark:bg-cyan-500/20 dark:text-cyan-400 border-cyan-500/20 dark:border-cyan-500/30",
+    accent: "from-cyan-600 to-sky-600",
+    glow: "rgba(6,182,212,0.15)",
     href: "/cee/revision",
   },
 ];
 
 export function CEEFeatured() {
   return (
-    <section className="relative py-24 bg-slate-50 dark:bg-slate-950 overflow-hidden">
-      {/* Architectural Grid Background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+    <section className="relative py-24 bg-[#090915] overflow-hidden">
+      {/* Grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
 
       <div className="container relative mx-auto px-4 md:px-6">
         {/* Header */}
         <div className="max-w-3xl mx-auto text-center mb-16">
-          <Badge variant="secondary" className="mb-4 bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-400 border-none shadow-sm">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1a1a30] border border-[#2a2a45] text-[10px] font-bold tracking-[0.2em] text-gray-300 uppercase mb-5">
             CEE Assam 2026 • PCM Stream
-          </Badge>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-            Target CEE. <span className="text-slate-400 dark:text-slate-600">Master PCM.</span>
+          </span>
+          <h2 className="font-black italic leading-none tracking-tight">
+            <span className="block text-[clamp(32px,5vw,64px)] text-white">TARGET CEE.</span>
+            <span
+              className="block text-[clamp(32px,5vw,64px)]"
+              style={{
+                background: "linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #38bdf8 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              MASTER PCM.
+            </span>
           </h2>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            Class 11 & 12 syllabus mapped to the Assam CEE pattern. PYQs, timed mocks, and revision material—all structured for rank-focused prep.
+          <p className="mt-5 text-lg text-gray-400 leading-relaxed">
+            Class 11 & 12 syllabus mapped to the Assam CEE pattern. PYQs, timed mocks, and revision material — all structured for rank-focused prep.
           </p>
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
           {categories.map((cat, i) => (
             <motion.div
               key={cat.title}
@@ -90,35 +103,43 @@ export function CEEFeatured() {
               viewport={{ once: true }}
             >
               <Link href={cat.href} className="block h-full group">
-                <Card className="h-full border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                  <CardHeader className="pb-3">
-                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-xl border ${cat.accent} transition-transform group-hover:scale-105`}>
-                      <cat.icon className="w-6 h-6" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                <div
+                  className="relative flex flex-col h-full bg-[#0d0d20] border border-[#1e1e3a] rounded-2xl overflow-hidden hover:border-violet-800/50 transition-all duration-300 hover:-translate-y-1"
+                  style={{
+                    boxShadow: "0 0 0 rgba(0,0,0,0)",
+                    transition: "border-color 0.3s, transform 0.3s, box-shadow 0.3s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.boxShadow = `0 20px 60px ${cat.glow}`)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.boxShadow = "0 0 0 rgba(0,0,0,0)")
+                  }
+                >
+                  {/* Gradient header bar */}
+                  <div className={`bg-gradient-to-r ${cat.accent} px-4 py-2.5 flex items-center gap-2`}>
+                    <cat.icon className="w-4 h-4 text-white/80" />
+                    <span className="text-white text-[10px] font-bold tracking-[0.2em] uppercase">
+                      {cat.count}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col flex-1 p-5 space-y-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">
-                        {cat.title}
-                      </CardTitle>
-                      <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
+                      <h3 className="text-xl font-black italic text-white tracking-tight">
+                        {cat.title.toUpperCase()}
+                      </h3>
+                      <ArrowUpRight className="w-4 h-4 text-gray-600 opacity-0 group-hover:opacity-100 transition-all -translate-x-1 translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0" />
                     </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
-                      {cat.desc}
-                    </p>
-                    <div className="pt-1">
-                      <span className="text-xs font-semibold tracking-wide uppercase text-slate-400 dark:text-slate-500">
-                        {cat.count}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-sm text-gray-400 leading-relaxed">{cat.desc}</p>
+                  </div>
+                </div>
               </Link>
             </motion.div>
           ))}
         </div>
 
-        {/* Bottom CTA Strip */}
+        {/* Bottom CTA */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -128,7 +149,7 @@ export function CEEFeatured() {
         >
           <Link
             href="/cee/syllabus"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1a1a30] border border-[#2a2a45] text-gray-300 text-sm font-medium hover:border-violet-800/50 transition-colors"
           >
             View Full CEE Syllabus Breakdown
             <ArrowUpRight className="w-3.5 h-3.5" />

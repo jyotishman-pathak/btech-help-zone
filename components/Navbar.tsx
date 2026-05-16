@@ -1,190 +1,135 @@
-// components/Navbar.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { Menu, Atom, FlaskConical, Sigma, FileCheck, Timer, LogIn, UserPlus, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, Shield } from "lucide-react";
 
+import { useSession } from "next-auth/react";
+import { cn } from "../lib/utils";
 
-
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-
-
-const mainNav = [
-  { name: "Home", href: "/" },
-  { name: "PYQs", href: "/cee/pyq" },
-  { name: "Mocks", href: "/cee/mock" },
-];
-
-const subjectNav = [
-  { name: "Physics", href: "/cee/physics", icon: Atom },
-  { name: "Chemistry", href: "/cee/chemistry", icon: FlaskConical },
-  { name: "Maths", href: "/cee/maths", icon: Sigma },
+const NAV_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "PYQs", href: "/student/cee/pyq" },
+  { label: "Batches Live", href: "/student/batches" },
+  { label: "Library", href: "student/my-batches" },
 ];
 
 export function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
   const { data: session } = useSession();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handler, { passive: true });
+    return () => window.removeEventListener("scroll", handler);
   }, []);
 
   return (
-    <nav className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${scrolled ? "bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-slate-200/70 dark:border-slate-700/50" : "bg-white dark:bg-slate-950 border-transparent"}`}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+    <header className={cn(
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+      scrolled
+        ? "bg-[#090915]/90 backdrop-blur-md border-b border-[#1e1e3a]"
+        : "bg-transparent"
+    )}>
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="group flex items-center gap-2.5">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-lg bg-slate-900 dark:bg-white blur opacity-20 group-hover:opacity-30 transition-opacity" />
-            <Atom className="relative h-6 w-6 text-slate-900 dark:text-white transition-transform group-hover:scale-105" />
+        <Link href="/" className="flex items-center gap-2.5">
+          <div className="relative w-8 h-8">
+            <Shield className="w-8 h-8 text-orange-500 fill-orange-500/20 stroke-[2.5]" />
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">B</span>
           </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-base font-black tracking-tight text-slate-900 dark:text-white">CEE Prep</span>
-            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5">Assam • PCM</span>
+          <div className="flex flex-col leading-none">
+            <span className="text-white font-black text-sm tracking-wider">TEAM B</span>
+            <span className="text-orange-500 text-[9px] font-bold tracking-[0.15em] uppercase">
+              Tech Help Zone
+            </span>
           </div>
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex md:items-center md:gap-1">
-          {mainNav.map((link) => (
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-8">
+          {NAV_LINKS.map(({ label, href }) => (
             <Link
-              key={link.name}
-              href={link.href}
-              className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+              key={href}
+              href={href}
+              className="text-gray-400 hover:text-white text-xs font-bold tracking-[0.15em] uppercase transition-colors duration-200"
             >
-              {link.name}
+              {label}
             </Link>
           ))}
+        </nav>
 
-          {/* Subjects Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">
-                Subjects <ChevronDown className="ml-1 h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-48 border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-900">
-              {subjectNav.map((sub) => (
-                <DropdownMenuItem key={sub.name} asChild>
-                  <Link href={sub.href} className="flex items-center gap-2 cursor-pointer">
-                    <sub.icon className="h-4 w-4 text-slate-500" /> {sub.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Desktop Auth + CTA */}
-        <div className="hidden md:flex md:items-center md:gap-3">
-          <Badge variant="secondary" className="hidden lg:inline-flex bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-400 border-none">
-            CEE 2026
-          </Badge>
-
-          {!session ? (
-            <>
-              <Button variant="ghost" size="sm" asChild className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
-                <Link href="/login"><LogIn className="mr-1.5 h-4 w-4" /> Login</Link>
-              </Button>
-              <Button size="sm" asChild className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
-                <Link href="/register"><UserPlus className="mr-1.5 h-4 w-4" /> Start Free</Link>
-              </Button>
-            </>
+        {/* Desktop CTA */}
+        <div className="hidden md:flex items-center gap-4">
+          {session?.user ? (
+            <Link href="/student">
+              <button className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold px-5 py-2.5 rounded-full tracking-widest uppercase transition-all duration-200 shadow-[0_0_20px_rgba(124,58,237,0.3)]">
+                Dashboard
+              </button>
+            </Link>
           ) : (
             <>
-              <Button variant="ghost" size="sm" asChild className="text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
-                <Link href="/dashboard"><LayoutDashboard className="mr-1.5 h-4 w-4" /> Dashboard</Link>
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => signOut()} className="border-slate-200/70 dark:border-slate-700/50">
-                <LogOut className="mr-1.5 h-4 w-4" /> Logout
-              </Button>
+              <Link href="/login">
+                <span className="text-gray-400 hover:text-white text-xs font-bold tracking-[0.15em] uppercase transition-colors cursor-pointer">
+                  Login
+                </span>
+              </Link>
+              <Link href="/register">
+                <button className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold px-5 py-2.5 rounded-full tracking-widest uppercase transition-all duration-200 shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_30px_rgba(124,58,237,0.5)]">
+                  Get Started
+                </button>
+              </Link>
             </>
           )}
         </div>
 
-        {/* Mobile Menu */}
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" className="text-slate-700 dark:text-slate-300">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[280px] border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-slate-950 p-0">
-            <div className="flex flex-col h-full">
-              {/* Mobile Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/70 dark:border-slate-700/50">
-                <span className="font-semibold text-slate-900 dark:text-slate-100">Menu</span>
-                <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400">CEE 2026</Badge>
-              </div>
-
-              {/* Mobile Links */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
-                {mainNav.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900 rounded-lg transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-                <div className="pt-2 pb-1">
-                  <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Subjects</p>
-                </div>
-                {subjectNav.map((sub) => (
-                  <Link
-                    key={sub.name}
-                    href={sub.href}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 text-base text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-900 rounded-lg transition-colors"
-                  >
-                    <sub.icon className="h-4 w-4 text-slate-500" /> {sub.name}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Mobile Auth */}
-              <div className="border-t border-slate-200/70 dark:border-slate-700/50 px-5 py-4 space-y-2">
-                {!session ? (
-                  <>
-                    <Button variant="outline" asChild className="w-full border-slate-200/70 dark:border-slate-700/50">
-                      <Link href="/login" onClick={() => setIsOpen(false)}>Login</Link>
-                    </Button>
-                    <Button asChild className="w-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900">
-                      <Link href="/register" onClick={() => setIsOpen(false)}>Start Free</Link>
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="outline" asChild className="w-full border-slate-200/70 dark:border-slate-700/50">
-                      <Link href="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
-                    </Button>
-                    <Button variant="destructive" className="w-full" onClick={() => { setIsOpen(false); signOut(); }}>
-                      Logout
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+        {/* Mobile menu toggle */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="md:hidden text-white p-2"
+        >
+          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
-    </nav>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="md:hidden bg-[#0d0d20] border-t border-[#1e1e3a] px-4 py-6 space-y-4">
+          {NAV_LINKS.map(({ label, href }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className="block text-gray-300 hover:text-white text-sm font-bold tracking-widest uppercase py-2 border-b border-[#1e1e3a]"
+            >
+              {label}
+            </Link>
+          ))}
+          <div className="pt-2 flex flex-col gap-3">
+            {session?.user ? (
+              <Link href="/student" onClick={() => setOpen(false)}>
+                <button className="w-full bg-violet-600 text-white text-sm font-bold py-3 rounded-full tracking-widest uppercase">
+                  Dashboard
+                </button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" onClick={() => setOpen(false)}>
+                  <button className="w-full border border-[#2a2a50] text-gray-300 text-sm font-bold py-3 rounded-full tracking-widest uppercase">
+                    Login
+                  </button>
+                </Link>
+                <Link href="/register" onClick={() => setOpen(false)}>
+                  <button className="w-full bg-violet-600 text-white text-sm font-bold py-3 rounded-full tracking-widest uppercase">
+                    Get Started
+                  </button>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
   );
 }

@@ -1,111 +1,231 @@
-// components/sections/CEEPricing.tsx
-"use client";
-
-
-import { Check, Shield, Sparkles, Crown, ArrowRight } from "lucide-react";
+import { Check, CheckSquare } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { cn } from "../lib/utils";
+import prisma from "../lib/prisma.client";
 
-const plans = [
+
+// Fallback batches if DB is empty
+const FALLBACK_BATCHES = [
   {
-    name: "Basic",
-    price: "₹0",
-    period: "forever",
-    features: ["1 CEE PYQ paper", "No notes provided", "1 Full Mock Test", "Community doubt board", "Syllabus section"],
-    cta: "Start Free",
-    href: "/register",
-    popular: false,
+    id: "sarathi",
+    name: "Sarathi",
+    slug: "sarathi",
+    tagline: "Free Starter Batch",
+    description: "Perfect for students who want to experience our mock test platform before purchasing premium plans.",
+    isFree: true,
+    price: 0,
+    originalPrice: null,
+    features: [
+      { text: "3 Free Full Mock Tests" },
+      { text: "Basic Performance Analysis" },
+      { text: "Real Exam Interface" },
+      { text: "Physics, Chemistry & Mathematics" },
+      { text: "Mobile Friendly Experience" },
+      { text: "Beginner Friendly" },
+    ],
   },
   {
-    name: "Intensive",
-    price: "₹399",
-    period: "semester",
-    features: ["Unlimited CEE PYQs & solutions", "No formula sheets", "5 Mock Tests / month", "Dashboard performance", "Email support"],
-    cta: "Unlock Intensive",
-    href: "/student/pricing",
-    popular: true,
+    id: "sankalpa",
+    name: "Sankalpa",
+    slug: "sankalpa",
+    tagline: "Building CEE Basics",
+    description: "A beginner level practice batch for building strong CEE basics.",
+    isFree: false,
+    price: 29900,
+    originalPrice: 44900,
+    features: [
+      { text: "6 Full Mock Tests" },
+      { text: "2 Years PYQs Included" },
+      { text: "Physics, Chemistry & Math" },
+      { text: "Detailed Score Analysis" },
+      { text: "Re-attempt Available" },
+      { text: "Mobile Friendly Platform" },
+    ],
   },
   {
-    name: "Elite",
-    price: "₹899",
-    period: "semester",
-    features: ["Everything in Intensive", "Live weekend doubt sessions", "Personalized weekly study planner", "1:1 strategy call with toppers", "Priority doubt resolution (<6 hrs)", "College counseling guide"],
-    cta: "Go Elite",
-    href: "/student/pricing",
-    popular: false,
+    id: "uttaran",
+    name: "Uttaran",
+    slug: "uttaran",
+    tagline: "Speed & Accuracy Booster",
+    description: "Best practice package for improving speed, accuracy, and confidence.",
+    isFree: false,
+    price: 49900,
+    originalPrice: 89900,
+    features: [
+      { text: "10 Full Mock Tests" },
+      { text: "4 Years PYQs Included" },
+      { text: "Class XI & XII Covered" },
+      { text: "Real Exam Pattern" },
+      { text: "Rank Prediction System" },
+      { text: "Detailed Performance Report" },
+    ],
   },
 ];
 
-export function CEEPricing() {
-  return (
-    <section className="relative py-32 bg-[#F7F5FF] dark:bg-[#0D0B1A]">
-      {/* Subtle Divider Line */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-slate-200 dark:bg-slate-800" />
+function calcDiscount(price: number, original: number) {
+  return Math.round(((original - price) / original) * 100);
+}
 
-      <div className="container relative mx-auto px-4 md:px-6">
-        <div className="max-w-3xl mx-auto text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-slate-50">
-            Plans that scale with <span className="text-slate-400 dark:text-slate-600">your prep.</span>
-          </h2>
-          <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-            Start free. Upgrade when you're serious about cracking CEE.
+function BatchCard({
+  batch,
+  index,
+}: {
+  batch: (typeof FALLBACK_BATCHES)[0];
+  index: number;
+}) {
+  const originalPrice = (batch as any).originalPrice;
+  const discount = !batch.isFree && originalPrice
+    ? calcDiscount(batch.price, originalPrice)
+    : null;
+
+  return (
+    <div className="relative flex flex-col bg-[#0d0d20] border border-[#1e1e3a] rounded-2xl overflow-hidden hover:border-violet-800/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(124,58,237,0.15)]">
+      {/* Purple header bar */}
+      <div className="bg-gradient-to-r from-fuchsia-700 to-violet-700 px-4 py-3 flex items-center gap-2.5">
+        <CheckSquare className="w-4 h-4 text-white shrink-0" />
+        <span className="text-white text-[10px] font-bold tracking-[0.2em] uppercase">
+          CEE 2026 Mock Test Series
+        </span>
+      </div>
+
+      <div className="flex flex-col flex-1 p-6 space-y-5">
+        {/* Tag + discount row */}
+        <div className="flex items-center justify-between gap-2">
+          <span className={cn(
+            "text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest uppercase",
+            batch.isFree
+              ? "bg-emerald-900/40 text-emerald-400 border border-emerald-700/40"
+              : "bg-[#1a1a30] text-gray-300 border border-[#2a2a45]"
+          )}>
+            {batch.tagline}
+          </span>
+          {discount && (
+            <span className="bg-orange-500/20 text-orange-400 border border-orange-500/30 text-[10px] font-black px-2.5 py-1 rounded tracking-wider uppercase">
+              {discount}% OFF
+            </span>
+          )}
+        </div>
+
+        {/* Batch name */}
+        <div>
+          <h3 className="text-[28px] md:text-[32px] font-black italic text-white leading-none tracking-tight">
+            {batch.name.toUpperCase()} BATCH
+          </h3>
+          <p className="text-gray-400 text-sm mt-2 leading-relaxed">
+            {batch.description}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-start">
-          {plans.map((plan, i) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
-              viewport={{ once: true }}
-            >
-              <Card className={`relative h-full flex flex-col overflow-visible border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-[#12101F] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${plan.popular ? "shadow-2xl ring-2 ring-indigo-500/50 dark:ring-indigo-400/50 md:scale-105 z-10 bg-gradient-to-b from-white to-indigo-50/30 dark:from-[#12101F] dark:to-indigo-950/20" : "shadow-sm"}`}>
-                {plan.popular && (
-                  <Badge className="absolute -top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
-                    <Crown className="w-4 h-4 mr-1 text-amber-400" /> Most Students Choose
-                  </Badge>
-                )}
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-xl font-bold text-slate-900 dark:text-slate-50">{plan.name}</CardTitle>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-4xl font-black text-slate-900 dark:text-slate-50">{plan.price}</span>
-                    <span className="text-slate-500 dark:text-slate-400">/{plan.period}</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400">
-                        <Check className="w-4 h-4 mt-0.5 text-emerald-500 shrink-0" /> {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter className="pt-4">
-                  <Button
-                    asChild
-                    size="lg"
-                    className={`w-full ${plan.popular ? "bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 shadow-lg shadow-indigo-500/25" : "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"}`}
-                  >
-                    <Link href={plan.href} className="flex items-center justify-center gap-2">
-                      {plan.cta} <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
+        {/* Price box */}
+        <div className="bg-[#060610] border border-[#1a1a30] rounded-xl p-4">
+          {batch.isFree ? (
+            <>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-gray-500 text-sm font-medium">Rs.</span>
+                <span className="text-4xl font-black text-white">FREE</span>
+                <span className="text-gray-500 text-sm">/batch</span>
+              </div>
+              <p className="text-emerald-400 text-xs font-bold tracking-wider mt-1.5">
+                NO PAYMENT REQUIRED
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-gray-500 text-sm font-medium">Rs.</span>
+                <span className="text-4xl font-black text-white">
+                  {(batch.price / 100).toLocaleString("en-IN")}
+                </span>
+                <span className="text-gray-500 text-sm">/batch</span>
+              </div>
+              {originalPrice && (
+                <p className="text-gray-600 text-xs mt-1.5 line-through">
+                  MRP Rs. {(originalPrice / 100).toLocaleString("en-IN")}
+                </p>
+              )}
+            </>
+          )}
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500 dark:text-slate-400">
-          <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Secure UPI / Netbanking / Cards</span>
-          {/* <span className="flex items-center gap-2"><Sparkles className="w-4 h-4" /> 7-day money-back guarantee</span>
-          <span className="flex items-center gap-2"><Crown className="w-4 h-4" /> Student ID discounts available</span> */}
+        {/* Features */}
+        <div className="flex-1">
+          <p className="text-[10px] font-bold tracking-[0.2em] text-gray-600 uppercase mb-3">
+            Included Features
+          </p>
+          <ul className="space-y-2.5">
+            {batch.features.map((f, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
+                <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                <span>{f.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* CTA */}
+        <Link href={`/batches/${batch.slug}`} className="block">
+          <button className={cn(
+            "w-full py-3.5 rounded-xl text-sm font-bold tracking-widest uppercase transition-all duration-200",
+            batch.isFree
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+              : "bg-violet-600 hover:bg-violet-700 text-white shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_50px_rgba(124,58,237,0.4)]"
+          )}>
+            {batch.isFree ? "Get Started Free" : "Enroll Now"}
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export async function CEEPricing() {
+  let batches = [];
+  try {
+    const dbBatches = await prisma.batch.findMany({
+      where: { isActive: true, isPublished: true, deletedAt: null },
+      include: { features: { orderBy: { order: "asc" } } },
+      orderBy: { sortOrder: "asc" },
+      take: 6,
+    });
+    batches = dbBatches.length > 0 ? dbBatches : FALLBACK_BATCHES;
+  } catch {
+    batches = FALLBACK_BATCHES;
+  }
+
+  return (
+    <section className="bg-[#090915] py-20 md:py-28 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Section header */}
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="font-black italic text-[clamp(28px,6vw,64px)] leading-tight tracking-tight">
+            <span className="text-white">CHOOSE YOUR </span>
+            <span
+              style={{
+                background: "linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #38bdf8 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              CEE
+            </span>
+            <span className="text-white"> MOCK TEST BATCH</span>
+          </h2>
+
+          {/* Divider + quote */}
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <div className="w-0.5 h-5 bg-violet-500 rounded-full" />
+            <p className="text-gray-400 italic text-sm md:text-base">
+              "Select the perfect batch for your CEE preparation journey."
+            </p>
+          </div>
+        </div>
+
+        {/* Cards grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+          {batches.map((batch: any, i: number) => (
+            <BatchCard key={batch.id} batch={batch} index={i} />
+          ))}
         </div>
       </div>
     </section>
