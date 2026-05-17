@@ -91,13 +91,13 @@ export function Hero() {
 
             <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-4 pt-2">
               <Link
-                href="/notes"
+                href="/student/cee/mock-tests"
                 className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold tracking-widest uppercase transition-all duration-200 shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_50px_rgba(124,58,237,0.4)]"
               >
                 Mock Tests<BookOpen className="h-4 w-4" />
               </Link>
               <Link
-                href="/papers"
+                href="student/cee/pyq"
                 className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl bg-[#1a1a30] border border-[#2a2a45] hover:border-violet-800/50 text-gray-300 text-sm font-bold tracking-widest uppercase transition-all duration-200"
               >
                 Past Papers <FileText className="h-4 w-4" />
@@ -124,7 +124,7 @@ export function Hero() {
           </div>
 
           {/* Right: Bento Stats Grid */}
-          <motion.div
+          {/* <motion.div
             variants={itemVariants}
             className="lg:col-span-5 grid grid-cols-2 gap-4"
           >
@@ -154,7 +154,7 @@ export function Hero() {
                 </div>
               </motion.div>
             ))}
-          </motion.div>
+          </motion.div> */}
         </div>
 
         {/* Bottom CTA */}
@@ -163,7 +163,7 @@ export function Hero() {
           className="mt-16 lg:mt-20 flex justify-center"
         >
           <Link
-            href="/mock-tests"
+            href="/student"
             className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-fuchsia-700 to-violet-700 text-white font-bold tracking-widest uppercase text-sm hover:opacity-90 transition-all shadow-[0_0_40px_rgba(124,58,237,0.35)] hover:shadow-[0_0_60px_rgba(124,58,237,0.5)]"
           >
             <span>Take Your First Mock For Free!!</span>

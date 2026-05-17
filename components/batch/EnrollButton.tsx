@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Zap, Lock } from "lucide-react";
-
-import { LeadCaptureForm } from "./LeadCaptureForm";
+import { Loader2, Zap, Lock, CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import Link from "next/link";
+import { LeadCaptureForm } from "./LeadCaptureForm";
+import { cn } from "../../lib/utils";
+
 
 interface EnrollButtonProps {
   batchId: string;
@@ -17,7 +17,10 @@ interface EnrollButtonProps {
   price: number;
   isEnrolled: boolean;
   isLoggedIn: boolean;
-  leadFormFields?: Array<{ id: string; label: string; placeholder?: string | null; fieldType: string; required: boolean; options: string[] }>;
+  leadFormFields?: Array<{
+    id: string; label: string; placeholder?: string | null;
+    fieldType: string; required: boolean; options: string[];
+  }>;
   userEmail?: string;
   userName?: string;
 }
@@ -46,42 +49,95 @@ export function EnrollButton({
   const [couponApplied, setCouponApplied] = useState<{ discount: number; code: string } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [showCoupon, setShowCoupon] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
+  // ── Already enrolled ─────────────────────────────────────────────────────
   if (isEnrolled) {
     return (
-      <Link href={`/student/my-batches`}>
-        <Button className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700 text-white" >
-          ✓ Continue Learning
-        </Button>
-      </Link>
+      <Button
+        className="w-full h-12 text-base bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+        onClick={() => router.push(`/student/my-batches`)}
+      >
+        <CheckCircle2 className="w-4 h-4 mr-2" /> Continue Learning
+      </Button>
     );
   }
 
+  // ── Not logged in ────────────────────────────────────────────────────────
   if (!isLoggedIn) {
     return (
-      <Button className="w-full h-12 text-base bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900" onClick={() => router.push(`/login?callbackUrl=/batches/${batchSlug}`)}>
+      <Button
+        className="w-full h-12 text-base bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 font-bold"
+        onClick={() => router.push(`/login?callbackUrl=/batches/${batchSlug}`)}
+      >
         <Lock className="w-4 h-4 mr-2" /> Login to Enroll
       </Button>
     );
   }
 
-  const validateCoupon = async () => {
-    setCouponError("");
-    const res = await fetch("/api/coupons/validate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: couponCode, batchId }),
-    });
-    const data = await res.json();
-    if (data.valid) setCouponApplied(data);
-    else setCouponError(data.error ?? "Invalid coupon");
+  // ── Direct free enrollment (no lead form) ─────────────────────────────────
+  const enrollDirectly = async (leadData: Record<string, string> = {}) => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/batches/${batchSlug}/enroll`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadData }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // Already enrolled is fine — just redirect
+        if (data.error === "Already enrolled" || res.status === 409) {
+          router.push("/my-batches");
+          router.refresh();
+          return;
+        }
+        setError(data.error ?? "Enrollment failed. Try again.");
+        return;
+      }
+      router.push("student/my-batches?enrolled=1");
+      router.refresh();
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleFreeEnroll = () => setShowLeadForm(true);
+  // ── Free batch click handler ──────────────────────────────────────────────
+  const handleFreeEnroll = () => {
+    // If admin configured a lead form → show it
+    if (leadFormFields.length > 0) {
+      setShowLeadForm(true);
+      return;
+    }
+    // Otherwise enroll directly with no form data
+    enrollDirectly({});
+  };
 
+  // ── Coupon validation ─────────────────────────────────────────────────────
+  const validateCoupon = async () => {
+    setCouponError("");
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, batchId }),
+      });
+      const data = await res.json();
+      if (data.valid) setCouponApplied(data);
+      else setCouponError(data.error ?? "Invalid coupon");
+    } catch {
+      setCouponError("Could not validate coupon");
+    }
+  };
+
+  // ── Paid enrollment via Razorpay ─────────────────────────────────────────
   const handlePaidEnroll = async () => {
     setLoading(true);
+    setError("");
     try {
       const loaded = await loadRazorpay();
       if (!loaded) throw new Error("Failed to load payment gateway");
@@ -91,7 +147,12 @@ export function EnrollButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ batchId, couponCode: couponApplied?.code }),
       });
-      const { orderId, amount, currency, keyId, batchName: bn } = await res.json();
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error ?? "Failed to create order");
+        return;
+      }
+      const { orderId, amount, currency, keyId } = await res.json();
 
       await new Promise<void>((resolve, reject) => {
         const rzp = new window.Razorpay({
@@ -99,10 +160,10 @@ export function EnrollButton({
           amount,
           currency,
           order_id: orderId,
-          name: "B Tech HelpZone",
-          description: bn,
+          name: "CEE HelpZone",
+          description: batchName,
           prefill: { email: userEmail, name: userName },
-          theme: { color: "#18181b" },
+          theme: { color: "#7c3aed" },
           modal: { ondismiss: () => reject(new Error("Cancelled")) },
           handler: async (resp: any) => {
             const verifyRes = await fetch("/api/payment/verify", {
@@ -111,18 +172,18 @@ export function EnrollButton({
               body: JSON.stringify(resp),
             });
             if (verifyRes.ok) {
-              router.push(`/batches/${batchSlug}?success=1`);
+              router.push(`/student/my-batches?enrolled=1`);
               router.refresh();
               resolve();
             } else {
-              reject(new Error("Verification failed"));
+              reject(new Error("Payment verification failed"));
             }
           },
         });
         rzp.open();
       });
     } catch (e: any) {
-      if (e.message !== "Cancelled") console.error(e);
+      if (e.message !== "Cancelled") setError(e.message ?? "Payment failed");
     } finally {
       setLoading(false);
     }
@@ -135,13 +196,15 @@ export function EnrollButton({
   return (
     <>
       <div className="space-y-3">
-        {/* Price display */}
+        {/* Price display for paid */}
         {!isFree && (
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-500 dark:text-zinc-400">Total</span>
             <div className="flex items-baseline gap-2">
               {couponApplied && (
-                <span className="text-sm line-through text-zinc-400">₹{(price / 100).toLocaleString("en-IN")}</span>
+                <span className="text-sm line-through text-zinc-400">
+                  ₹{(price / 100).toLocaleString("en-IN")}
+                </span>
               )}
               <span className="text-xl font-black text-zinc-900 dark:text-zinc-100">
                 ₹{(discountedPrice / 100).toLocaleString("en-IN")}
@@ -150,7 +213,7 @@ export function EnrollButton({
           </div>
         )}
 
-        {/* Coupon field (paid only) */}
+        {/* Coupon (paid only) */}
         {!isFree && (
           <div>
             {showCoupon ? (
@@ -166,7 +229,10 @@ export function EnrollButton({
                 </Button>
               </div>
             ) : (
-              <button onClick={() => setShowCoupon(true)} className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 underline underline-offset-2">
+              <button
+                onClick={() => setShowCoupon(true)}
+                className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 underline underline-offset-2"
+              >
                 Have a coupon code?
               </button>
             )}
@@ -179,25 +245,40 @@ export function EnrollButton({
           </div>
         )}
 
+        {/* Main CTA button */}
         <Button
           onClick={isFree ? handleFreeEnroll : handlePaidEnroll}
           disabled={loading}
-          className="w-full h-12 text-base bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+          className={cn(
+            "w-full h-12 text-base font-bold",
+            isFree
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+              : "bg-violet-600 hover:bg-violet-700 text-white shadow-[0_0_30px_rgba(124,58,237,0.3)]"
+          )}
         >
           {loading ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {isFree ? "Enrolling..." : "Processing..."}</>
           ) : isFree ? (
-            "Enroll for Free →"
+            <>Enroll for Free <ArrowRight className="w-4 h-4 ml-1" /></>
           ) : (
             <><Zap className="w-4 h-4 mr-2" /> Enroll Now</>
           )}
         </Button>
 
+        {error && (
+          <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg text-center">
+            {error}
+          </p>
+        )}
+
         <p className="text-[11px] text-center text-zinc-400 dark:text-zinc-600">
-          {isFree ? "Instant access. No credit card needed." : "Secure payment via Razorpay · 7-day refund policy"}
+          {isFree
+            ? "Instant access · No credit card needed"
+            : "Secure payment via Razorpay · 7-day refund policy"}
         </p>
       </div>
 
+      {/* Lead form dialog — only when fields are configured */}
       {isFree && leadFormFields.length > 0 && (
         <LeadCaptureForm
           open={showLeadForm}

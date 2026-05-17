@@ -8,56 +8,56 @@ const categories = [
   {
     title: "Physics",
     icon: Atom,
-    count: "420+ Questions",
+    count: "Concept Builder",
     desc: "Mechanics, Optics, Electromagnetism & Modern Physics",
     accent: "from-amber-600 to-orange-600",
     glow: "rgba(217,119,6,0.15)",
-    href: "/cee/physics",
+    href: "/student",
   },
   {
     title: "Chemistry",
     icon: FlaskConical,
-    count: "380+ Questions",
-    desc: "Physical, Organic & Inorganic (Class 11–12 Syllabus)",
+    count: "Practice Modules",
+    desc: "Physical, Organic & Inorganic for Assam CEE prep",
     accent: "from-emerald-600 to-teal-600",
     glow: "rgba(16,185,129,0.15)",
-    href: "/cee/chemistry",
+    href: "/student",
   },
   {
     title: "Mathematics",
     icon: Sigma,
-    count: "510+ Questions",
+    count: "Rank-Oriented Prep",
     desc: "Calculus, Algebra, Coordinate Geometry & Vectors",
     accent: "from-blue-600 to-indigo-600",
     glow: "rgba(59,130,246,0.15)",
-    href: "/cee/maths",
+    href: "/student",
   },
   {
     title: "CEE PYQs",
     icon: FileCheck,
-    count: "10 Years",
-    desc: "Official past papers with step-by-step solutions & analysis",
+    count: "Previous Year Papers",
+    desc: "Past CEE questions with detailed solutions & analysis",
     accent: "from-fuchsia-700 to-violet-700",
     glow: "rgba(124,58,237,0.15)",
-    href: "/cee/pyqs",
+    href: "/student",
   },
   {
     title: "Mock Tests",
     icon: Timer,
-    count: "45+ Sets",
-    desc: "CEE-pattern simulations with auto-grading & time tracking",
+    count: "Timed Practice",
+    desc: "CEE-style test experience with performance tracking",
     accent: "from-rose-600 to-pink-600",
     glow: "rgba(244,63,94,0.15)",
-    href: "/cee/mocks",
+    href: "/student",
   },
   {
     title: "Quick Revision",
     icon: BookOpenCheck,
-    count: "Formula Sheets",
-    desc: "High-yield notes, shortcuts & last-minute cram guides",
+    count: "Smart Revision",
+    desc: "Formula sheets, shortcuts & rapid revision notes",
     accent: "from-cyan-600 to-sky-600",
     glow: "rgba(6,182,212,0.15)",
-    href: "/cee/revision",
+    href: "/student",
   },
 ];
 
@@ -148,7 +148,7 @@ export function CEEFeatured() {
           className="mt-12 flex justify-center"
         >
           <Link
-            href="/cee/syllabus"
+            href="student/cee/syllabus"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1a1a30] border border-[#2a2a45] text-gray-300 text-sm font-medium hover:border-violet-800/50 transition-colors"
           >
             View Full CEE Syllabus Breakdown
