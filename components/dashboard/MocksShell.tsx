@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Timer, Globe, Save, Flag, Eraser, Send, AlertCircle, CheckCircle2, XCircle,
-  Clock, Trophy, ArrowLeftRight, Info, Play, X, Search, Loader2,
+  Clock, Trophy, ArrowLeftRight, Info, Play, X, Search, Loader2, Eye,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -49,13 +50,10 @@ interface TestMeta {
 }
 
 interface TestResult {
-  correct: number;
-  wrong: number;
-  unattempted: number;
-  score: number;
-  totalMarks: number;
-  timeTaken: number;
+  correct: number; wrong: number; unattempted: number;
+  score: number; totalMarks: number; timeTaken: number;
   accuracy: number;
+  attemptId?: string;
 }
 
 interface CBTEngineProps {
@@ -225,6 +223,7 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
     });
   };
 
+  // Update finishTest to:
   const finishTest = async (auto = false) => {
     if (status === "submitting") return;
     clearInterval(timerRef.current!);
@@ -235,7 +234,11 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
       const res = await fetch(`/api/tests/${testId}/attempt`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attemptId, answers }),
+        body: JSON.stringify({
+          attemptId,
+          answers,
+          markedForReview: [...marked],  // ← send marked question IDs
+        }),
       });
       const data = await res.json();
       setResult({
@@ -245,17 +248,14 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
         score: data.score,
         totalMarks: data.totalMarks,
         timeTaken,
-        accuracy:
-          data.correct + data.wrong > 0
-            ? Math.round((data.correct / (data.correct + data.wrong)) * 100)
-            : 0,
+        accuracy: data.correct + data.wrong > 0
+          ? Math.round((data.correct / (data.correct + data.wrong)) * 100) : 0,
+        attemptId: data.id,   // ← save attemptId for review link
       });
-      // Clear session storage after submit
       sessionStorage.removeItem(SS_KEY(testId, user?.id));
       setStatus("results");
     } catch (e) {
       setStatus("running");
-      console.error(e);
     }
   };
 
@@ -368,6 +368,18 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                     <p className="text-xs text-slate-500">{x.label}</p>
                   </div>
                 ))}
+              </div>
+              <div className="flex gap-3 mt-4">
+                {result.attemptId && (
+                  <Link href={`/cee/mock/${testId}/result/${result.attemptId}`} className="flex-1">
+                    <Button className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900">
+                      <Eye className="w-4 h-4 mr-2" /> Review All Answers
+                    </Button>
+                  </Link>
+                )}
+                <Button onClick={() => setStatus("idle")} variant="outline" className="flex-1 h-12 border-zinc-200 dark:border-zinc-800">
+                  <ArrowLeftRight className="w-4 h-4 mr-2" /> Back to Dashboard
+                </Button>
               </div>
             </CardContent>
           </Card>

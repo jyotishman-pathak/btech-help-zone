@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
     ChevronLeft, Save, Plus, Trash2, ChevronDown, ChevronUp,
     Check, X, Image as ImageIcon, Loader2, Eye, ToggleLeft,
-    ToggleRight, GripVertical, Copy, ExternalLink, BookOpen,
+    ToggleRight, GripVertical, Copy, ExternalLink, BookOpen, Lightbulb,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../components/ui/card";
 
@@ -35,6 +35,8 @@ interface Question {
     options: string[];
     optionsAs: string[];
     correctIndex: number;
+    explanation?: string | null;
+    explanationImageUrl?: string | null;
     marks: number;
     negativeMarks: number;
     section: string;
@@ -110,7 +112,9 @@ function QuestionEditor({
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [explanationUploading, setExplanationUploading] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
+    const explanationImgRef = useRef<HTMLInputElement>(null);
 
     const update = (patch: Partial<Question>) => {
         setLocal((prev) => ({ ...prev, ...patch }));
@@ -133,6 +137,15 @@ function QuestionEditor({
         finally { setUploading(false); }
     };
 
+    const handleExplanationImageUpload = async (file: File) => {
+        setExplanationUploading(true);
+        try {
+            const { url } = await uploadToCloudinary(file, { folder: "cee/questions/explanations", resourceType: "image" });
+            update({ explanationImageUrl: url });
+        } catch { alert("Explanation image upload failed. Check Cloudinary."); }
+        finally { setExplanationUploading(false); }
+    };
+
     const saveQuestion = async () => {
         setSaving(true);
         try {
@@ -149,6 +162,8 @@ function QuestionEditor({
                     marks: local.marks,
                     negativeMarks: local.negativeMarks,
                     section: local.section,
+                    explanation: local.explanation,
+                    explanationImageUrl: local.explanationImageUrl,
                 }),
             });
             if (res.ok) {
@@ -346,6 +361,58 @@ function QuestionEditor({
                                 />
                             </div>
                         ))}
+                    </div>
+
+                    {/* Explanation Section */}
+                    <div className="border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3 bg-blue-50/50 dark:bg-blue-900/10">
+                        <div className="flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                            <Label className="text-xs text-blue-700 dark:text-blue-400 font-bold">
+                                Solution Explanation (shown to students after submission)
+                            </Label>
+                        </div>
+
+                        <Textarea
+                            value={local.explanation ?? ""}
+                            onChange={(e) => update({ explanation: e.target.value || null })}
+                            placeholder="Explain the correct answer, steps, formula used, key concept..."
+                            rows={4}
+                            className="text-sm resize-none border-blue-200 dark:border-blue-800 focus:border-blue-400 bg-white dark:bg-zinc-900"
+                        />
+
+                        <div className="space-y-1.5">
+                            <Label className="text-xs text-blue-600 dark:text-blue-400">Explanation Image (diagram, graph, etc.)</Label>
+                            {local.explanationImageUrl ? (
+                                <div className="flex items-start gap-3">
+                                    <img
+                                        src={local.explanationImageUrl}
+                                        alt="Explanation"
+                                        className="h-28 rounded-lg border border-blue-200 dark:border-blue-700 object-contain bg-white dark:bg-zinc-800"
+                                    />
+                                    <button
+                                        onClick={() => update({ explanationImageUrl: null })}
+                                        className="p-1.5 rounded bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => explanationImgRef.current?.click()}
+                                    disabled={explanationUploading}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-500 text-sm hover:border-blue-400 transition bg-white dark:bg-zinc-900"
+                                >
+                                    {explanationUploading
+                                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
+                                        : <><ImageIcon className="w-4 h-4" /> Upload explanation image</>
+                                    }
+                                </button>
+                            )}
+                            <input
+                                ref={explanationImgRef} type="file" accept="image/*" className="hidden"
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleExplanationImageUpload(f); }}
+                            />
+                        </div>
                     </div>
 
                     {/* Save button at bottom of expanded question */}

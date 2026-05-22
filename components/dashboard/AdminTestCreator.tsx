@@ -11,6 +11,7 @@ import {
   Loader2,
   Check,
   BookOpen,
+  Lightbulb,
 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -44,6 +45,9 @@ interface QuestionDraft {
   marks: number;
   negativeMarks: number;
   expanded: boolean;
+  explanation: string;
+  explanationImageUrl: string | null;
+  explanationUploading?: boolean;
 }
 
 const SECTIONS = ["Physics", "Chemistry", "Mathematics", "Biology"];
@@ -62,6 +66,8 @@ function makeQuestion(): QuestionDraft {
     marks: 4,
     negativeMarks: 1,
     expanded: true,
+    explanation: "",
+    explanationImageUrl: null,
   };
 }
 
@@ -80,6 +86,7 @@ export function AdminTestCreator() {
   const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const explanationFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -112,6 +119,21 @@ export function AdminTestCreator() {
           : { ...q, optionsAs: arr };
       })
     );
+
+  const handleExplanationImage = async (qid: string, file: File) => {
+    updateQ(qid, { explanationUploading: true } as any);
+    try {
+      const { url } = await uploadToCloudinary(file, {
+        folder: "cee/questions/explanations",
+        resourceType: "image",
+      });
+      updateQ(qid, { explanationImageUrl: url, explanationUploading: false } as any);
+    } catch (err) {
+      console.error("Explanation image upload failed:", err);
+      setError("Explanation image upload failed.");
+      updateQ(qid, { explanationUploading: false } as any);
+    }
+  };
 
   const handleImage = async (qid: string, file: File) => {
     updateQ(qid, { uploading: true } as any);
@@ -159,7 +181,7 @@ export function AdminTestCreator() {
           examType,
           batchIds: selectedBatchIds,
           questions: questions.map(
-            ({ id, expanded, uploading, ...q }) => q
+            ({ id, expanded, uploading, explanationUploading, ...q }) => q
           ),
         }),
       });
@@ -530,6 +552,59 @@ export function AdminTestCreator() {
                       />
                     </div>
                   ))}
+                </div>
+
+                {/* Explanation Section */}
+                <div className="border border-blue-200 dark:border-blue-800 rounded-xl p-4 space-y-3 bg-blue-50/50 dark:bg-blue-900/10 mt-4">
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <Label className="text-xs text-blue-700 dark:text-blue-400 font-bold">
+                      Solution Explanation (shown to students after submission)
+                    </Label>
+                  </div>
+
+                  <Textarea
+                    value={q.explanation}
+                    onChange={(e) => updateQ(q.id, { explanation: e.target.value })}
+                    placeholder="Explain the correct answer, steps, formula used, key concept..."
+                    rows={4}
+                    className="text-sm resize-none border-blue-200 dark:border-blue-800 focus:border-blue-400 bg-white dark:bg-slate-900"
+                  />
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-blue-600 dark:text-blue-400">Explanation Image (diagram, graph, etc.)</Label>
+                    {q.explanationImageUrl ? (
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={q.explanationImageUrl}
+                          alt="Explanation"
+                          className="h-28 rounded-lg border border-blue-200 dark:border-blue-700 object-contain bg-white dark:bg-slate-800"
+                        />
+                        <button
+                          onClick={() => updateQ(q.id, { explanationImageUrl: null })}
+                          className="p-1.5 rounded bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => explanationFileRefs.current[q.id]?.click()}
+                        disabled={q.explanationUploading}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-500 text-sm hover:border-blue-400 transition bg-white dark:bg-slate-900"
+                      >
+                        {q.explanationUploading
+                          ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</>
+                          : <><Image className="w-4 h-4" /> Upload explanation image</>
+                        }
+                      </button>
+                    )}
+                    <input
+                      ref={(el) => { explanationFileRefs.current[q.id] = el; }}
+                      type="file" accept="image/*" className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleExplanationImage(q.id, f); }}
+                    />
+                  </div>
                 </div>
               </CardContent>
             )}

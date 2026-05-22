@@ -10,13 +10,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../../components
 import { Button } from "../../../../components/ui/button";
 import { Badge } from "../../../../components/ui/badge";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from  "../../../../components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
 import { cn } from "../../../../lib/utils";
 import { Progress } from "../../../../components/ui/progress";
 
 
 
 interface Attempt {
+  id: string;
   testId: string;
   score: number;
   percentage: number;
@@ -64,8 +65,13 @@ export default function MyBatchesPage() {
   const [loading, setLoading] = useState(true);
   const [activeEnrollment, setActiveEnrollment] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [allAttempts, setAllAttempts] = useState<any[]>([]);
 
   useEffect(() => {
+    fetch("/api/student/attempts")
+      .then(r => r.json())
+      .then(data => setAllAttempts(Array.isArray(data) ? data : []));
+
     fetch("/api/my-batches")
       .then((r) => r.json())
       .then((data) => {
@@ -423,6 +429,43 @@ export default function MyBatchesPage() {
                   )}
                 </TabsContent>
               </Tabs>
+
+              {/* Attempt History section */}
+              {allAttempts.length > 0 && (
+                <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 mt-6">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-zinc-500" /> Attempt History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {allAttempts.map((attempt) => (
+                      <Link
+                        key={attempt.id}
+                        href={`/cee/mock/${attempt.testId}/result/${attempt.id}`}
+                        className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                          <Timer className="w-4 h-4 text-zinc-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">{attempt.testTitle}</p>
+                          <p className="text-xs text-zinc-500">
+                            {attempt.completedAt ? new Date(attempt.completedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">
+                            {attempt.score}<span className="text-xs text-zinc-400 font-normal">/{attempt.testTotalMarks}</span>
+                          </p>
+                          <p className="text-xs text-zinc-500">{attempt.percentage}%</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                      </Link>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </div>

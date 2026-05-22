@@ -54,7 +54,7 @@ export async function GET() {
   const testIds = enrollments.flatMap((e) => e.batch.tests.map((bt) => bt.test.id));
   const attempts = await prisma.mockTestAttempt.findMany({
     where: { userId, testId: { in: testIds }, status: "SUBMITTED" },
-    select: { testId: true, score: true, percentage: true, completedAt: true },
+    select: { id: true, testId: true, score: true, percentage: true, completedAt: true },
     orderBy: { completedAt: "desc" },
   });
 

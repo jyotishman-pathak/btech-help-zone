@@ -4,6 +4,7 @@ import { attemptSubmissionSchema } from "../../../../../lib/validations";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import prisma from "../../../../../lib/prisma.client";
+import { Prisma } from "@prisma/client";
 
 type Question = {
   id: string;
@@ -66,11 +67,12 @@ export async function PUT(
 ) {
   const { id } = await params;
   const session = await auth();
+  const { attemptId, answers, markedForReview = [] } = await req.json();
   if (!session?.user?.id)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = session.user.id as string;
-  const { attemptId, answers } = await req.json();
+
 
   const [attempt, rawQuestions] = await Promise.all([
     prisma.mockTestAttempt.findFirst({
@@ -100,11 +102,12 @@ export async function PUT(
   const updated = await prisma.mockTestAttempt.update({
     where: { id: attemptId },
     data: {
-      answers: answers as any,
+      answers: answers as Prisma.InputJsonValue,
       score,
       percentage: totalMarks > 0 ? (score / totalMarks) * 100 : 0,
       status: "SUBMITTED",
       completedAt: new Date(),
+      markedForReview,
     },
   });
 
