@@ -269,7 +269,7 @@ export function EnrollButton({
         <p className="text-[11px] text-center text-zinc-400 dark:text-zinc-600">
           {isFree
             ? "Instant access · No credit card needed"
-            : "Secure payment via Razorpay · 7-day refund policy"}
+            : "Secure payment via Razorpay "}
         </p>
       </div>
 

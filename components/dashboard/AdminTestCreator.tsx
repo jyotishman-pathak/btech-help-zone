@@ -40,6 +40,7 @@ interface QuestionDraft {
   uploading?: boolean;
   options: string[];
   optionsAs: string[];
+  optionImages: string[];
   correctIndex: number;
   section: string;
   marks: number;
@@ -48,6 +49,7 @@ interface QuestionDraft {
   explanation: string;
   explanationImageUrl: string | null;
   explanationUploading?: boolean;
+  optionUploading?: number | null;
 }
 
 const SECTIONS = ["Physics", "Chemistry", "Mathematics", "Biology"];
@@ -61,6 +63,7 @@ function makeQuestion(): QuestionDraft {
     uploading: false,
     options: ["", "", "", ""],
     optionsAs: ["", "", "", ""],
+    optionImages: ["", "", "", ""],
     correctIndex: 0,
     section: "Physics",
     marks: 4,
@@ -87,6 +90,7 @@ export function AdminTestCreator() {
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const explanationFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const optionImgRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -119,6 +123,28 @@ export function AdminTestCreator() {
           : { ...q, optionsAs: arr };
       })
     );
+
+  const updateOptionImage = (qid: string, i: number, url: string | null) =>
+    setQuestions((qs) =>
+      qs.map((q) => {
+        if (q.id !== qid) return q;
+        const arr = [...(q.optionImages ?? ["", "", "", ""])];
+        arr[i] = url ?? "";
+        return { ...q, optionImages: arr };
+      })
+    );
+
+  const handleOptionImageUpload = async (qid: string, i: number, file: File) => {
+    updateQ(qid, { optionUploading: i } as any);
+    try {
+      const { url } = await uploadToCloudinary(file, { folder: "cee/options", resourceType: "image" });
+      updateOptionImage(qid, i, url);
+      updateQ(qid, { optionUploading: null } as any);
+    } catch {
+      setError("Option image upload failed.");
+      updateQ(qid, { optionUploading: null } as any);
+    }
+  };
 
   const handleExplanationImage = async (qid: string, file: File) => {
     updateQ(qid, { explanationUploading: true } as any);
@@ -181,7 +207,7 @@ export function AdminTestCreator() {
           examType,
           batchIds: selectedBatchIds,
           questions: questions.map(
-            ({ id, expanded, uploading, explanationUploading, ...q }) => q
+            ({ id, expanded, uploading, explanationUploading, optionUploading, ...q }) => q
           ),
         }),
       });
@@ -495,61 +521,96 @@ export function AdminTestCreator() {
                   </Label>
 
                   {q.options.map((opt, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2"
-                    >
-                      <button
-                        onClick={() =>
-                          updateQ(q.id, {
-                            correctIndex: i,
-                          })
-                        }
-                        className={cn(
-                          "w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 font-bold text-xs transition",
-                          q.correctIndex === i
-                            ? "border-emerald-500 bg-emerald-500 text-white"
-                            : "border-slate-300 dark:border-slate-700 text-slate-500"
-                        )}
-                      >
-                        {q.correctIndex === i ? (
-                          <Check className="w-3 h-3" />
-                        ) : (
-                          "ABCD"[i]
-                        )}
-                      </button>
+                    <div key={i} className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() =>
+                            updateQ(q.id, {
+                              correctIndex: i,
+                            })
+                          }
+                          className={cn(
+                            "w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 font-bold text-xs transition",
+                            q.correctIndex === i
+                              ? "border-emerald-500 bg-emerald-500 text-white"
+                              : "border-slate-300 dark:border-slate-700 text-slate-500"
+                          )}
+                        >
+                          {q.correctIndex === i ? (
+                            <Check className="w-3 h-3" />
+                          ) : (
+                            "ABCD"[i]
+                          )}
+                        </button>
 
-                      <Input
-                        value={opt}
-                        onChange={(e) =>
-                          updateOption(
-                            q.id,
-                            i,
-                            e.target.value,
-                            "en"
-                          )
-                        }
-                        placeholder={`Option ${
-                          ["A", "B", "C", "D"][i]
-                        } (English)`}
-                        className="flex-1 h-9 text-sm"
-                      />
+                        <Input
+                          value={opt}
+                          onChange={(e) =>
+                            updateOption(
+                              q.id,
+                              i,
+                              e.target.value,
+                              "en"
+                            )
+                          }
+                          placeholder={`Option ${
+                            ["A", "B", "C", "D"][i]
+                          } (English)`}
+                          className="flex-1 h-9 text-sm"
+                        />
 
-                      <Input
-                        value={q.optionsAs[i]}
-                        onChange={(e) =>
-                          updateOption(
-                            q.id,
-                            i,
-                            e.target.value,
-                            "as"
-                          )
-                        }
-                        placeholder={`বিকল্প ${
-                          ["ক", "খ", "গ", "ঘ"][i]
-                        }`}
-                        className="flex-1 h-9 text-sm"
-                      />
+                        <Input
+                          value={q.optionsAs[i]}
+                          onChange={(e) =>
+                            updateOption(
+                              q.id,
+                              i,
+                              e.target.value,
+                              "as"
+                            )
+                          }
+                          placeholder={`বিকল্প ${
+                            ["ক", "খ", "গ", "ঘ"][i]
+                          }`}
+                          className="flex-1 h-9 text-sm"
+                        />
+
+                        {/* Upload image for this option */}
+                        <button
+                          onClick={() => optionImgRefs.current[`${q.id}-${i}`]?.click()}
+                          disabled={q.optionUploading === i}
+                          className="h-9 px-2.5 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:border-zinc-400 text-xs flex items-center gap-1.5 shrink-0 transition-colors bg-white dark:bg-zinc-900"
+                        >
+                          {q.optionUploading === i
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <><Image className="w-3 h-3" /> {q.optionImages?.[i] ? "Change" : "Image"}</>
+                          }
+                        </button>
+                        <input
+                          ref={(el) => { optionImgRefs.current[`${q.id}-${i}`] = el; }}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleOptionImageUpload(q.id, i, f); }}
+                        />
+                      </div>
+
+                      {/* Image preview if uploaded */}
+                      {q.optionImages?.[i] && (
+                        <div className="ml-9 flex items-start gap-2">
+                          <img
+                            src={q.optionImages[i]}
+                            alt={`Option ${"ABCD"[i]}`}
+                            className="h-20 rounded-lg border border-zinc-200 dark:border-zinc-700 object-contain bg-zinc-50 dark:bg-zinc-800"
+                          />
+                          <button
+                            onClick={() => updateOptionImage(q.id, i, null)}
+                            className="p-1.5 rounded bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition shrink-0"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

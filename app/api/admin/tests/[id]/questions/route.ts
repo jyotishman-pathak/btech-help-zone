@@ -44,10 +44,13 @@ export async function POST(
             imageUrl: body.imageUrl ?? null,
             options: body.options ?? ["Option A", "Option B", "Option C", "Option D"],
             optionsAs: body.optionsAs ?? [],
+            optionImages: body.optionImages ?? [],
             correctIndex: body.correctIndex ?? 0,
             marks: body.marks ?? 4,
             negativeMarks: body.negativeMarks ?? 1,
             section: body.section ?? "General",
+            explanation: body.explanation ?? null,
+            explanationImageUrl: body.explanationImageUrl ?? null,
             order: (last?.order ?? -1) + 1,
         },
     });

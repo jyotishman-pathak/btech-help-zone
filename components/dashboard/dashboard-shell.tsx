@@ -119,8 +119,12 @@ function getTimeLeft(target: string) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function CountdownBlock() {
-  const [time, setTime] = useState(getTimeLeft(CEE_DATE));
+  const [time, setTime] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
+    setTime(getTimeLeft(CEE_DATE));
     const t = setInterval(() => setTime(getTimeLeft(CEE_DATE)), 1000);
     return () => clearInterval(t);
   }, []);
@@ -128,10 +132,10 @@ function CountdownBlock() {
   return (
     <div className="flex items-center gap-0.5 sm:gap-2 flex-nowrap justify-center sm:justify-start w-full whitespace-nowrap">
       {[
-        { val: time.days, label: "D" },
-        { val: time.hours, label: "H" },
-        { val: time.minutes, label: "M" },
-        { val: time.seconds, label: "S" },
+        { val: mounted ? time.days : 0, label: "D" },
+        { val: mounted ? time.hours : 0, label: "H" },
+        { val: mounted ? time.minutes : 0, label: "M" },
+        { val: mounted ? time.seconds : 0, label: "S" },
       ].map(({ val, label }, i) => (
         <div key={label} className="flex items-center gap-0.5 shrink-0">
           {i > 0 && (
@@ -506,8 +510,16 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                 {/* Subject mini cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {subjectsState.length === 0 ? (
-                    <div className="col-span-1 sm:col-span-3 py-10 text-center text-zinc-400 dark:text-zinc-600 text-sm">
-                      No subjects yet — ask admin to add the syllabus.
+                    <div className="col-span-1 sm:col-span-3">
+                      <Card className="border-dashed border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 shadow-none">
+                        <CardContent className="py-8 text-center space-y-2">
+                          <BookOpen className="w-8 h-8 mx-auto text-zinc-300 dark:text-zinc-700" />
+                          <p className="font-semibold text-zinc-700 dark:text-zinc-300">Syllabus Not Available</p>
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                            The syllabus is currently being updated. Check back later.
+                          </p>
+                        </CardContent>
+                      </Card>
                     </div>
                   ) : (
                     subjectsState.map((sub) => {
@@ -818,13 +830,17 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                 </Card>
 
                 {subjectsState.length === 0 ? (
-                  <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                    <CardContent className="py-16 text-center">
-                      <BookOpen className="w-12 h-12 mx-auto text-zinc-300 dark:text-zinc-700 mb-4" />
-                      <p className="font-semibold text-zinc-700 dark:text-zinc-300">No syllabus yet</p>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                        Ask admin to add subjects and topics.
-                      </p>
+                  <Card className="border-dashed border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 shadow-none">
+                    <CardContent className="py-16 text-center space-y-4">
+                      <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto">
+                        <BookOpen className="w-8 h-8 text-zinc-400 dark:text-zinc-500" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Syllabus Not Available</p>
+                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
+                          The course syllabus hasn't been published yet. Content will appear here once the curriculum is configured.
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
@@ -864,9 +880,13 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                           <CollapsibleContent>
                             <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-zinc-100 dark:border-zinc-800 pt-2">
                               {sub.topics.length === 0 ? (
-                                <p className="text-sm text-zinc-400 dark:text-zinc-600 py-4 text-center italic">
-                                  No topics added for {sub.name} yet.
-                                </p>
+                                <div className="py-6 text-center space-y-2">
+                                  <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto">
+                                    <Minus className="w-5 h-5 text-zinc-400" />
+                                  </div>
+                                  <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">No topics available</p>
+                                  <p className="text-xs text-zinc-500">Topics for {sub.name} will be added soon.</p>
+                                </div>
                               ) : (
                                 <div className="space-y-1">
                                   {sub.topics.map((topic) => (

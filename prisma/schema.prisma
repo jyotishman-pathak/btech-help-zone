@@ -387,8 +387,8 @@ model MockTestQuestion {
   order               Int      @default(0)
   explanation         String? // admin-written solution text
   explanationImageUrl String?
-
-  test MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  optionImages        String[] @default([])
+  test                MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
 }
 
 model MockTestAttempt {

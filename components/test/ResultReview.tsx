@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useEffect } from "react";
 import {
     CheckCircle2, XCircle, MinusCircle, Flag, Clock, Target,
     Trophy, ArrowLeft, ChevronDown, ChevronUp, Lightbulb,
-    BarChart3, RotateCcw, TrendingUp, BookOpen,
+    BarChart3, RotateCcw, TrendingUp, BookOpen, X
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
@@ -21,6 +22,7 @@ interface QuestionResult {
     id: string; order: number; section: string;
     text: string; textAs: string | null; imageUrl: string | null;
     options: string[]; optionsAs: string[];
+    optionImages?: string[];
     correctIndex: number;
     explanation: string | null; explanationImageUrl: string | null;
     marks: number; negativeMarks: number;
@@ -60,9 +62,43 @@ function getQuestionStatus(q: QuestionResult): keyof typeof STATUS_CONFIG {
     return q.isCorrect ? "correct" : "wrong";
 }
 
+// ─── Image Zoom Modal ──────────────────────────────────────────────────────────
+function ImageZoomModal({ src, onClose }: { src: string; onClose: () => void }) {
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [onClose]);
+
+    return (
+        <div
+            className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+            onClick={onClose}
+        >
+            <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
+                <img
+                    src={src}
+                    alt="Option"
+                    className="w-full h-full object-contain rounded-xl shadow-2xl"
+                    style={{ maxHeight: "85vh" }}
+                />
+                <button
+                    onClick={onClose}
+                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+                <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/60 text-xs">
+                    Click anywhere or press Esc to close
+                </p>
+            </div>
+        </div>
+    );
+}
+
 // ─── Question Card ────────────────────────────────────────────────────────────
 
-function QuestionCard({ q, index, lang }: { q: QuestionResult; index: number; lang: "en" | "as" }) {
+function QuestionCard({ q, index, lang, setZoomedImage }: { q: QuestionResult; index: number; lang: "en" | "as", setZoomedImage: (s: string) => void }) {
     const [expanded, setExpanded] = useState(false);
     const status = getQuestionStatus(q);
     const cfg = STATUS_CONFIG[status];
@@ -117,6 +153,7 @@ function QuestionCard({ q, index, lang }: { q: QuestionResult; index: number; la
                     {/* Options */}
                     <div className="space-y-2">
                         {displayOptions.map((opt, i) => {
+                            const hasImage = q.optionImages?.[i];
                             const isUserAnswer = q.userAnswer === i;
                             const isCorrectAnswer = q.correctIndex === i;
 
@@ -125,13 +162,12 @@ function QuestionCard({ q, index, lang }: { q: QuestionResult; index: number; la
                             let indicator = null;
 
                             if (isCorrectAnswer) {
-                                optionStyle = "border-emerald-400 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-100";
+                                optionStyle = "border-emerald-400 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20";
                                 labelStyle = "border-emerald-500 bg-emerald-500 text-white";
                                 indicator = <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />;
                             }
-
                             if (isUserAnswer && !isCorrectAnswer) {
-                                optionStyle = "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-100";
+                                optionStyle = "border-red-400 dark:border-red-700 bg-red-50 dark:bg-red-900/20";
                                 labelStyle = "border-red-500 bg-red-500 text-white";
                                 indicator = <XCircle className="w-4 h-4 text-red-500 shrink-0" />;
                             }
@@ -141,18 +177,26 @@ function QuestionCard({ q, index, lang }: { q: QuestionResult; index: number; la
                                     <div className={cn("w-7 h-7 rounded-full border-2 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5", labelStyle)}>
                                         {["A", "B", "C", "D"][i]}
                                     </div>
-                                    <span className="text-sm flex-1 leading-relaxed">{opt}</span>
+                                    <div className="flex-1 min-w-0 space-y-2">
+                                        {opt && <span className="text-sm leading-relaxed">{opt}</span>}
+                                        {hasImage && (
+                                            <button
+                                                onClick={() => setZoomedImage(hasImage)}
+                                                className="block cursor-zoom-in"
+                                            >
+                                                <img
+                                                    src={hasImage}
+                                                    alt={`Option ${["A", "B", "C", "D"][i]}`}
+                                                    className="max-h-24 rounded-lg border border-zinc-200 dark:border-zinc-700 object-contain hover:opacity-90 transition bg-zinc-50 dark:bg-zinc-800"
+                                                />
+                                            </button>
+                                        )}
+                                    </div>
                                     <div className="shrink-0 flex items-center gap-1.5">
                                         {indicator}
-                                        {isUserAnswer && isCorrectAnswer && (
-                                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Your answer</span>
-                                        )}
-                                        {isUserAnswer && !isCorrectAnswer && (
-                                            <span className="text-[10px] font-bold text-red-600 dark:text-red-400">Your answer</span>
-                                        )}
-                                        {!isUserAnswer && isCorrectAnswer && (
-                                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Correct</span>
-                                        )}
+                                        {isUserAnswer && isCorrectAnswer && <span className="text-[10px] font-bold text-emerald-600">Your answer ✓</span>}
+                                        {isUserAnswer && !isCorrectAnswer && <span className="text-[10px] font-bold text-red-600">Your answer ✗</span>}
+                                        {!isUserAnswer && isCorrectAnswer && <span className="text-[10px] font-bold text-emerald-600">Correct</span>}
                                     </div>
                                 </div>
                             );
@@ -200,6 +244,7 @@ export function ResultReview({ data, testId }: { data: ResultData; testId: strin
     const [filter, setFilter] = useState<FilterType>("all");
     const [lang, setLang] = useState<"en" | "as">("en");
     const [expandAll, setExpandAll] = useState(false);
+    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
     const { attempt, test, stats, subjectBreakdown, questions } = data;
 
@@ -378,19 +423,19 @@ export function ResultReview({ data, testId }: { data: ResultData; testId: strin
                 {/* Questions */}
                 <div className="space-y-3">
                     {filteredQuestions.map((q, idx) => (
-                        <QuestionCard key={q.id} q={q} index={questions.indexOf(q)} lang={lang} />
+                        <QuestionCard key={q.id} q={q} index={questions.indexOf(q)} lang={lang} setZoomedImage={setZoomedImage} />
                     ))}
                 </div>
 
                 {/* Bottom actions */}
                 {filteredQuestions.length > 0 && (
                     <div className="flex gap-3 pt-4">
-                        <Link href="/my-batches" className="flex-1">
+                        <Link href="/student/my-batches" className="flex-1">
                             <Button variant="outline" className="w-full border-zinc-200 dark:border-zinc-800">
                                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to Batches
                             </Button>
                         </Link>
-                        <Link href={`/cee/mock/${testId}`} className="flex-1">
+                        <Link href={`/student/cee/mock/${testId}`} className="flex-1">
                             <Button className="w-full bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900">
                                 <RotateCcw className="w-4 h-4 mr-2" /> Reattempt Test
                             </Button>
@@ -398,6 +443,7 @@ export function ResultReview({ data, testId }: { data: ResultData; testId: strin
                     </div>
                 )}
             </div>
+            {zoomedImage && <ImageZoomModal src={zoomedImage} onClose={() => setZoomedImage(null)} />}
         </div>
     );
 }

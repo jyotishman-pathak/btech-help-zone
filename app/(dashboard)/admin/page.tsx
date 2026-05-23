@@ -6,9 +6,10 @@ import { AdminShell } from "../../../components/dashboard/AdminShell";
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: { tab?: string };
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const session = await auth();
+  const resolvedSearchParams = await searchParams;
 
   if (!session?.user) {
     redirect("/dashboard");
@@ -25,7 +26,7 @@ export default async function AdminPage({
         email: session.user.email ?? "",
         image: session.user.image ?? undefined,
       }}
-      initialTab={searchParams.tab}
+      initialTab={resolvedSearchParams.tab}
     />
   );
 }

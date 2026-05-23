@@ -2,65 +2,10 @@ import { Check, CheckSquare } from "lucide-react";
 import Link from "next/link";
 import { cn } from "../lib/utils";
 import prisma from "../lib/prisma.client";
+import { Batch, BatchFeature } from "@prisma/client";
 
+type BatchWithFeatures = Batch & { features: BatchFeature[] };
 
-// Fallback batches if DB is empty
-const FALLBACK_BATCHES = [
-  {
-    id: "sarathi",
-    name: "Sarathi",
-    slug: "sarathi",
-    tagline: "Free Starter Batch",
-    description: "Perfect for students who want to experience our mock test platform before purchasing premium plans.",
-    isFree: true,
-    price: 0,
-    originalPrice: null,
-    features: [
-      { text: "3 Free Full Mock Tests" },
-      { text: "Basic Performance Analysis" },
-      { text: "Real Exam Interface" },
-      { text: "Physics, Chemistry & Mathematics" },
-      { text: "Mobile Friendly Experience" },
-      { text: "Beginner Friendly" },
-    ],
-  },
-  {
-    id: "sankalpa",
-    name: "Sankalpa",
-    slug: "sankalpa",
-    tagline: "Building CEE Basics",
-    description: "A beginner level practice batch for building strong CEE basics.",
-    isFree: false,
-    price: 29900,
-    originalPrice: 44900,
-    features: [
-      { text: "6 Full Mock Tests" },
-      { text: "2 Years PYQs Included" },
-      { text: "Physics, Chemistry & Math" },
-      { text: "Detailed Score Analysis" },
-      { text: "Re-attempt Available" },
-      { text: "Mobile Friendly Platform" },
-    ],
-  },
-  {
-    id: "uttaran",
-    name: "Uttaran",
-    slug: "uttaran",
-    tagline: "Speed & Accuracy Booster",
-    description: "Best practice package for improving speed, accuracy, and confidence.",
-    isFree: false,
-    price: 49900,
-    originalPrice: 89900,
-    features: [
-      { text: "10 Full Mock Tests" },
-      { text: "4 Years PYQs Included" },
-      { text: "Class XI & XII Covered" },
-      { text: "Real Exam Pattern" },
-      { text: "Rank Prediction System" },
-      { text: "Detailed Performance Report" },
-    ],
-  },
-];
 
 function calcDiscount(price: number, original: number) {
   return Math.round(((original - price) / original) * 100);
@@ -68,12 +13,10 @@ function calcDiscount(price: number, original: number) {
 
 function BatchCard({
   batch,
-  index,
 }: {
-  batch: (typeof FALLBACK_BATCHES)[0];
-  index: number;
+  batch: BatchWithFeatures;
 }) {
-  const originalPrice = (batch as any).originalPrice;
+  const originalPrice = batch.originalPrice;
   const discount = !batch.isFree && originalPrice
     ? calcDiscount(batch.price, originalPrice)
     : null;
@@ -179,17 +122,32 @@ function BatchCard({
 }
 
 export async function CEEPricing() {
-  let batches = [];
+  let batches: BatchWithFeatures[] = [];
   try {
-    const dbBatches = await prisma.batch.findMany({
+    batches = await prisma.batch.findMany({
       where: { isActive: true, isPublished: true, deletedAt: null },
       include: { features: { orderBy: { order: "asc" } } },
       orderBy: { sortOrder: "asc" },
       take: 6,
     });
-    batches = dbBatches.length > 0 ? dbBatches : FALLBACK_BATCHES;
-  } catch {
-    batches = FALLBACK_BATCHES;
+  } catch (error) {
+    console.error("Failed to fetch batches:", error);
+    batches = [];
+  }
+
+  if (batches.length === 0) {
+    return (
+      <section className="bg-[#090915] py-20 md:py-28 px-4">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="font-black italic text-3xl md:text-5xl text-white mb-4">
+            PREMIUM BATCHES COMMING SOON
+          </h2>
+          <p className="text-gray-400">
+            We are currently updating our mock test batches. Please check back later.
+          </p>
+        </div>
+      </section>
+    );
   }
 
   return (
@@ -216,15 +174,15 @@ export async function CEEPricing() {
           <div className="flex items-center justify-center gap-3 mt-4">
             <div className="w-0.5 h-5 bg-violet-500 rounded-full" />
             <p className="text-gray-400 italic text-sm md:text-base">
-              "Select the perfect batch for your CEE preparation journey."
+              &quot;Select the perfect batch for your CEE preparation journey.&quot;
             </p>
           </div>
         </div>
 
         {/* Cards grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-          {batches.map((batch: any, i: number) => (
-            <BatchCard key={batch.id} batch={batch} index={i} />
+          {batches.map((batch: BatchWithFeatures) => (
+            <BatchCard key={batch.id} batch={batch} />
           ))}
         </div>
       </div>

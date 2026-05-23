@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Timer, Globe, Save, Flag, Eraser, Send, AlertCircle, CheckCircle2, XCircle,
-  Clock, Trophy, ArrowLeftRight, Info, Play, X, Search, Loader2, Eye,
+  Clock, Trophy, ArrowLeftRight, Info, Play, X, Search, Loader2, Eye, ZoomIn,
 } from "lucide-react";
 import { Button } from "../ui/button";
 
@@ -35,6 +35,7 @@ interface Question {
   imageUrl?: string;
   options: string[];
   optionsAs?: string[];
+  optionImages?: string[];
   marks: number;
   negativeMarks: number;
   order: number;
@@ -72,6 +73,40 @@ function formatTime(s: number) {
 
 const SS_KEY = (testId: string, userId?: string) => `cbt_${testId}_${userId ?? "anon"}`;
 
+// ─── Image Zoom Modal ──────────────────────────────────────────────────────────
+function ImageZoomModal({ src, onClose }: { src: string; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4 cursor-zoom-out"
+      onClick={onClose}
+    >
+      <div className="relative max-w-4xl max-h-[90vh] w-full" onClick={(e) => e.stopPropagation()}>
+        <img
+          src={src}
+          alt="Option"
+          className="w-full h-full object-contain rounded-xl shadow-2xl"
+          style={{ maxHeight: "85vh" }}
+        />
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/60 text-xs">
+          Click anywhere or press Esc to close
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function CBTEngine({ testId, user }: CBTEngineProps) {
@@ -88,6 +123,7 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [result, setResult] = useState<TestResult | null>(null);
   const [timeTaken, setTimeTaken] = useState(0);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const autosaveRef = useRef<NodeJS.Timeout | null>(null);
@@ -550,35 +586,64 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                   </h2>
                 </CardHeader>
                 <CardContent className="flex-1 pt-6 space-y-3">
-                  {currentQ.options.map((opt, i) => {
-                    const isSelected = answers[currentQ.id] === i;
-                    const displayOpt =
-                      lang === "as" && currentQ.optionsAs?.[i]
-                        ? currentQ.optionsAs[i]
-                        : opt;
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => handleSelectOption(i)}
-                        className={cn(
-                          "w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all",
-                          isSelected
-                            ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-800/50"
-                            : "border-slate-200/70 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/30"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm shrink-0",
-                          isSelected
-                            ? "border-slate-900 dark:border-slate-100 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-                            : "border-slate-300 dark:border-slate-700 text-slate-500"
-                        )}>
-                          {["A", "B", "C", "D"][i]}
-                        </div>
-                        <span className="text-slate-800 dark:text-slate-200 font-medium">{displayOpt}</span>
-                      </button>
-                    );
-                  })}
+                  {/* Options */}
+                  <div className="space-y-2">
+                    {currentQ.options.map((opt, i) => {
+                      const hasImage = currentQ.optionImages?.[i];
+                      const isSelected = answers[currentQ.id] === i;
+                      const displayOpt =
+                        lang === "as" && currentQ.optionsAs?.[i]
+                          ? currentQ.optionsAs[i]
+                          : opt;
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => handleSelectOption(i)}
+                          className={cn(
+                            "w-full flex items-start gap-3 p-3 rounded-xl border-2 text-left transition-all",
+                            isSelected
+                              ? "border-slate-900 dark:border-slate-100 bg-slate-100 dark:bg-slate-800"
+                              : "border-slate-200/70 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
+                          )}
+                        >
+                          {/* Letter badge */}
+                          <div className={cn(
+                            "w-7 h-7 rounded-full border-2 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 transition-all",
+                            isSelected
+                              ? "border-slate-900 dark:border-slate-100 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
+                              : "border-slate-300 dark:border-slate-700 text-slate-500"
+                          )}>
+                            {"ABCD"[i]}
+                          </div>
+
+                          {/* Option content */}
+                          <div className="flex-1 min-w-0 space-y-2">
+                            {displayOpt && (
+                              <span className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed block mt-1">{displayOpt}</span>
+                            )}
+                            {hasImage && (
+                              <div
+                                onClick={(e) => { e.stopPropagation(); setZoomedImage(hasImage); }}
+                                className="cursor-zoom-in inline-block"
+                                title="Click to zoom"
+                              >
+                                <img
+                                  src={hasImage}
+                                  alt={`Option ${"ABCD"[i]}`}
+                                  className="max-h-28 rounded-lg border border-slate-200 dark:border-slate-700 object-contain hover:opacity-90 transition bg-slate-50 dark:bg-slate-800"
+                                />
+                                <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                  <ZoomIn className="w-3 h-3" /> Tap to zoom
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {isSelected && <CheckCircle2 className="w-4 h-4 text-slate-900 dark:text-slate-100 shrink-0 mt-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -664,6 +729,7 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {zoomedImage && <ImageZoomModal src={zoomedImage} onClose={() => setZoomedImage(null)} />}
     </div>
   );
 }

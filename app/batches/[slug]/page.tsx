@@ -314,9 +314,9 @@ export default function BatchDetailPage() {
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
                       <Shield className="w-3.5 h-3.5" /> Secure payment via Razorpay
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-zinc-500">
+                    {/* <div className="flex items-center gap-2 text-xs text-zinc-500">
                       <Award className="w-3.5 h-3.5" /> Certificate on completion
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
                       <Users className="w-3.5 h-3.5" /> {batch._count.enrollments.toLocaleString()} students enrolled
                     </div>

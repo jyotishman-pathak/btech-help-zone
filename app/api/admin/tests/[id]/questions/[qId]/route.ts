@@ -22,10 +22,13 @@ export async function PATCH(
             imageUrl: body.imageUrl ?? null,
             options: body.options,
             optionsAs: body.optionsAs ?? [],
+            optionImages: body.optionImages ?? [],
             correctIndex: body.correctIndex,
             marks: body.marks ?? 4,
             negativeMarks: body.negativeMarks ?? 1,
             section: body.section ?? "General",
+            explanation: body.explanation ?? null,
+            explanationImageUrl: body.explanationImageUrl ?? null,
         },
     });
 

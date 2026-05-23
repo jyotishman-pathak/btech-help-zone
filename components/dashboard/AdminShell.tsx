@@ -429,6 +429,7 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
               { id: "batches", label: "Batches", icon: BookOpen, href: "/admin/batches" },
               { id: "coupons", label: "Coupons", icon: Tag, href: "/admin/coupons" },
               { id: "leads", label: "Free Leads", icon: Users },
+              { id: "syllabus", label: "Syllabus", icon: BookOpen, href: "/admin/syllabus" },
               { id: "audit", label: "Audit Logs", icon: Shield, href: "/admin/audit-logs" },
               { id: "pyq", label: "Upload PYQ", icon: Upload, href: "/admin/pyq" },
               { id: "settings", label: "Settings", icon: Settings },

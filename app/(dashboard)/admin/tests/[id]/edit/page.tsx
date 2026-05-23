@@ -34,6 +34,7 @@ interface Question {
     imageUrl: string | null;
     options: string[];
     optionsAs: string[];
+    optionImages?: string[];
     correctIndex: number;
     explanation?: string | null;
     explanationImageUrl?: string | null;
@@ -147,6 +148,24 @@ function QuestionEditor({
         finally { setExplanationUploading(false); }
     };
 
+    const optionImgRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+    const [optionUploading, setOptionUploading] = useState<number | null>(null);
+
+    const updateOptionImage = (i: number, url: string | null) => {
+        const next = [...(local.optionImages ?? ["","","",""])];
+        next[i] = url ?? "";
+        update({ optionImages: next });
+    };
+
+    const handleOptionImageUpload = async (i: number, file: File) => {
+        setOptionUploading(i);
+        try {
+            const { url } = await uploadToCloudinary(file, { folder: "cee/options", resourceType: "image" });
+            updateOptionImage(i, url);
+        } catch { alert("Upload failed"); }
+        finally { setOptionUploading(null); }
+    };
+
     const saveQuestion = async () => {
         setSaving(true);
         try {
@@ -159,6 +178,7 @@ function QuestionEditor({
                     imageUrl: local.imageUrl,
                     options: local.options,
                     optionsAs: local.optionsAs,
+                    optionImages: local.optionImages ?? [],
                     correctIndex: local.correctIndex,
                     marks: local.marks,
                     negativeMarks: local.negativeMarks,
@@ -332,34 +352,81 @@ function QuestionEditor({
                     <div className="space-y-2">
                         <Label className="text-xs">Options — click circle to mark correct answer</Label>
                         {local.options.map((opt, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                                <button
-                                    onClick={() => update({ correctIndex: i })}
-                                    className={cn(
-                                        "w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 font-bold text-xs transition-all",
-                                        local.correctIndex === i
-                                            ? "border-emerald-500 bg-emerald-500 text-white"
-                                            : "border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:border-emerald-400"
-                                    )}
-                                >
-                                    {local.correctIndex === i ? <Check className="w-3 h-3" /> : "ABCD"[i]}
-                                </button>
-                                <Input
-                                    value={opt}
-                                    onChange={(e) => updateOption(i, e.target.value)}
-                                    placeholder={`Option ${["A", "B", "C", "D"][i]}`}
-                                    className="flex-1 h-8 text-sm"
-                                />
-                                <Input
-                                    value={local.optionsAs?.[i] ?? ""}
-                                    onChange={(e) => {
-                                        const next = [...(local.optionsAs ?? ["", "", "", ""])];
-                                        next[i] = e.target.value;
-                                        update({ optionsAs: next });
-                                    }}
-                                    placeholder={`বিকল্প ${["ক", "খ", "গ", "ঘ"][i]}`}
-                                    className="flex-1 h-8 text-sm"
-                                />
+                            <div key={i} className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    {/* Correct answer button */}
+                                    <button
+                                        onClick={() => update({ correctIndex: i })}
+                                        className={cn(
+                                            "w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 font-bold text-xs transition-all",
+                                            local.correctIndex === i
+                                                ? "border-emerald-500 bg-emerald-500 text-white"
+                                                : "border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:border-emerald-400"
+                                        )}
+                                    >
+                                        {local.correctIndex === i ? <Check className="w-3 h-3" /> : "ABCD"[i]}
+                                    </button>
+
+                                    {/* Text input */}
+                                    <Input
+                                        value={opt}
+                                        onChange={(e) => updateOption(i, e.target.value)}
+                                        placeholder={`Option ${"ABCD"[i]} text (or leave blank if image-only)`}
+                                        className="flex-1 h-8 text-sm"
+                                    />
+                                    
+                                    <Input
+                                        value={local.optionsAs?.[i] ?? ""}
+                                        onChange={(e) => {
+                                            const next = [...(local.optionsAs ?? ["", "", "", ""])];
+                                            next[i] = e.target.value;
+                                            update({ optionsAs: next });
+                                        }}
+                                        placeholder={`বিকল্প ${["ক", "খ", "গ", "ঘ"][i]}`}
+                                        className="flex-1 h-8 text-sm"
+                                    />
+
+                                    {/* Upload image for this option */}
+                                    <button
+                                        onClick={() => optionImgRefs[i].current?.click()}
+                                        disabled={optionUploading === i}
+                                        className="h-8 px-2.5 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 hover:border-zinc-400 text-xs flex items-center gap-1.5 shrink-0 transition-colors bg-white dark:bg-zinc-900"
+                                    >
+                                        {optionUploading === i
+                                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                                            : <><ImageIcon className="w-3 h-3" /> {local.optionImages?.[i] ? "Change" : "Image"}</>
+                                        }
+                                    </button>
+                                    <input
+                                        ref={optionImgRefs[i]}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleOptionImageUpload(i, f); }}
+                                    />
+                                </div>
+
+                                {/* Image preview if uploaded */}
+                                {local.optionImages?.[i] && (
+                                    <div className="ml-9 flex items-start gap-2">
+                                        <button
+                                            onClick={() => {/* zoom — handled in student view */}}
+                                            className="block"
+                                        >
+                                            <img
+                                                src={local.optionImages[i]}
+                                                alt={`Option ${"ABCD"[i]}`}
+                                                className="h-20 rounded-lg border border-zinc-200 dark:border-zinc-700 object-contain bg-zinc-50 dark:bg-zinc-800"
+                                            />
+                                        </button>
+                                        <button
+                                            onClick={() => updateOptionImage(i, null)}
+                                            className="p-1.5 rounded bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-100 transition shrink-0"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
