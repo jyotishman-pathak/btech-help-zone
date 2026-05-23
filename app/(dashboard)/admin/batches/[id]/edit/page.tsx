@@ -6,9 +6,10 @@ import Link from "next/link";
 import {
     ChevronLeft, Save, Plus, X, Loader2, Check,
     Trash2, Upload, Eye, ToggleLeft, ToggleRight,
-    Timer, FileText, Search,
+    Timer, FileText, Search, Download, GripVertical,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../components/ui/card";
+import { DEFAULT_LEAD_FIELDS } from "../../../../../../components/batch/LeadCaptureForm";
 
 import { Input } from "../../../../../../components/ui/input";
 import { Label } from "../../../../../../components/ui/label";
@@ -21,6 +22,247 @@ import { Button } from "../../../../../../components/ui/button";
 import { Badge } from "../../../../../../components/ui/badge";
 import { uploadToCloudinary } from "../../../../../../lib/cloudinary-upload";
 import { AdminPageWrapper } from "../../../../../../components/dashboard/AdminPageWrapper";
+
+function LeadFormTab({ batchId }: { batchId: string }) {
+  const [fields, setFields] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [usingDefaults, setUsingDefaults] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/admin/batches/${batchId}/lead-form`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.fields?.length) {
+          setFields(data.fields);
+          setUsingDefaults(false);
+        } else {
+          // Load default fields as starting point
+          setFields(DEFAULT_LEAD_FIELDS.map((f, i) => ({ ...f, order: i })));
+          setUsingDefaults(true);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [batchId]);
+
+  const addField = () => {
+    setFields([...fields, { id: `new-${Date.now()}`, label: "", fieldType: "text", required: true, placeholder: "", options: [] }]);
+  };
+
+  const removeField = (idx: number) => setFields(fields.filter((_, i) => i !== idx));
+
+  const updateField = (idx: number, patch: any) => {
+    const next = [...fields];
+    next[idx] = { ...next[idx], ...patch };
+    setFields(next);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/admin/batches/${batchId}/lead-form`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "Register for Free Access", fields }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setUsingDefaults(false);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } finally { setSaving(false); }
+  };
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-zinc-400" /></div>;
+
+  return (
+    <div className="space-y-4">
+      {usingDefaults && (
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 text-sm text-blue-700 dark:text-blue-400">
+          Showing default fields. Customize and save to use your own.
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {fields.map((field, idx) => (
+          <Card key={field.id ?? idx} className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <GripVertical className="w-4 h-4 text-zinc-400 shrink-0" />
+                <div className="grid grid-cols-2 gap-3 flex-1">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Field Label</Label>
+                    <Input
+                      value={field.label}
+                      onChange={(e) => updateField(idx, { label: e.target.value })}
+                      placeholder="e.g. Phone Number"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Field Type</Label>
+                    <Select value={field.fieldType} onValueChange={(v) => updateField(idx, { fieldType: v })}>
+                      <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text">Text</SelectItem>
+                        <SelectItem value="phone">Phone</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                        <SelectItem value="select">Dropdown</SelectItem>
+                        <SelectItem value="textarea">Textarea</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <label className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={field.required}
+                      onChange={(e) => updateField(idx, { required: e.target.checked })}
+                      className="rounded"
+                    />
+                    Required
+                  </label>
+                  <button onClick={() => removeField(idx)} className="p-1.5 rounded text-zinc-400 hover:text-red-500 transition">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1 ml-6">
+                <Label className="text-xs">Placeholder</Label>
+                <Input
+                  value={field.placeholder ?? ""}
+                  onChange={(e) => updateField(idx, { placeholder: e.target.value })}
+                  placeholder="Hint text shown inside the field"
+                  className="text-sm"
+                />
+              </div>
+
+              {field.fieldType === "select" && (
+                <div className="space-y-1 ml-6">
+                  <Label className="text-xs">Options (one per line)</Label>
+                  <Textarea
+                    value={(field.options ?? []).join("\n")}
+                    onChange={(e) => updateField(idx, { options: e.target.value.split("\n").filter(Boolean) })}
+                    placeholder={"Class 11\nClass 12\n12th Pass 2024"}
+                    rows={4}
+                    className="text-sm resize-none font-mono"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Button
+        variant="outline"
+        onClick={addField}
+        className="w-full border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500"
+      >
+        <Plus className="w-4 h-4 mr-2" /> Add Field
+      </Button>
+
+      <Button
+        onClick={save}
+        disabled={saving}
+        className={cn(
+          "w-full",
+          saved ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+        )}
+      >
+        {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+          : saved ? <><Check className="w-4 h-4 mr-2" /> Saved!</>
+            : <><Save className="w-4 h-4 mr-2" /> Save Lead Form</>}
+      </Button>
+    </div>
+  );
+}
+
+function LeadsTab({ batchId }: { batchId: string }) {
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/admin/leads?batchId=${batchId}`)
+      .then((r) => r.json())
+      .then((data) => setLeads(Array.isArray(data) ? data : []))
+      .finally(() => setLoading(false));
+  }, [batchId]);
+
+  const exportCSV = () => {
+    if (!leads.length) return;
+    // Get all field names from first lead
+    const allKeys = Object.keys(leads[0]?.data ?? {});
+    const headers = ["Date", "Name", "Email", ...allKeys];
+    const rows = leads.map((lead) => [
+      new Date(lead.createdAt).toLocaleDateString("en-IN"),
+      lead.user?.name ?? "—",
+      lead.user?.email ?? "—",
+      ...allKeys.map((k) => (lead.data as any)[k] ?? ""),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = `leads-${batchId}.csv`;
+    a.click();
+  };
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-zinc-400" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">{leads.length} submissions</p>
+        <Button variant="outline" size="sm" onClick={exportCSV} disabled={!leads.length} className="border-zinc-200 dark:border-zinc-800">
+          <Download className="w-3.5 h-3.5 mr-1.5" /> Export CSV
+        </Button>
+      </div>
+
+      {leads.length === 0 ? (
+        <div className="py-12 text-center text-zinc-400 dark:text-zinc-600">
+          No enrollments yet for this batch.
+        </div>
+      ) : (
+        <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/50">
+                <th className="text-left px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</th>
+                <th className="text-left px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Account</th>
+                {Object.keys(leads[0]?.data ?? {}).map((key) => (
+                  <th key={key} className="text-left px-4 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider whitespace-nowrap">
+                    {key}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {leads.map((lead) => (
+                <tr key={lead.id} className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
+                  <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
+                    {new Date(lead.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-zinc-900 dark:text-zinc-100">{lead.user?.name ?? "—"}</p>
+                    <p className="text-xs text-zinc-500">{lead.user?.email ?? "—"}</p>
+                  </td>
+                  {Object.keys(leads[0]?.data ?? {}).map((key) => (
+                    <td key={key} className="px-4 py-3 text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
+                      {(lead.data as any)[key] ?? "—"}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+    </div>
+  );
+}
 
 export default function BatchEditPage() {
     const params = useParams();
@@ -209,6 +451,12 @@ export default function BatchEditPage() {
                         <TabsTrigger value="content" className="text-sm data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900">
                             PYQs ({assignedPYQIds.size})
                         </TabsTrigger>
+                        <TabsTrigger value="lead-form" className="text-sm data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900">
+                            Lead Form
+                        </TabsTrigger>
+                        <TabsTrigger value="leads" className="text-sm data-[state=active]:bg-zinc-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-zinc-900">
+                            Leads
+                        </TabsTrigger>
                     </TabsList>
 
                     {/* ── Details Tab ────────────────────────────────────────────────── */}
@@ -265,10 +513,10 @@ export default function BatchEditPage() {
                                     </div>
                                     <div className="space-y-1.5">
                                         <Label>Badge</Label>
-                                        <Select value={form.badge || ""} onValueChange={(v) => update("badge", v || null)}>
+                                        <Select value={form.badge || "none"} onValueChange={(v) => update("badge", v === "none" ? null : v)}>
                                             <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="">None</SelectItem>
+                                                <SelectItem value="none">None</SelectItem>
                                                 <SelectItem value="Most Popular">Most Popular</SelectItem>
                                                 <SelectItem value="Bestseller">Bestseller</SelectItem>
                                                 <SelectItem value="New">New</SelectItem>
@@ -444,6 +692,14 @@ export default function BatchEditPage() {
                                 );
                             })}
                         </div>
+                    </TabsContent>
+
+                    <TabsContent value="lead-form" className="mt-4">
+                        <LeadFormTab batchId={batchId} />
+                    </TabsContent>
+
+                    <TabsContent value="leads" className="mt-4">
+                        <LeadsTab batchId={batchId} />
                     </TabsContent>
                 </Tabs>
             </div>

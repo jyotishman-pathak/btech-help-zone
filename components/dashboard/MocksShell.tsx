@@ -133,18 +133,43 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
     );
   }, [answers, marked, visited, attemptId, timeLeft, currentIdx]);
 
-  // ── Timer ────────────────────────────────────────────────────────────────
+  // ── Timer — FIXED (no side-effects inside setState) ─────────────────────────
+  const hasStarted = useRef(false);
+
+  useEffect(() => {
+    if (status === "running") hasStarted.current = true;
+  }, [status]);
+
+  // Tick every second
   useEffect(() => {
     if (status !== "running") return;
+
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) { clearInterval(timerRef.current!); finishTest(true); return 0; }
+        // Just decrement — never call functions inside setState
+        if (prev <= 0) return 0;
         return prev - 1;
       });
       setTimeTaken((prev) => prev + 1);
     }, 1000);
+
     return () => clearInterval(timerRef.current!);
   }, [status]);
+
+  // Watch timeLeft reaching zero — auto-save then submit
+  useEffect(() => {
+    if (timeLeft === 0 && hasStarted.current && status === "running") {
+      // Flush sessionStorage so nothing is lost
+      if (test) {
+        sessionStorage.setItem(
+          SS_KEY(testId, user?.id),
+          JSON.stringify({ answers, marked: [...marked], visited: [...visited], attemptId, timeLeft: 0, currentIdx })
+        );
+      }
+      // Auto-submit exactly like the user clicked "Confirm Submit"
+      finishTest();
+    }
+  }, [timeLeft]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── DB Autosave every 60s ────────────────────────────────────────────────
   useEffect(() => {
@@ -224,10 +249,11 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
   };
 
   // Update finishTest to:
-  const finishTest = async (auto = false) => {
-    if (status === "submitting") return;
+  const finishTest = useCallback(async () => {
+    if (status === "submitting" || status === "results") return;
     clearInterval(timerRef.current!);
     clearInterval(autosaveRef.current!);
+    setShowSubmitDialog(false);
     setStatus("submitting");
 
     try {
@@ -237,7 +263,7 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
         body: JSON.stringify({
           attemptId,
           answers,
-          markedForReview: [...marked],  // ← send marked question IDs
+          markedForReview: [...marked],
         }),
       });
       const data = await res.json();
@@ -248,16 +274,20 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
         score: data.score,
         totalMarks: data.totalMarks,
         timeTaken,
-        accuracy: data.correct + data.wrong > 0
-          ? Math.round((data.correct / (data.correct + data.wrong)) * 100) : 0,
-        attemptId: data.id,   // ← save attemptId for review link
+        accuracy:
+          data.correct + data.wrong > 0
+            ? Math.round((data.correct / (data.correct + data.wrong)) * 100)
+            : 0,
+        attemptId: data.id,
       });
       sessionStorage.removeItem(SS_KEY(testId, user?.id));
       setStatus("results");
     } catch (e) {
+      // On network error during auto-submit, try once more
       setStatus("running");
+      setTimeout(() => finishTest(), 3000);
     }
-  };
+  }, [status, testId, attemptId, answers, marked, timeTaken, user?.id, test, currentIdx, visited]);
 
   // ─── Status colors ────────────────────────────────────────────────────────
   const statusColors: Record<QuestionStatus, string> = {
@@ -580,7 +610,7 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
                 <Button
                   onClick={() => setShowSubmitDialog(true)}
                   variant="destructive"
-                  className="w-full h-11 bg-red-600 hover:bg-red-700"
+                  className="w-full h-11 bg-green-600 text-white hover:bg-green-700"
                 >
                   <Send className="w-4 h-4 mr-2" /> Submit Test
                 </Button>

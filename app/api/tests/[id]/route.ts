@@ -27,8 +27,8 @@ export async function GET(
   }
 
   const [test, batchAccess, submittedCount] = await Promise.all([
-    prisma.mockTest.findUnique({
-      where: { id, isActive: true },
+    prisma.mockTest.findFirst({
+      where: { id, isActive: true, deletedAt: null },
       include: { questions: { orderBy: { order: "asc" } } },
     }),
     prisma.enrollment.findFirst({

@@ -57,10 +57,10 @@ export default function BrowseBatchesPage() {
 
   const filtered = search
     ? batches.filter(
-        (b) =>
-          b.name.toLowerCase().includes(search.toLowerCase()) ||
-          b.tagline?.toLowerCase().includes(search.toLowerCase())
-      )
+      (b) =>
+        b.name.toLowerCase().includes(search.toLowerCase()) ||
+        b.tagline?.toLowerCase().includes(search.toLowerCase())
+    )
     : batches;
 
   return (
@@ -159,7 +159,7 @@ export default function BrowseBatchesPage() {
 
       {/* Back to home */}
       <div className="max-w-6xl mx-auto px-4 pb-12 text-center">
-        <Link href="/">
+        <Link href="/student">
           <Button variant="ghost" className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
             ← Back to Home
           </Button>

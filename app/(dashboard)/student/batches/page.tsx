@@ -5,6 +5,8 @@ import { Input } from "../../../../components/ui/input";
 import { BookOpen, Search } from "lucide-react";
 import { cn } from "../../../../lib/utils";
 import { BatchCard } from "../../../../components/batch/BatchCard";
+import Link from "next/link";
+import { Button } from "../../../../components/ui/button";
 
 
 const TABS = [
@@ -60,7 +62,12 @@ export default function BatchesPage() {
               className="pl-9 h-11 bg-white/10 dark:bg-zinc-900/10 border-white/20 text-white dark:text-zinc-900 placeholder:text-zinc-500"
             />
           </div>
+
+
         </div>
+
+
+
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
@@ -104,6 +111,16 @@ export default function BatchesPage() {
             ))}
           </div>
         )}
+
+
+        <div className="max-w-6xl mx-auto px-4 pb-12 text-center">
+          <Link href="/student">
+            <Button variant="ghost" className="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
+              ← Back to Home
+            </Button>
+          </Link>
+        </div>
+
       </div>
     </div>
   );

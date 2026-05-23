@@ -108,13 +108,8 @@ export function EnrollButton({
 
   // ── Free batch click handler ──────────────────────────────────────────────
   const handleFreeEnroll = () => {
-    // If admin configured a lead form → show it
-    if (leadFormFields.length > 0) {
-      setShowLeadForm(true);
-      return;
-    }
-    // Otherwise enroll directly with no form data
-    enrollDirectly({});
+    // Always show lead form for free batches — never skip
+    setShowLeadForm(true);
   };
 
   // ── Coupon validation ─────────────────────────────────────────────────────
@@ -278,14 +273,14 @@ export function EnrollButton({
         </p>
       </div>
 
-      {/* Lead form dialog — only when fields are configured */}
-      {isFree && leadFormFields.length > 0 && (
+      {/* Lead form — shown for ALL free batches */}
+      {isFree && (
         <LeadCaptureForm
           open={showLeadForm}
           onClose={() => setShowLeadForm(false)}
           batchSlug={batchSlug}
           batchName={batchName}
-          fields={leadFormFields}
+          fields={leadFormFields}  // empty = LeadCaptureForm uses defaults
         />
       )}
     </>

@@ -35,15 +35,16 @@ export function AdminPageWrapper({ children, activeTab, backHref }: AdminPageWra
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: BarChart3, href: "/admin" },
-    { id: "users", label: "Users", icon: Users, href: "/admin" },
-    { id: "content", label: "Content", icon: FileText, href: "/admin" },
+    { id: "users", label: "Users", icon: Users, href: "/admin?tab=users" },
+    { id: "content", label: "Content", icon: FileText, href: "/admin?tab=content" },
     { id: "tests", label: "Mock Tests", icon: Code, href: "/admin/tests" },
-    { id: "analytics", label: "Analytics", icon: PieChart, href: "/admin" },
+    { id: "analytics", label: "Analytics", icon: PieChart, href: "/admin?tab=analytics" },
     { id: "batches", label: "Batches", icon: BookOpen, href: "/admin/batches" },
     { id: "coupons", label: "Coupons", icon: Tag, href: "/admin/coupons" },
+    { id: "leads", label: "Free Leads", icon: Users, href: "/admin?tab=leads" },
     { id: "audit", label: "Audit Logs", icon: Shield, href: "/admin/audit-logs" },
     { id: "pyq", label: "Upload PYQ", icon: Upload, href: "/admin/pyq" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/admin" },
+    { id: "settings", label: "Settings", icon: Settings, href: "/admin?tab=settings" },
   ];
 
   return (

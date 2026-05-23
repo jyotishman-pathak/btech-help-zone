@@ -42,6 +42,7 @@ type AdminTab =
   | "batches"
   | "coupons"
   | "audit"
+  | "leads"
   | "settings";
 type Tier = "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
 
@@ -131,8 +132,8 @@ function Spinner() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function AdminShell({ admin }: { admin: { name: string; email: string; image?: string } }) {
-  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+export function AdminShell({ admin, initialTab }: { admin: { name: string; email: string; image?: string }, initialTab?: string }) {
+  const [activeTab, setActiveTab] = useState<AdminTab>((initialTab as AdminTab) || "dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [userFilter, setUserFilter] = useState<"all" | Tier>("all");
@@ -161,6 +162,13 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
   const [newContent, setNewContent] = useState({ title: "", type: "NOTE" as const, fileUrl: "", requiredTier: "NORMAL" as Tier });
   const [savingContent, setSavingContent] = useState(false);
+
+  // Leads state
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
+  const [leadsBatchFilter, setLeadsBatchFilter] = useState("all");
+  const [leadSearch, setLeadSearch] = useState("");
+  const [allFreeBatches, setAllFreeBatches] = useState<{ id: string; name: string; slug: string }[]>([]);
 
   // ── Fetchers ────────────────────────────────────────────────────────────────
 
@@ -214,6 +222,30 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
     } finally { setLoadingCodes(false); }
   }, []);
 
+  const fetchLeads = useCallback(async () => {
+    setLoadingLeads(true);
+    try {
+      const params = new URLSearchParams();
+      if (leadsBatchFilter !== "all") params.set("batchId", leadsBatchFilter);
+      const res = await fetch(`/api/admin/leads?${params}`);
+      if (res.ok) setLeads(await res.json());
+    } finally { setLoadingLeads(false); }
+  }, [leadsBatchFilter]);
+
+  const fetchFreeBatches = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/batches");
+      if (res.ok) {
+        const data = await res.json();
+        setAllFreeBatches(
+          (Array.isArray(data) ? data : [])
+            .filter((b: any) => b.isFree && !b.deletedAt)
+            .map((b: any) => ({ id: b.id, name: b.name, slug: b.slug }))
+        );
+      }
+    } catch { }
+  }, []);
+
   // Load data when tab changes
   useEffect(() => {
     if (activeTab === "dashboard") { fetchStats(); }
@@ -221,7 +253,12 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
     if (activeTab === "content") { fetchContent(); }
     if (activeTab === "codes") { fetchCodes(); }
     if (activeTab === "analytics") { fetchAnalytics(); }
+    if (activeTab === "leads") { fetchLeads(); fetchFreeBatches(); }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === "leads") fetchLeads();
+  }, [leadsBatchFilter]);
 
   // Re-fetch users when filters change
   useEffect(() => {
@@ -231,7 +268,6 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
   useEffect(() => {
     if (activeTab === "content") fetchContent();
   }, [contentFilter, searchQuery]);
-
 
   const { data: session } = useSession();
 
@@ -312,6 +348,29 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
     a.click();
   };
 
+  const exportLeadsCSV = () => {
+    if (!leads.length) return;
+    const allDataKeys = [...new Set(leads.flatMap((l) => Object.keys(l.data ?? {})))];
+    const headers = ["Date", "Batch", "Account Name", "Account Email", ...allDataKeys];
+    const rows = leads.map((l) => {
+      const d = l.data as Record<string, string>;
+      return [
+        new Date(l.createdAt).toLocaleDateString("en-IN"),
+        l.batchName,
+        l.user?.name ?? "",
+        l.user?.email ?? "",
+        ...allDataKeys.map((k) => d[k] ?? ""),
+      ];
+    });
+    const csv = [headers, ...rows]
+      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+    a.download = `leads-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+  };
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   const statCards = stats
@@ -322,6 +381,21 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
       { title: "Revenue (₹)", value: `₹${stats.revenueTotal.toLocaleString("en-IN")}`, change: trendStr(stats.trends.revenue), trend: stats.trends.revenue >= 0 ? "up" as const : "down" as const, icon: TrendingUp },
     ]
     : [];
+
+  const filteredLeads = leadSearch
+    ? leads.filter((l) => {
+      const d = l.data as Record<string, string>;
+      const q = leadSearch.toLowerCase();
+      return (
+        l.user?.name?.toLowerCase().includes(q) ||
+        l.user?.email?.toLowerCase().includes(q) ||
+        d["Full Name"]?.toLowerCase().includes(q) ||
+        d["Phone Number"]?.includes(leadSearch) ||
+        d["School / College"]?.toLowerCase().includes(q) ||
+        l.batchName?.toLowerCase().includes(q)
+      );
+    })
+    : leads;
 
   return (
     <div className="min-h-screen bg-[#F7F5FF] dark:bg-[#0D0B1A] flex">
@@ -352,21 +426,40 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
               { id: "content", label: "Content", icon: FileText },
               { id: "tests", label: "Mock Tests", icon: Code, href: "/admin/tests" },
               { id: "analytics", label: "Analytics", icon: PieChart },
-
               { id: "batches", label: "Batches", icon: BookOpen, href: "/admin/batches" },
               { id: "coupons", label: "Coupons", icon: Tag, href: "/admin/coupons" },
+              { id: "leads", label: "Free Leads", icon: Users },
               { id: "audit", label: "Audit Logs", icon: Shield, href: "/admin/audit-logs" },
-
               { id: "pyq", label: "Upload PYQ", icon: Upload, href: "/admin/pyq" },
               { id: "settings", label: "Settings", icon: Settings },
             ] as const).map((item) => {
-              if ('href' in item) {
+              if ("href" in item) {
                 return (
                   <Link key={item.id} href={item.href}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                   >
                     <item.icon className="w-4 h-4" /> {item.label}
                   </Link>
+                );
+              }
+              if (item.id === "leads") {
+                return (
+                  <button
+                    key="leads"
+                    onClick={() => setActiveTab("leads")}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === "leads"
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                      }`}
+                  >
+                    <Users className="w-4 h-4" />
+                    Free Leads
+                    {leads.length > 0 && (
+                      <span className="ml-auto text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                        {leads.length}
+                      </span>
+                    )}
+                  </button>
                 );
               }
               return (
@@ -419,8 +512,7 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
                 className="hidden md:flex"
               >
                 <ChevronDown
-                  className={`w-4 h-4 transition-transform ${sidebarOpen ? "rotate-90" : "-rotate-90"
-                    }`}
+                  className={`w-4 h-4 transition-transform ${sidebarOpen ? "rotate-90" : "-rotate-90"}`}
                 />
               </Button>
 
@@ -429,7 +521,6 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
                   <Button variant="ghost" size="sm" asChild>
                     <Link href="/login">Login</Link>
                   </Button>
-
                   <Button size="sm" asChild>
                     <Link href="/register">Start Free</Link>
                   </Button>
@@ -446,47 +537,24 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
                       </Avatar>
                     </button>
                   </DropdownMenuTrigger>
-
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-56"
-                  >
+                  <DropdownMenuContent align="end" className="w-56">
                     <div className="px-2 py-1.5">
-                      <p className="text-sm font-medium">
-                        {session.user?.name}
-                      </p>
-
-                      <p className="text-xs text-slate-500 truncate">
-                        {session.user?.email}
-                      </p>
+                      <p className="text-sm font-medium">{session.user?.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{session.user?.email}</p>
                     </div>
-
                     <DropdownMenuSeparator />
-
                     <DropdownMenuItem asChild>
-                      <Link
-                        href="/dashboard"
-                        className="cursor-pointer"
-                      >
+                      <Link href="/dashboard" className="cursor-pointer">
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
-
-                    <DropdownMenuItem
-                      onClick={() => setActiveTab("settings")}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem onClick={() => setActiveTab("settings")} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
                       Profile Settings
                     </DropdownMenuItem>
-
                     <DropdownMenuSeparator />
-
-                    <DropdownMenuItem
-                      onClick={() => signOut()}
-                      className="cursor-pointer text-red-500 focus:text-red-500"
-                    >
+                    <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-red-500 focus:text-red-500">
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
                     </DropdownMenuItem>
@@ -705,7 +773,6 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
                     <p className="text-slate-500 dark:text-slate-400 mt-1">PYQs, notes, and study materials</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Link to mock test creator for "Mock" content */}
                     <Link href="/admin/tests/new">
                       <Button variant="outline" className="border-slate-200/70 dark:border-slate-700/50">
                         <Plus className="w-4 h-4 mr-2" /> New Mock Test
@@ -980,11 +1047,11 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                             <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#94a3b8" />
                             <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                            <Tooltip cursor={{ fill: "#f8fafc" }} contentStyle={{ borderRadius: "12px", border: "none", backgroundColor: "white", color: "#1e293b" }}
-                              formatter={(v) => [
-                                `₹${Number(v).toLocaleString("en-IN")}`,
-                                "Revenue",
-                              ]} />
+                            <Tooltip
+                              cursor={{ fill: "#f8fafc" }}
+                              contentStyle={{ borderRadius: "12px", border: "none", backgroundColor: "white", color: "#1e293b" }}
+                              formatter={(v) => [`₹${Number(v).toLocaleString("en-IN")}`, "Revenue"]}
+                            />
                             <Bar dataKey="amount" fill="#18181b" radius={[4, 4, 0, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
@@ -1036,6 +1103,262 @@ export function AdminShell({ admin }: { admin: { name: string; email: string; im
                     </Button>
                   </Link>
                 </div>
+              </motion.div>
+            )}
+
+            {/* ── LEADS ───────────────────────────────────────────────────── */}
+            {activeTab === "leads" && (
+              <motion.div
+                key="leads"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">
+                      Free Batch Leads
+                    </h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">
+                      {leads.length} student{leads.length !== 1 ? "s" : ""} enrolled via free batches
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={exportLeadsCSV}
+                    disabled={!leads.length}
+                    className="border-slate-200/70 dark:border-slate-700/50"
+                  >
+                    <Download className="w-4 h-4 mr-2" /> Export CSV
+                  </Button>
+                </div>
+
+                {/* Stats row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Total Leads", value: leads.length },
+                    { label: "This Month", value: leads.filter((l) => new Date(l.createdAt) > new Date(Date.now() - 30 * 86400000)).length },
+                    { label: "Free Batches", value: new Set(leads.map((l) => l.batchId)).size },
+                    { label: "Verified Accounts", value: leads.filter((l) => l.user?.email).length },
+                  ].map(({ label, value }) => (
+                    <Card key={label} className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-[#12101F]">
+                      <CardContent className="p-4">
+                        <p className="text-2xl font-black text-slate-900 dark:text-slate-100">{value}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Filters row */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Select value={leadsBatchFilter} onValueChange={setLeadsBatchFilter}>
+                    <SelectTrigger className="w-52 bg-white dark:bg-[#12101F] border-slate-200/70 dark:border-slate-700/50">
+                      <SelectValue placeholder="All Free Batches" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Free Batches</SelectItem>
+                      {allFreeBatches.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <div className="relative flex-1 min-w-[200px] max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="Search by name, email, phone..."
+                      value={leadSearch}
+                      onChange={(e) => setLeadSearch(e.target.value)}
+                      className="pl-9 bg-white dark:bg-[#12101F] border-slate-200/70 dark:border-slate-700/50"
+                    />
+                  </div>
+
+                  {leadsBatchFilter !== "all" && (
+                    <Link href={`/admin/batches/${leadsBatchFilter}/edit`}>
+                      <Button variant="outline" size="sm" className="border-slate-200/70 dark:border-slate-700/50 gap-1.5">
+                        <Edit className="w-3.5 h-3.5" />
+                        Configure Lead Form
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    </Link>
+                  )}
+
+                  {leadSearch && (
+                    <Button variant="ghost" size="sm" onClick={() => setLeadSearch("")} className="text-slate-500">
+                      <X className="w-3.5 h-3.5 mr-1" /> Clear
+                    </Button>
+                  )}
+                </div>
+
+                {/* Per-batch summary cards (shown when "all" selected) */}
+                {leadsBatchFilter === "all" && allFreeBatches.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {allFreeBatches.map((b) => {
+                      const batchLeads = leads.filter((l) => l.batchId === b.id);
+                      return (
+                        <div
+                          key={b.id}
+                          className="flex items-center gap-3 p-4 bg-white dark:bg-[#12101F] border border-slate-200/70 dark:border-slate-700/50 rounded-xl hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer"
+                          onClick={() => setLeadsBatchFilter(b.id)}
+                        >
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                            <Users className="w-5 h-5 text-slate-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{b.name}</p>
+                            <p className="text-xs text-slate-500">{batchLeads.length} lead{batchLeads.length !== 1 ? "s" : ""}</p>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <Link href={`/admin/batches/${b.id}/edit`} onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <Edit className="w-3.5 h-3.5" />
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Leads Table */}
+                <Card className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-[#12101F] overflow-hidden">
+                  {loadingLeads ? (
+                    <div className="flex justify-center py-16">
+                      <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                    </div>
+                  ) : filteredLeads.length === 0 ? (
+                    <div className="py-16 text-center space-y-3">
+                      <Users className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700" />
+                      <p className="text-slate-500 font-medium">
+                        {leadSearch ? "No leads match your search" : "No leads yet"}
+                      </p>
+                      <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                        {leadSearch
+                          ? "Try different search terms"
+                          : "Students who enroll in free batches will appear here with their details."}
+                      </p>
+                      {!leadSearch && allFreeBatches.length === 0 && (
+                        <Link href="/admin/batches/new">
+                          <Button variant="outline" size="sm" className="mt-2 border-slate-200/70 dark:border-slate-700/50">
+                            <Plus className="w-3.5 h-3.5 mr-1.5" /> Create a Free Batch
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-slate-200/70 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/30">
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">Date</TableHead>
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">Batch</TableHead>
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">Account</TableHead>
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">Full Name</TableHead>
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">Phone</TableHead>
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">School / College</TableHead>
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">Class / Year</TableHead>
+                            <TableHead className="text-slate-500 whitespace-nowrap text-xs font-bold uppercase tracking-wider">District</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredLeads.map((lead) => {
+                            const d = lead.data as Record<string, string>;
+                            return (
+                              <TableRow
+                                key={lead.id}
+                                className="border-slate-200/70 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-900/50"
+                              >
+                                <TableCell className="text-slate-500 dark:text-slate-400 whitespace-nowrap text-xs">
+                                  {new Date(lead.createdAt).toLocaleDateString("en-IN", {
+                                    day: "numeric", month: "short", year: "numeric",
+                                  })}
+                                </TableCell>
+
+                                <TableCell>
+                                  <button onClick={() => setLeadsBatchFilter(lead.batchId)} className="text-left">
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400 hover:bg-violet-200 cursor-pointer whitespace-nowrap"
+                                    >
+                                      {lead.batchName}
+                                    </Badge>
+                                  </button>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-7 w-7">
+                                      <AvatarFallback className="bg-slate-200 dark:bg-slate-700 text-[10px] font-bold">
+                                        {(lead.user?.name ?? d["Full Name"] ?? "?").slice(0, 2).toUpperCase()}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="text-xs font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                                        {lead.user?.name ?? "Guest"}
+                                      </p>
+                                      <p className="text-[10px] text-slate-500 whitespace-nowrap">{lead.user?.email ?? "—"}</p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+
+                                <TableCell className="text-slate-700 dark:text-slate-300 whitespace-nowrap font-medium">
+                                  {d["Full Name"] ?? "—"}
+                                </TableCell>
+
+                                <TableCell>
+                                  {d["Phone Number"] ? (
+                                    <a
+                                      href={`tel:${d["Phone Number"]}`}
+                                      className="text-slate-700 dark:text-slate-300 font-mono text-sm hover:text-violet-600 dark:hover:text-violet-400 transition-colors whitespace-nowrap"
+                                    >
+                                      {d["Phone Number"]}
+                                    </a>
+                                  ) : (
+                                    <span className="text-slate-400">—</span>
+                                  )}
+                                </TableCell>
+
+                                <TableCell className="text-slate-700 dark:text-slate-300 max-w-[180px]">
+                                  <p className="truncate" title={d["School / College"]}>
+                                    {d["School / College"] ?? "—"}
+                                  </p>
+                                </TableCell>
+
+                                <TableCell>
+                                  {d["Class / Pass Year"] ? (
+                                    <Badge variant="outline" className="border-slate-200/70 dark:border-slate-700/50 text-xs whitespace-nowrap">
+                                      {d["Class / Pass Year"]}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-slate-400 text-sm">—</span>
+                                  )}
+                                </TableCell>
+
+                                <TableCell className="text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                                  {d["District"] ?? "—"}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+
+                      {/* Table footer */}
+                      <div className="px-4 py-3 border-t border-slate-200/70 dark:border-slate-700/50 flex items-center justify-between">
+                        <p className="text-xs text-slate-500">
+                          Showing {filteredLeads.length} of {leads.length} lead{leads.length !== 1 ? "s" : ""}
+                        </p>
+                        <Button variant="ghost" size="sm" onClick={exportLeadsCSV} className="text-xs text-slate-500 gap-1.5">
+                          <Download className="w-3.5 h-3.5" /> Download CSV
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </Card>
               </motion.div>
             )}
 

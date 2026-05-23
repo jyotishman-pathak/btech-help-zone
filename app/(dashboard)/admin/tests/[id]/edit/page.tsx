@@ -128,6 +128,7 @@ function QuestionEditor({
         update({ options: next });
     };
 
+    
     const handleImageUpload = async (file: File) => {
         setUploading(true);
         try {

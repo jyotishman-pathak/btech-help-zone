@@ -547,7 +547,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
                       <CardTitle className="text-sm sm:text-base flex items-center gap-2 text-zinc-900 dark:text-zinc-100">
                         <Timer className="w-4 h-4 text-zinc-500" /> Mock Tests
                       </CardTitle>
-                      <Link href={hasActiveEnrollments ? "/my-batches" : "/cee/mock"}>
+                      <Link href={hasActiveEnrollments ? "/student/my-batches" : "/cee/mock"}>
                         <Button variant="ghost" size="sm" className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 gap-1 h-8 px-2">
                           View all <ChevronRight className="w-3 h-3" />
                         </Button>

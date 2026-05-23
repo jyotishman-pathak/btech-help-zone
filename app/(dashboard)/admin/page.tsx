@@ -3,7 +3,11 @@ import { redirect } from "next/navigation";
 import { auth } from "../../../auth";
 import { AdminShell } from "../../../components/dashboard/AdminShell";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: { tab?: string };
+}) {
   const session = await auth();
 
   if (!session?.user) {
@@ -21,6 +25,7 @@ export default async function AdminPage() {
         email: session.user.email ?? "",
         image: session.user.image ?? undefined,
       }}
+      initialTab={searchParams.tab}
     />
   );
 }

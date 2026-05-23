@@ -76,7 +76,11 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
 
     // Active batch enrollments with tests
     prisma.enrollment.findMany({
-      where: { userId, status: "ACTIVE" },
+      where: { 
+        userId, 
+        status: "ACTIVE",
+        batch: { deletedAt: null },
+      },
       include: {
         batch: {
           select: {
@@ -84,6 +88,9 @@ async function getDashboardData(userId: string): Promise<DashboardData> {
             name: true,
             slug: true,
             tests: {
+              where: {
+                test: { deletedAt: null },
+              },
               include: {
                 test: {
                   select: {
