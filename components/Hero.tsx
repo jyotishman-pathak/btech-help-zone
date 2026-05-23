@@ -92,13 +92,13 @@ export function Hero() {
 
           <motion.div variants={itemVariants} className="flex flex-wrap justify-center items-center gap-4 pt-2">
             <Link
-              href="/student/cee/mock-tests"
+              href={session ? "/student/cee/mock-tests" : "/register"}
               className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold tracking-widest uppercase transition-all duration-200 shadow-[0_0_30px_rgba(124,58,237,0.3)] hover:shadow-[0_0_50px_rgba(124,58,237,0.4)]"
             >
               Mock Tests<BookOpen className="h-4 w-4" />
             </Link>
             <Link
-              href="student/cee/pyq"
+              href={session ? "/student/cee/pyq" : "/register"}
               className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl bg-[#1a1a30] border border-[#2a2a45] hover:border-violet-800/50 text-gray-300 text-sm font-bold tracking-widest uppercase transition-all duration-200"
             >
               Past Papers <FileText className="h-4 w-4" />
