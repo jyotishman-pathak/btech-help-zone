@@ -59,6 +59,12 @@ model User {
   role          Role      @default(STUDENT)
   emailVerified DateTime?
   image         String?
+  phone         String?
+  school        String?
+  district      String?
+  hasPredictor  Boolean   @default(false)
+  hasAnalytics  Boolean   @default(false)
+  hasCounselling Boolean  @default(false)
   suspended     Boolean   @default(false)
   deletedAt     DateTime? // soft delete
   createdAt     DateTime  @default(now())
@@ -424,6 +430,7 @@ model Payment {
   razorpayPaymentId String?
   razorpaySignature String?
   couponId          String?
+  serviceType       String? // PREDICTOR, ANALYTICS, COUNSELLING
   discountAmount    Int?
   invoiceUrl        String?
   refundId          String?

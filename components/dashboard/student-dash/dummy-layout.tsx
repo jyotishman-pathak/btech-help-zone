@@ -109,7 +109,7 @@ const SECONDARY_NAV = [
     { title: "Analytics", href: "/student/cee/analytics", icon: BrainCircuit, badge: "Pro", proOnly: true },
     { title: "Browse Batches", href: "/student/batches", icon: Layers, badge: null, proOnly: false },
     { title: "College Predictor", href: "/student/cee/colleges", icon: GraduationCap, badge: "Pro", proOnly: true },
-    { title: "Settings", href: "/student/cee/settings", icon: Settings, badge: null, proOnly: false },
+    { title: "Settings", href: "/student/settings", icon: Settings, badge: null, proOnly: false },
     { title: "Help & Support", href: "/student/cee/support", icon: HelpCircle, badge: null, proOnly: false },
 ];
 
