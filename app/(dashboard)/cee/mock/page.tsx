@@ -50,7 +50,7 @@ export default async function MockListPage() {
               <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50">Mock Tests</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 {freeTestUsed
-                  ? "Upgrade to Premium to unlock all tests"
+                  ? "Enroll in a Batch to unlock all tests"
                   : "Your first test is free — no credit card needed"}
               </p>
             </div>
@@ -82,15 +82,15 @@ export default async function MockListPage() {
             </div>
             <p className="text-sm text-amber-800 dark:text-amber-300 flex-1 font-medium">
               {freeTestUsed
-                ? "You've used your free test. Upgrade to Premium for unlimited access."
+                ? "You've used your free test. Enroll in a Batch for unlimited access."
                 : `You have 1 free test remaining, ${user?.name?.split(" ")[0] ?? "student"}.`}
             </p>
             {freeTestUsed && (
               <Link
-                href="/pricing"
+                href="/batches"
                 className="shrink-0 text-xs font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 hover:from-amber-300 hover:to-orange-400 transition shadow-sm"
               >
-                Upgrade
+                View Batches
               </Link>
             )}
           </div>
@@ -140,7 +140,7 @@ export default async function MockListPage() {
 
                 {isLocked ? (
                   <div className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-sm font-semibold shrink-0">
-                    <Lock className="w-3.5 h-3.5" /> Premium
+                    <Lock className="w-3.5 h-3.5" /> Batch Required
                   </div>
                 ) : (
                   <Link
@@ -164,9 +164,9 @@ export default async function MockListPage() {
             </div>
             <div className="relative">
               <p className="text-xl font-black text-white">Unlock all {tests.length} tests</p>
-              <p className="text-sm text-indigo-300 mt-1">For just ₹499/month — less than one coaching class</p>
-              <Link href="/pricing" className="inline-flex items-center gap-2 mt-4 px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 font-black text-sm hover:from-amber-300 hover:to-orange-400 transition shadow-lg">
-                View Plans <ChevronRight className="w-4 h-4" />
+              <p className="text-sm text-indigo-300 mt-1">Enroll in our comprehensive batches for complete preparation</p>
+              <Link href="/batches" className="inline-flex items-center gap-2 mt-4 px-8 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 font-black text-sm hover:from-amber-300 hover:to-orange-400 transition shadow-lg">
+                View Batches <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
           </div>

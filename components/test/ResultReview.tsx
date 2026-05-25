@@ -355,7 +355,7 @@ export function ResultReview({ data, testId }: { data: ResultData; testId: strin
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {subjectBreakdown.map((sub) => {
-                                const pct = sub.maxScore > 0 ? Math.round((Math.max(0, sub.score) / sub.maxScore) * 100) : 0;
+                                const pct = sub.maxScore > 0 ? Math.round((sub.score / sub.maxScore) * 100) : 0;
                                 const accuracy = sub.correct + sub.wrong > 0 ? Math.round((sub.correct / (sub.correct + sub.wrong)) * 100) : 0;
                                 return (
                                     <div key={sub.section} className="space-y-2">

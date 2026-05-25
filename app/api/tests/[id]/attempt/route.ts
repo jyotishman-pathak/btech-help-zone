@@ -97,8 +97,6 @@ export async function PUT(
     else { score -= q.negativeMarks; wrong++; }
   });
 
-  score = Math.max(0, score);
-
   const updated = await prisma.mockTestAttempt.update({
     where: { id: attemptId },
     data: {

@@ -340,7 +340,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
             <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-xs sm:text-sm flex items-center gap-2">
               <Zap className="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <span className="truncate">
-                {hasActiveEnrollments ? "Continue from where you left off." : "CEE 2027 — let's get that rank."}
+                {hasActiveEnrollments ? "Continue from where you left off." : "CEE 2026 — let's get that rank."}
               </span>
             </p>
           </div>
