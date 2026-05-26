@@ -1,35 +1,75 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { getIP } from "../../../../lib/ip";
+import { checkLimit } from "../../../../lib/ratelimit";
 import prisma from "../../../../lib/prisma.client";
 
+export async function POST(req: NextRequest) {
+  const ip = getIP(req);
 
-
-export async function POST(req: Request) {
-  try {
-    const { name, email, password } = await req.json();
-
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "All fields required" }, { status: 400 });
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
-    }
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      return NextResponse.json({ error: "Email already exists" }, { status: 400 });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-    await prisma.user.create({
-      data: { name, email, password: hashed, role: "STUDENT" },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[REGISTER_ERROR]", error);
-    const message = error instanceof Error ? error.message : "Server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+  // ── Rate limit (second layer after middleware) ────────────────────────────
+  const limit = await checkLimit("register", ip);
+  if (!limit.allowed) {
+    return NextResponse.json(
+      {
+        error: "rate_limit_exceeded",
+        message: "Too many registrations from this IP. Try again later.",
+        retryAfter: limit.retryAfter,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(limit.retryAfter) },
+      }
+    );
   }
+
+  const body = await req.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+
+  const { name, email, password } = body;
+
+  // ── Input validation ────────────────────────────────────────────────────
+  if (!email || !password || !name) {
+    return NextResponse.json({ error: "Name, email and password are required" }, { status: 400 });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+  }
+
+  if (password.length < 8) {
+    return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+  }
+
+  if (name.length < 2 || name.length > 60) {
+    return NextResponse.json({ error: "Name must be 2–60 characters" }, { status: 400 });
+  }
+
+  // ── Check existing user ─────────────────────────────────────────────────
+  const existing = await prisma.user.findUnique({
+    where: { email: email.toLowerCase().trim() },
+    select: { id: true },
+  });
+
+  if (existing) {
+    // Don't reveal if email exists — timing-safe response
+    await new Promise((r) => setTimeout(r, 300 + Math.random() * 200));
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 409 });
+  }
+
+  // ── Create user ─────────────────────────────────────────────────────────
+  const hash = await bcrypt.hash(password, 12);
+
+  const user = await prisma.user.create({
+    data: {
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password: hash,
+      role: "STUDENT",
+    },
+    select: { id: true, name: true, email: true },
+  });
+
+  return NextResponse.json({ user }, { status: 201 });
 }

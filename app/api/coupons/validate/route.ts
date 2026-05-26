@@ -4,22 +4,35 @@ import prisma from "../../../../lib/prisma.client";
 
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const { code, batchId } = await req.json();
 
-  const coupon = await prisma.coupon.findFirst({
-    where: {
-      code: code.toUpperCase(),
-      isActive: true,
-      OR: [{ batchId: null }, { batchId }],
-      AND: [{ OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] }],
-    },
+  if (!code?.trim())
+    return NextResponse.json({ valid: false, error: "Enter a coupon code" });
+
+  const coupon = await prisma.coupon.findUnique({
+    where: { code: code.trim().toUpperCase() },
+    include: { batch: { select: { name: true } } },
   });
 
-  if (!coupon || coupon.used >= coupon.maxUses)
-    return NextResponse.json({ valid: false, error: "Invalid or expired coupon" });
+  if (!coupon)
+    return NextResponse.json({ valid: false, error: "Invalid coupon code" });
+  if (!coupon.isActive)
+    return NextResponse.json({ valid: false, error: "This coupon is no longer active" });
+  if (coupon.used >= coupon.maxUses)
+    return NextResponse.json({ valid: false, error: "Coupon limit reached" });
+  if (coupon.expiresAt && coupon.expiresAt < new Date())
+    return NextResponse.json({ valid: false, error: "This coupon has expired" });
+  if (coupon.batchId && batchId && coupon.batchId !== batchId)
+    return NextResponse.json({
+      valid: false,
+      error: `This coupon is only valid for "${coupon.batch?.name}"`,
+    });
 
-  return NextResponse.json({ valid: true, discount: coupon.discount, code: coupon.code });
+  return NextResponse.json({
+    valid: true,
+    code: coupon.code,
+    discount: coupon.discount,
+    description: coupon.description,
+    batchName: coupon.batch?.name ?? null,
+  });
 }

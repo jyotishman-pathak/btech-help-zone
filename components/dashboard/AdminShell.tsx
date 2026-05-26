@@ -29,6 +29,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import Link from "next/link";
 
 import { signOut, useSession } from "next-auth/react";
+import prisma from "../../lib/prisma.client";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ interface Stats {
   mocksThisMonth: number;
   revenueTotal: number;
   revenueThisMonth: number;
+  blockedToday?: number;
   trends: { users: number; mocks: number; revenue: number };
   feed: Array<{ user: string; action: string; time: string; type: string }>;
 }
@@ -187,6 +189,8 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
       if (res.ok) setAnalytics(await res.json());
     } finally { setLoadingAnalytics(false); }
   }, []);
+
+
 
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
@@ -379,6 +383,15 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
       { title: "Active Today", value: stats.activeToday.toLocaleString(), change: "test sessions", trend: "neutral" as const, icon: Activity },
       { title: "Mocks Completed", value: stats.mocksTotal.toLocaleString(), change: trendStr(stats.trends.mocks), trend: stats.trends.mocks >= 0 ? "up" as const : "down" as const, icon: Timer },
       { title: "Revenue (₹)", value: `₹${stats.revenueTotal.toLocaleString("en-IN")}`, change: trendStr(stats.trends.revenue), trend: stats.trends.revenue >= 0 ? "up" as const : "down" as const, icon: TrendingUp },
+      {
+        title: "Attacks Blocked",
+        value: stats.blockedToday?.toLocaleString() ?? "0",
+        change: "last 24 hours",
+        trend: "neutral",
+        icon: Shield,
+      }
+
+
     ]
     : [];
 
@@ -432,6 +445,10 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
               { id: "syllabus", label: "Syllabus", icon: BookOpen, href: "/admin/syllabus" },
               { id: "audit", label: "Audit Logs", icon: Shield, href: "/admin/audit-logs" },
               { id: "pyq", label: "Upload PYQ", icon: Upload, href: "/admin/pyq" },
+              { id: "payments", label: "Payments", icon: TrendingUp, href: "/admin/payments" },
+
+
+
               { id: "settings", label: "Settings", icon: Settings },
             ] as const).map((item) => {
               if ("href" in item) {

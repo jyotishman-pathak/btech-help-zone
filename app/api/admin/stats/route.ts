@@ -49,6 +49,7 @@ export async function GET() {
     revenueAll,
     revenueThisMonth,
     revenueLastMonth,
+    blockedToday,
     recentActivity,
   ] = await Promise.all([
     prisma.user.count({ where: { role: "STUDENT" } }),
@@ -61,6 +62,12 @@ export async function GET() {
     prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] } }, _sum: { amount: true } }),
     prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] }, startsAt: { gte: startOfMonth } }, _sum: { amount: true } }),
     prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] }, startsAt: { gte: startOfLastMonth, lt: startOfMonth } }, _sum: { amount: true } }),
+    prisma.auditLog.count({
+      where: {
+        action: "RATE_LIMIT_BLOCK",
+        createdAt: { gte: new Date(Date.now() - 86400000) },
+      },
+    }),
     Promise.all([
       prisma.mockTestAttempt.findMany({
         where: { status: "SUBMITTED" },
@@ -124,6 +131,7 @@ export async function GET() {
     mocksThisMonth,
     revenueTotal: revenueAll._sum.amount ?? 0,
     revenueThisMonth: revenueThisMonth._sum.amount ?? 0,
+    blockedToday,
     trends: {
       users: pct(usersThisMonth, usersLastMonth),
       mocks: pct(mocksThisMonth, mocksLastMonth),
