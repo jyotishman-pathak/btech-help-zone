@@ -21,7 +21,7 @@ const resourceLinks = [
 
 const companyLinks = [
   { name: "About", href: "/about" },
-  { name: "Contact", href: "/contact" },
+  { name: "Contact", href: "/student/cee/support" },
   { name: "Careers", href: "/careers" },
   { name: "Blog", href: "/blog" },
 ];
@@ -133,9 +133,14 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-slate-200/70 dark:border-slate-700/50 pt-6">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            © {new Date().getFullYear()} CEE Prep. Built for Assam engineering aspirants.
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              © {new Date().getFullYear()} CEE Prep. Built for Assam engineering aspirants.
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Made by <a href="https://jyotishmanpathak.vercel.app/" target="_blank" rel="noopener noreferrer" className="font-medium text-slate-900 dark:text-slate-100 hover:underline">Jyotishman pathak</a>
+            </p>
+          </div>
           <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> help@ceeprep.in</span>
             <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" /> +91 98765 43210</span>

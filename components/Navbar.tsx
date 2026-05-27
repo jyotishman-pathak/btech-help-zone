@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { label: "PYQs", href: "/student/cee/pyq" },
   { label: "Batches Live", href: "/student/batches" },
   { label: "Library", href: "student/my-batches" },
+  { label: "Help & Support", href: "/student/cee/support" },
 ];
 
 export function Navbar() {
