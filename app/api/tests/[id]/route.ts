@@ -26,7 +26,7 @@ export async function GET(
     return NextResponse.json(test);
   }
 
-  const [test, batchAccess, submittedCount] = await Promise.all([
+  const [test, batchAccess] = await Promise.all([
     prisma.mockTest.findFirst({
       where: { id, isActive: true, deletedAt: null },
       include: { questions: { orderBy: { order: "asc" } } },
@@ -37,11 +37,11 @@ export async function GET(
         status: "ACTIVE",
         batch: {
           deletedAt: null,
+          isFree: false,
           tests: { some: { testId: id } },
         },
       },
     }),
-    prisma.mockTestAttempt.count({ where: { userId, status: "SUBMITTED" } }),
   ]);
 
   if (!test) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -50,22 +50,8 @@ export async function GET(
   const safeQuestions = test.questions.map(({ correctIndex: _ci, ...q }) => q);
   const safeTest = { ...test, questions: safeQuestions };
 
-  // Enrolled in a batch containing this test → full access
+  // Enrolled in a paid batch containing this test → full access
   if (batchAccess) return NextResponse.json(safeTest);
 
-  // Legacy free tier: 1 free attempt total
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { role: true },
-  });
-
-  if (user?.role === "STUDENT") {
-    const alreadyAttemptedThis = await prisma.mockTestAttempt.findFirst({
-      where: { userId, testId: id },
-    });
-    if (!alreadyAttemptedThis && submittedCount >= 1)
-      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
-  }
-
-  return NextResponse.json(safeTest);
+  return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
 }

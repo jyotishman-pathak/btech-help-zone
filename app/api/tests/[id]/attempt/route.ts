@@ -24,6 +24,26 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = session.user.id as string;
+  const role = (session.user as any).role;
+
+  // Verify access for student users
+  if (!["ADMIN", "SUPER_ADMIN"].includes(role)) {
+    const batchAccess = await prisma.enrollment.findFirst({
+      where: {
+        userId,
+        status: "ACTIVE",
+        batch: {
+          deletedAt: null,
+          isFree: false, // Paid batches only
+          tests: { some: { testId: id } },
+        },
+      },
+    });
+
+    if (!batchAccess) {
+      return NextResponse.json({ error: "UPGRADE_REQUIRED" }, { status: 403 });
+    }
+  }
 
   const existing = await prisma.mockTestAttempt.findFirst({
     where: { userId, testId: id, status: "IN_PROGRESS" },

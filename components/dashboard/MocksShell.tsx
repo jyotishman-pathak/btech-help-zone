@@ -352,13 +352,15 @@ export function CBTEngine({ testId, user }: CBTEngineProps) {
             <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto">
               <Trophy className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             </div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50">Upgrade Required</h2>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50">Enrollment Required</h2>
             <p className="text-slate-500 dark:text-slate-400">
-              You have used your free test. Upgrade to Premium to unlock all mock tests.
+              You must be enrolled in a paid batch to access mock tests.
             </p>
-            <Button className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white">
-              Upgrade to Premium
-            </Button>
+            <Link href="/batches" className="block w-full">
+              <Button className="w-full h-12 bg-amber-500 hover:bg-amber-600 text-white">
+                View Batches
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

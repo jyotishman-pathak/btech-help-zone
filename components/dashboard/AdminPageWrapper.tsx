@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, BarChart3, Users, FileText, Code, PieChart,
   BookOpen, Tag, Upload, Settings, Search, MoreHorizontal,
-  ChevronDown, LayoutDashboard, User, LogOut, Loader2, ArrowLeft
+  ChevronDown, LayoutDashboard, User, LogOut, Loader2, ArrowLeft, Timer
 } from "lucide-react";
 
 import { Button } from "../ui/button";
@@ -38,6 +38,7 @@ export function AdminPageWrapper({ children, activeTab, backHref }: AdminPageWra
     { id: "users", label: "Users", icon: Users, href: "/admin?tab=users" },
     { id: "content", label: "Content", icon: FileText, href: "/admin?tab=content" },
     { id: "tests", label: "Mock Tests", icon: Code, href: "/admin/tests" },
+    { id: "attempts", label: "Mock Attempts", icon: Timer, href: "/admin/attempts" },
     { id: "analytics", label: "Analytics", icon: PieChart, href: "/admin?tab=analytics" },
     { id: "batches", label: "Batches", icon: BookOpen, href: "/admin/batches" },
     { id: "coupons", label: "Coupons", icon: Tag, href: "/admin/coupons" },

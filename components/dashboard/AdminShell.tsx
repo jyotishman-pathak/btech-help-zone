@@ -438,6 +438,7 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
               { id: "users", label: "Users", icon: Users },
               { id: "content", label: "Content", icon: FileText },
               { id: "tests", label: "Mock Tests", icon: Code, href: "/admin/tests" },
+              { id: "attempts", label: "Mock Attempts", icon: Timer, href: "/admin/attempts" },
               { id: "analytics", label: "Analytics", icon: PieChart },
               { id: "batches", label: "Batches", icon: BookOpen, href: "/admin/batches" },
               { id: "coupons", label: "Coupons", icon: Tag, href: "/admin/coupons" },
@@ -446,9 +447,6 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
               { id: "audit", label: "Audit Logs", icon: Shield, href: "/admin/audit-logs" },
               { id: "pyq", label: "Upload PYQ", icon: Upload, href: "/admin/pyq" },
               { id: "payments", label: "Payments", icon: TrendingUp, href: "/admin/payments" },
-
-
-
               { id: "settings", label: "Settings", icon: Settings },
             ] as const).map((item) => {
               if ("href" in item) {

@@ -1,14 +1,16 @@
-// app/(dashboard)/cee/mock/page.tsx
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Timer, Lock, ChevronRight, Trophy, Sparkles, Clock, Target } from "lucide-react";
 
-import { Role } from "@prisma/client";  // if you need the enum for typing
+import { Role } from "@prisma/client";
 import prisma from "../../../../lib/prisma.client";
 import { auth } from "../../../../auth";
 
 type MockTestWithCount = Awaited<ReturnType<typeof prisma.mockTest.findMany<{
-  include: { _count: { select: { questions: true } } }
+  include: {
+    _count: { select: { questions: true } };
+    batchTests: { select: { batchId: true } };
+  }
 }>>>[number];
 
 export default async function MockListPage() {
@@ -17,24 +19,38 @@ export default async function MockListPage() {
 
   const userId = session.user.id as string;
 
-  const [tests, user, submittedCount] = await Promise.all([
+  const [tests, user, enrollments, submittedCount] = await Promise.all([
     prisma.mockTest.findMany({
-      where: { isActive: true },
-      include: { _count: { select: { questions: true } } },
+      where: { isActive: true, deletedAt: null },
+      include: {
+        _count: { select: { questions: true } },
+        batchTests: { select: { batchId: true } },
+      },
       orderBy: { id: "desc" },
     }),
     prisma.user.findUnique({
       where: { id: userId },
-      select: { role: true, name: true },   // ✅ changed tier → role
+      select: { role: true, name: true },
+    }),
+    prisma.enrollment.findMany({
+      where: {
+        userId,
+        status: "ACTIVE",
+        batch: {
+          deletedAt: null,
+          isFree: false,
+        },
+      },
+      select: { batchId: true },
     }),
     prisma.mockTestAttempt.count({
       where: { userId, status: "SUBMITTED" },
     }),
   ]);
 
-  // Map new roles to old tier logic:
-  // STUDENT = free tier, PREMIUM_STUDENT = premium
-  const freeTestUsed = user?.role === "STUDENT" && submittedCount > 0;
+  const enrolledBatchIds = enrollments.map((e) => e.batchId);
+  const isAdminOrSuper = user?.role && ["ADMIN", "SUPER_ADMIN"].includes(user.role);
+  const hasPaidEnrollments = enrolledBatchIds.length > 0;
 
   return (
     <div className="min-h-screen bg-[#F7F5FF] dark:bg-[#0D0B1A] p-4 md:p-8">
@@ -49,9 +65,7 @@ export default async function MockListPage() {
             <div>
               <h1 className="text-2xl font-black text-slate-900 dark:text-slate-50">Mock Tests</h1>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                {freeTestUsed
-                  ? "Enroll in a Batch to unlock all tests"
-                  : "Your first test is free — no credit card needed"}
+                Enroll in a paid batch to access mock tests.
               </p>
             </div>
           </div>
@@ -74,25 +88,21 @@ export default async function MockListPage() {
           ))}
         </div>
 
-        {/* Tier notice */}
-        {user?.role === "STUDENT" && (   // ✅ was user?.tier === "NORMAL"
+        {/* Paid batch notice */}
+        {!isAdminOrSuper && !hasPaidEnrollments && (
           <div className="flex items-center gap-4 px-5 py-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800/50">
             <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
               <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
             <p className="text-sm text-amber-800 dark:text-amber-300 flex-1 font-medium">
-              {freeTestUsed
-                ? "You've used your free test. Enroll in a Batch for unlimited access."
-                : `You have 1 free test remaining, ${user?.name?.split(" ")[0] ?? "student"}.`}
+              You must be enrolled in a paid batch to start mock tests.
             </p>
-            {freeTestUsed && (
-              <Link
-                href="/batches"
-                className="shrink-0 text-xs font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 hover:from-amber-300 hover:to-orange-400 transition shadow-sm"
-              >
-                View Batches
-              </Link>
-            )}
+            <Link
+              href="/batches"
+              className="shrink-0 text-xs font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 hover:from-amber-300 hover:to-orange-400 transition shadow-sm"
+            >
+              View Batches
+            </Link>
           </div>
         )}
 
@@ -107,7 +117,9 @@ export default async function MockListPage() {
           )}
 
           {tests.map((t: MockTestWithCount, idx: number) => {
-            const isLocked = user?.role === "STUDENT" && freeTestUsed;   // ✅ was user?.tier === "NORMAL"
+            const isLocked = !isAdminOrSuper && !t.batchTests.some((bt) =>
+              enrolledBatchIds.includes(bt.batchId)
+            );
 
             return (
               <div
@@ -156,7 +168,7 @@ export default async function MockListPage() {
         </div>
 
         {/* Upgrade CTA for locked users */}
-        {freeTestUsed && (
+        {!isAdminOrSuper && !hasPaidEnrollments && (
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-indigo-900 to-violet-950 p-8 text-center space-y-4">
             <div className="absolute inset-0 pointer-events-none">
               <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full border border-indigo-700/30" />

@@ -12,16 +12,16 @@ export async function GET() {
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  const [users, subscriptions] = await Promise.all([
+  const [users, payments] = await Promise.all([
     prisma.user.findMany({
       where: { role: "STUDENT", createdAt: { gte: thirtyDaysAgo } },
       select: { createdAt: true },
       orderBy: { createdAt: "asc" },
     }),
-    prisma.subscription.findMany({
-      where: { startsAt: { gte: sixMonthsAgo } },
-      select: { amount: true, startsAt: true },
-      orderBy: { startsAt: "asc" },
+    prisma.payment.findMany({
+      where: { status: "CAPTURED", createdAt: { gte: sixMonthsAgo } },
+      select: { amount: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
     }),
   ]);
 
@@ -42,9 +42,9 @@ export async function GET() {
   // Group revenue by month
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const revenueMap: Record<string, number> = {};
-  subscriptions.forEach((s: (typeof subscriptions)[number]) => {
-    const key = MONTHS[s.startsAt.getMonth()];
-    revenueMap[key] = (revenueMap[key] ?? 0) + s.amount;
+  payments.forEach((p: (typeof payments)[number]) => {
+    const key = MONTHS[p.createdAt.getMonth()];
+    revenueMap[key] = (revenueMap[key] ?? 0) + (p.amount / 100);
   });
 
   const revenue = Array.from({ length: 6 }, (_, i) => {

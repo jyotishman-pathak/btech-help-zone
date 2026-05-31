@@ -59,9 +59,9 @@ export async function GET() {
     prisma.mockTestAttempt.count({ where: { status: "SUBMITTED" } }),
     prisma.mockTestAttempt.count({ where: { status: "SUBMITTED", completedAt: { gte: startOfMonth } } }),
     prisma.mockTestAttempt.count({ where: { status: "SUBMITTED", completedAt: { gte: startOfLastMonth, lt: startOfMonth } } }),
-    prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] } }, _sum: { amount: true } }),
-    prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] }, startsAt: { gte: startOfMonth } }, _sum: { amount: true } }),
-    prisma.subscription.aggregate({ where: { status: { in: ["ACTIVE", "CANCELLED", "EXPIRED"] }, startsAt: { gte: startOfLastMonth, lt: startOfMonth } }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { status: "CAPTURED" }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { status: "CAPTURED", createdAt: { gte: startOfMonth } }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { status: "CAPTURED", createdAt: { gte: startOfLastMonth, lt: startOfMonth } }, _sum: { amount: true } }),
     prisma.auditLog.count({
       where: {
         action: "RATE_LIMIT_BLOCK",
@@ -75,8 +75,9 @@ export async function GET() {
         orderBy: { completedAt: "desc" },
         take: 7,
       }),
-      prisma.subscription.findMany({
-        include: { user: { select: { name: true } } },
+      prisma.payment.findMany({
+        where: { status: "CAPTURED" },
+        include: { user: { select: { name: true } }, enrollment: { select: { batch: { select: { name: true } } } } },
         orderBy: { createdAt: "desc" },
         take: 5,
       }),
@@ -92,7 +93,7 @@ export async function GET() {
   const pct = (curr: number, prev: number) =>
     prev === 0 ? 100 : Math.round(((curr - prev) / prev) * 100);
 
-  const [attempts, subs, newUsers] = recentActivity as [AttemptItem[], SubItem[], NewUserItem[]];
+  const [attempts, subs, newUsers] = recentActivity as [AttemptItem[], any[], NewUserItem[]];
 
   const rawFeed = [
     ...attempts.map((a: AttemptItem) => ({
@@ -101,10 +102,10 @@ export async function GET() {
       time: (a.completedAt ?? a.startedAt) || new Date(),
       type: "success" as const,
     })),
-    ...subs.map((s: SubItem) => ({
-      user: s.user.name ?? "Unknown",
-      action: `Upgraded to ${s.tier}`,
-      time: s.createdAt,
+    ...subs.map((p: any) => ({
+      user: p.user.name ?? "Unknown",
+      action: `Paid ₹${p.amount / 100} for ${p.enrollment?.batch?.name ?? p.serviceType ?? "Premium"}`,
+      time: p.createdAt,
       type: "upgrade" as const,
     })),
     ...newUsers.map((u: NewUserItem) => ({
@@ -129,8 +130,8 @@ export async function GET() {
     activeToday,
     mocksTotal,
     mocksThisMonth,
-    revenueTotal: revenueAll._sum.amount ?? 0,
-    revenueThisMonth: revenueThisMonth._sum.amount ?? 0,
+    revenueTotal: (revenueAll._sum.amount ?? 0) / 100,
+    revenueThisMonth: (revenueThisMonth._sum.amount ?? 0) / 100,
     blockedToday,
     trends: {
       users: pct(usersThisMonth, usersLastMonth),

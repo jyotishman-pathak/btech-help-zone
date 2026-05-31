@@ -17,32 +17,55 @@ export async function GET() {
 
   const userId = session.user.id as string;
 
-  const [rawTests, user, attemptCount] = await Promise.all([
+  const role = (session.user as any).role;
+  const isAdminOrSuper = role && ["ADMIN", "SUPER_ADMIN"].includes(role);
+
+  const [tests, enrollments, attempts] = await Promise.all([
     prisma.mockTest.findMany({
-      where: { isActive: true },
-      include: { _count: { select: { questions: true } }, subject: true },
-      orderBy: { id: "desc" },
+      where: { isActive: true, deletedAt: null },
+      include: {
+        subject: { select: { id: true, name: true } },
+        batchTests: { select: { batchId: true } },
+      },
     }),
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: { role: true },
+    prisma.enrollment.findMany({
+      where: {
+        userId,
+        status: "ACTIVE",
+        batch: {
+          deletedAt: null,
+          isFree: false,
+        },
+      },
+      select: { batchId: true },
     }),
-    prisma.mockTestAttempt.count({
-      where: { userId, status: "SUBMITTED" },
+    prisma.mockTestAttempt.findMany({
+      where: { userId },
+      select: { testId: true, status: true, score: true, percentage: true },
     }),
   ]);
 
-  const tests = rawTests as unknown as MockTest[];
-  const isStudent = user?.role === "STUDENT";
-  const freeTestUsed = isStudent && attemptCount > 0;
+  const activeBatchIds = enrollments.map((e) => e.batchId);
 
-  const enriched = tests.map((t: MockTest, idx: number) => ({
-    ...t,
-    locked: isStudent && t.requiredTier !== "NORMAL"
-      ? true
-      : isStudent && freeTestUsed && idx > 0,
-    canAttempt: !isStudent || !freeTestUsed,
-  }));
+  const enriched = tests.map((test) => {
+    const isEnrolled = test.batchTests.some((bt) =>
+      activeBatchIds.includes(bt.batchId)
+    );
+    const attempt = attempts.find((a) => a.testId === test.id);
+    const locked = !isAdminOrSuper && !isEnrolled;
 
-  return NextResponse.json({ tests: enriched, userTier: user?.role, freeTestUsed });
+    return {
+      ...test,
+      locked,
+      canAttempt: !locked,
+      attempt: attempt
+        ? { status: attempt.status, score: attempt.score, percentage: attempt.percentage }
+        : null,
+    };
+  });
+
+  return NextResponse.json({
+    tests: enriched,
+    freeTestUsed: true,
+  });
 }
