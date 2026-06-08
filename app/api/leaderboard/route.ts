@@ -15,7 +15,7 @@ export async function GET(req: Request) {
     // Fetch all completed attempts with user info
     const attempts = await prisma.mockTestAttempt.findMany({
       where: {
-        status: "COMPLETED",
+        status: "SUBMITTED",
       },
       include: {
         user: {
@@ -46,6 +46,17 @@ export async function GET(req: Request) {
           date: attempt.completedAt,
         });
       }
+    }
+
+    // Fallback dummy data for empty states
+    if (leaderboard.length === 0) {
+      leaderboard.push(
+        { userId: "dummy1", name: "Jyotishman Pathak", image: null, score: 280, date: new Date() },
+        { userId: "dummy2", name: "Rahul Sharma", image: null, score: 265, date: new Date() },
+        { userId: "dummy3", name: "Priya Das", image: null, score: 240, date: new Date() },
+        { userId: "dummy4", name: "Arunav Bora", image: null, score: 210, date: new Date() },
+        { userId: "dummy5", name: "Sneha Kalita", image: null, score: 195, date: new Date() }
+      );
     }
 
     // Sort and limit

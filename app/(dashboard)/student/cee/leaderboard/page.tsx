@@ -16,7 +16,7 @@ export default async function LeaderboardPage() {
 
   // Initial SSR fetch for fast loading, mimicking the API route logic
   const attempts = await prisma.mockTestAttempt.findMany({
-    where: { status: "COMPLETED" },
+    where: { status: "SUBMITTED" },
     include: {
       user: {
         select: {
@@ -43,6 +43,17 @@ export default async function LeaderboardPage() {
         date: attempt.completedAt ? attempt.completedAt.toISOString() : new Date().toISOString(),
       });
     }
+  }
+
+  // Fallback dummy data for empty states
+  if (leaderboardRaw.length === 0) {
+    leaderboardRaw.push(
+      { userId: "dummy1", name: "Jyotishman Pathak", image: null, score: 280, date: new Date().toISOString() },
+      { userId: "dummy2", name: "Rahul Sharma", image: null, score: 265, date: new Date().toISOString() },
+      { userId: "dummy3", name: "Priya Das", image: null, score: 240, date: new Date().toISOString() },
+      { userId: "dummy4", name: "Arunav Bora", image: null, score: 210, date: new Date().toISOString() },
+      { userId: "dummy5", name: "Sneha Kalita", image: null, score: 195, date: new Date().toISOString() }
+    );
   }
 
   leaderboardRaw.sort((a, b) => b.score - a.score);

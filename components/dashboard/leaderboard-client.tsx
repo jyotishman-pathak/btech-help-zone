@@ -1,10 +1,12 @@
 "use client";
 
-import { Crown, Trophy, Medal, Search, Star, TrendingUp } from "lucide-react";
+import { Crown, Trophy, Medal, Search, Star, TrendingUp, RefreshCw, Activity } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "../ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LeaderboardUser {
   rank: number;
@@ -20,8 +22,35 @@ interface LeaderboardClientProps {
   currentUser: { rank: number | null; score: number | null };
 }
 
-export function LeaderboardClient({ leaderboard, currentUser }: LeaderboardClientProps) {
+export function LeaderboardClient({ leaderboard: initialLeaderboard, currentUser: initialCurrentUser }: LeaderboardClientProps) {
   const [search, setSearch] = useState("");
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>(initialLeaderboard);
+  const [currentUser, setCurrentUser] = useState(initialCurrentUser);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  const fetchLiveLeaderboard = async () => {
+    try {
+      setIsRefreshing(true);
+      const res = await fetch("/api/leaderboard?limit=100");
+      if (res.ok) {
+        const data = await res.json();
+        setLeaderboard(data.leaderboard);
+        setCurrentUser(data.currentUser);
+        setLastUpdated(new Date());
+      }
+    } catch (e) {
+      console.error("Failed to fetch live leaderboard", e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    // Poll every 30 seconds for live data
+    const interval = setInterval(fetchLiveLeaderboard, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredLeaderboard = leaderboard.filter((user) =>
     user.name.toLowerCase().includes(search.toLowerCase())
@@ -76,13 +105,26 @@ export function LeaderboardClient({ leaderboard, currentUser }: LeaderboardClien
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-50 flex items-center gap-3">
-              <Crown className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
-              Global Leaderboard
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-slate-50 flex items-center gap-3">
+                <Crown className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                Global Leaderboard
+              </h1>
+              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none px-2 py-0.5 text-[10px] uppercase flex items-center gap-1.5 animate-pulse mt-2">
+                <Activity className="w-3 h-3" /> Live
+              </Badge>
+            </div>
             <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-xl">
               Compete with thousands of CEE aspirants. Rankings are based on your highest score across all full-length mock tests.
             </p>
+            <div className="flex items-center gap-2 mt-4 text-xs text-slate-400">
+               <button onClick={fetchLiveLeaderboard} disabled={isRefreshing} className="flex items-center gap-1 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                 <RefreshCw className={`w-3 h-3 ${isRefreshing ? "animate-spin" : ""}`} /> 
+                 {isRefreshing ? "Updating..." : "Refresh"}
+               </button>
+               <span>•</span>
+               <span>Updated {lastUpdated.toLocaleTimeString()}</span>
+            </div>
           </div>
           
           {currentUser.rank && (
@@ -120,37 +162,50 @@ export function LeaderboardClient({ leaderboard, currentUser }: LeaderboardClien
               <p>No students found. Keep preparing!</p>
             </div>
           ) : (
-            filteredLeaderboard.map((user) => (
-              <div 
-                key={user.userId}
-                className={`flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 ${getRankStyle(user.rank)}`}
-              >
-                <div className="flex-shrink-0">
-                  {getRankBadge(user.rank)}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 dark:text-slate-100 truncate">
-                      {user.name}
-                    </h3>
-                    {user.rank === 1 && <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none text-[10px] uppercase">Champion</Badge>}
+            <AnimatePresence>
+              {filteredLeaderboard.map((user, idx) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: Math.min(idx * 0.05, 0.5) }}
+                  key={user.userId}
+                  className={`flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 ${getRankStyle(user.rank)}`}
+                >
+                  <div className="flex-shrink-0">
+                    {getRankBadge(user.rank)}
                   </div>
-                  <p className="text-sm text-slate-500 truncate">
-                    Last active: {new Date(user.date).toLocaleDateString()}
-                  </p>
-                </div>
+                  
+                  <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-800 shadow-sm hidden sm:block">
+                    <AvatarImage src={user.image || ""} />
+                    <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs">
+                      {user.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-900 dark:text-slate-100 truncate">
+                        {user.name}
+                      </h3>
+                      {user.rank === 1 && <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-none text-[10px] uppercase">Champion</Badge>}
+                    </div>
+                    <p className="text-sm text-slate-500 truncate">
+                      Last active: {new Date(user.date).toLocaleDateString()}
+                    </p>
+                  </div>
 
-                <div className="text-right">
-                  <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-                    {user.score}
+                  <div className="text-right">
+                    <div className="text-lg font-black text-slate-900 dark:text-slate-100">
+                      {user.score}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Score
+                    </div>
                   </div>
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Score
-                  </div>
-                </div>
-              </div>
-            ))
+                </motion.div>
+              ))}
+            </AnimatePresence>
           )}
         </div>
       </div>
