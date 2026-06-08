@@ -18,10 +18,43 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<1 | 2>(1);
   const [error, setError] = useState("");
   const [isPending, setIsPending] = useState(false);
 
   const router = useRouter();
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsPending(true);
+
+    const toastId = toast.loading("Sending OTP...");
+
+    try {
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && !data.error) {
+        toast.success("OTP sent to your email! 📩", { id: toastId });
+        setStep(2);
+      } else {
+        setError(data.error || "Failed to send OTP");
+        toast.error("Error", { id: toastId, description: data.error || "Failed to send OTP" });
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+      toast.error("Error", { id: toastId, description: "Something went wrong." });
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +74,7 @@ export default function RegisterPage() {
           name,
           email,
           password,
+          otp,
         }),
       });
 
@@ -115,46 +149,71 @@ export default function RegisterPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={step === 1 ? handleSendOtp : handleSubmit} className="space-y-5">
               
-              <div className="relative">
-                <User className="absolute left-3 top-3.5 h-4 w-4 text-zinc-400" />
+              {step === 1 && (
+                <>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3.5 h-4 w-4 text-zinc-400" />
+                    <Input
+                      placeholder="Full Name"
+                      className="pl-10 h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
 
-                <Input
-                  placeholder="Full Name"
-                  className="pl-10 h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3.5 h-4 w-4 text-zinc-400" />
+                    <Input
+                      type="email"
+                      placeholder="Email address"
+                      className="pl-10 h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
 
-              <div className="relative">
-                <Mail className="absolute left-3 top-3.5 h-4 w-4 text-zinc-400" />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3.5 h-4 w-4 text-zinc-400" />
+                    <Input
+                      type="password"
+                      placeholder="Password (min 8 chars)"
+                      className="pl-10 h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      minLength={8}
+                      required
+                    />
+                  </div>
+                </>
+              )}
 
-                <Input
-                  type="email"
-                  placeholder="Email address"
-                  className="pl-10 h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+              {step === 2 && (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Input
+                      placeholder="Enter 6-digit OTP"
+                      className="text-center h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 tracking-widest text-xl"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setStep(1)} 
+                    className="text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+                  >
+                    ← Back to edit details
+                  </button>
+                </div>
+              )}
+              
 
-              <div className="relative">
-                <Lock className="absolute left-3 top-3.5 h-4 w-4 text-zinc-400" />
-
-                <Input
-                  type="password"
-                  placeholder="Password (min 8 chars)"
-                  className="pl-10 h-12 rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={8}
-                  required
-                />
-              </div>
 
               {error && (
                 <p className="text-sm text-red-500">
@@ -170,11 +229,11 @@ export default function RegisterPage() {
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
+                    {step === 1 ? "Sending OTP..." : "Creating account..."}
                   </>
                 ) : (
                   <>
-                    Create Account
+                    {step === 1 ? "Send OTP" : "Verify & Create Account"}
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </>
                 )}

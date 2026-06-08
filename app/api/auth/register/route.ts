@@ -26,11 +26,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
 
-  const { name, email, password } = body;
+  const { name, email, password, otp } = body;
 
   // ── Input validation ────────────────────────────────────────────────────
-  if (!email || !password || !name) {
-    return NextResponse.json({ error: "Name, email and password are required" }, { status: 400 });
+  if (!email || !password || !name || !otp) {
+    return NextResponse.json({ error: "Name, email, password and OTP are required" }, { status: 400 });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,6 +58,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 409 });
   }
 
+  // ── Verify OTP ─────────────────────────────────────────────────────────
+  const cleanOtp = otp.trim();
+  const verificationRecord = await prisma.verificationToken.findFirst({
+    where: { identifier: email.toLowerCase().trim(), token: cleanOtp },
+  });
+
+  if (!verificationRecord) {
+    return NextResponse.json({ error: "Invalid OTP" }, { status: 400 });
+  }
+
+  if (verificationRecord.expires < new Date()) {
+    return NextResponse.json({ error: "OTP has expired" }, { status: 400 });
+  }
+
+  // Delete the token so it can't be used again
+  await prisma.verificationToken.delete({
+    where: { token: cleanOtp },
+  });
+
   // ── Create user ─────────────────────────────────────────────────────────
   const hash = await bcrypt.hash(password, 12);
 
@@ -67,6 +86,7 @@ export async function POST(req: NextRequest) {
       email: email.toLowerCase().trim(),
       password: hash,
       role: "STUDENT",
+      emailVerified: new Date(),
     },
     select: { id: true, name: true, email: true },
   });

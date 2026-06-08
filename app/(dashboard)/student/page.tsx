@@ -324,6 +324,11 @@ export default async function DashboardPage() {
   const userId = session.user.id as string;
   const tier = ((session.user as any).tier ?? "NORMAL") as "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
 
+  const dbUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { emailVerified: true }
+  });
+
   const data = await getDashboardData(userId);
 
   return (
@@ -332,6 +337,7 @@ export default async function DashboardPage() {
         name: session.user.name,
         email: session.user.email,
         image: session.user.image,
+        emailVerified: dbUser?.emailVerified,
       }}
       tier={tier}
       data={data}

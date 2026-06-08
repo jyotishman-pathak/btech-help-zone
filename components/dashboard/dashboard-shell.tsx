@@ -31,7 +31,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../../@/com
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface User { name?: string | null; email?: string | null; image?: string | null; }
+interface User { name?: string | null; email?: string | null; image?: string | null; emailVerified?: Date | null; }
 type Tier = "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
 
 export interface DashboardData {
@@ -325,6 +325,26 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
         style={{ backgroundImage: "radial-gradient(#555 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 max-w-7xl relative space-y-4 sm:space-y-6">
+        
+        {/* Email Verification Banner */}
+        {user && !user.emailVerified && (
+          <div className="bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-400 p-3 sm:p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-200 dark:bg-amber-800/50 p-2 rounded-lg shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm sm:text-base">Please verify your email address</h4>
+                <p className="text-xs sm:text-sm mt-0.5 opacity-90">Verify your email to secure your account and access all features.</p>
+              </div>
+            </div>
+            <Link href="/student/settings" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white border-none shadow-sm h-9">
+                Verify Now
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <motion.div

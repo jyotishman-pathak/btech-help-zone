@@ -9,7 +9,7 @@ export default async function SettingsPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, phone: true, school: true, district: true, email: true },
+    select: { name: true, phone: true, school: true, district: true, email: true, emailVerified: true },
   });
 
   if (!user) redirect("/login");

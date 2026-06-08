@@ -29,10 +29,10 @@ function upstashLimiter(max: number, window: `${number} ${"s" | "m" | "h" | "d"}
 export const limiters = {
   // Login: 5 attempts / minute then 15-minute block
   login: upstashLimiter(5, "60 s", "login"),
-  // Register: 3 per hour
-  register: upstashLimiter(3, "1 h", "register"),
-  // Password reset: 3 per hour
-  reset: upstashLimiter(3, "1 h", "reset"),
+  // Register: 30 per hour (relaxed for testing)
+  register: upstashLimiter(30, "1 h", "register"),
+  // Password reset: 30 per hour (relaxed for testing)
+  reset: upstashLimiter(30, "1 h", "reset"),
   // General auth API: 40 per minute
   auth: upstashLimiter(40, "60 s", "auth"),
   // Any API: 120 per minute (catch-all)
@@ -130,8 +130,8 @@ export async function checkLimit(
   // In-memory fallback
   const configs: Record<LimiterKey, [number, number, number]> = {
     login: [5, 60, 900],    // max, windowSec, blockSec
-    register: [3, 3600, 86400],
-    reset: [3, 3600, 3600],
+    register: [30, 3600, 3600], // relaxed for testing
+    reset: [30, 3600, 3600], // relaxed for testing
     auth: [40, 60, 0],
     api: [120, 60, 0],
   };
