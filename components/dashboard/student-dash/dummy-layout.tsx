@@ -53,6 +53,7 @@ import {
     X,
     Bell,
     User,
+    Users,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/avatar";
@@ -69,6 +70,7 @@ interface DashboardContextType {
     userImage: string | null;
     userTier: "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
     streak: number;
+    userFeatures?: { hasPredictor?: boolean; hasAnalytics?: boolean; hasCounselling?: boolean } | null;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -79,9 +81,10 @@ export function DashboardProvider({
     userImage,
     userTier,
     streak,
+    userFeatures,
 }: DashboardContextType & { children: ReactNode }) {
     return (
-        <DashboardContext.Provider value={{ userName, userImage, userTier, streak }}>
+        <DashboardContext.Provider value={{ userName, userImage, userTier, streak, userFeatures }}>
             {children}
         </DashboardContext.Provider>
     );
@@ -106,9 +109,10 @@ const PRIMARY_NAV = [
 
 // These appear in sidebar on desktop + "More" sheet on mobile
 const SECONDARY_NAV = [
+    { title: "Study Squads", href: "/student/squad", icon: Users, badge: "New", proOnly: false },
     { title: "Analytics", href: "/student/cee/analytics", icon: BrainCircuit, badge: "Pro", proOnly: true },
     { title: "Browse Batches", href: "/student/batches", icon: Layers, badge: null, proOnly: false },
-    { title: "College Predictor", href: "/student/cee/colleges", icon: GraduationCap, badge: "Pro", proOnly: true },
+    { title: "College Predictor", href: "/student/predictor", icon: GraduationCap, badge: "Pro", proOnly: true },
     { title: "Settings", href: "/student/settings", icon: Settings, badge: null, proOnly: false },
     { title: "Help & Support", href: "/student/cee/support", icon: HelpCircle, badge: null, proOnly: false },
 ];
@@ -137,7 +141,7 @@ function DesktopSidebar({
     collapsed: boolean;
     onCollapse: (v: boolean) => void;
 }) {
-    const { userName, userImage, userTier, streak } = useDashboard();
+    const { userName, userImage, userTier, streak, userFeatures } = useDashboard();
     const pathname = usePathname();
     const isPro = userTier !== "NORMAL";
 
@@ -226,7 +230,17 @@ function DesktopSidebar({
                 <nav className="space-y-0.5 px-2">
                     {allNav.map((item) => {
                         const isActive = pathname === item.href;
-                        const isLocked = item.proOnly && !isPro;
+                        
+                        let isLocked = item.proOnly && !isPro;
+                        if (isLocked && userFeatures) {
+                            if (item.href.includes("predictor") || item.href.includes("colleges")) {
+                                if (userFeatures.hasPredictor) isLocked = false;
+                            }
+                            if (item.href.includes("analytics")) {
+                                if (userFeatures.hasAnalytics) isLocked = false;
+                            }
+                        }
+
                         return (
                             <Link
                                 key={item.href}
@@ -464,7 +478,7 @@ function MobileBottomNav({ onMore }: { onMore: () => void }) {
 // ─── Mobile "More" Drawer ─────────────────────────────────────────────────────
 
 function MobileMoreDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
-    const { userName, userImage, userTier, streak } = useDashboard();
+    const { userName, userImage, userTier, streak, userFeatures } = useDashboard();
     const pathname = usePathname();
     const isPro = userTier !== "NORMAL";
 
@@ -532,7 +546,17 @@ function MobileMoreDrawer({ open, onClose }: { open: boolean; onClose: () => voi
                             <div className="grid grid-cols-1 gap-0.5">
                                 {moreItems.map((item) => {
                                     const isActive = pathname === item.href;
-                                    const isLocked = item.proOnly && !isPro;
+                                    
+                                    let isLocked = item.proOnly && !isPro;
+                                    if (isLocked && userFeatures) {
+                                        if (item.href.includes("predictor") || item.href.includes("colleges")) {
+                                            if (userFeatures.hasPredictor) isLocked = false;
+                                        }
+                                        if (item.href.includes("analytics")) {
+                                            if (userFeatures.hasAnalytics) isLocked = false;
+                                        }
+                                    }
+
                                     return (
                                         <Link
                                             key={item.href}
@@ -586,12 +610,14 @@ export default function DashboardLayout({
     userImage,
     userTier = "NORMAL",
     streak = 0,
+    userFeatures,
 }: {
     children: ReactNode;
     userName: string | null;
     userImage: string | null;
     userTier?: "NORMAL" | "PREMIUM" | "SUPER_PREMIUM";
     streak?: number;
+    userFeatures?: { hasPredictor?: boolean; hasAnalytics?: boolean; hasCounselling?: boolean } | null;
 }) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [moreOpen, setMoreOpen] = useState(false);
@@ -617,6 +643,7 @@ export default function DashboardLayout({
             userImage={userImage}
             userTier={userTier}
             streak={streak}
+            userFeatures={userFeatures}
         >
             <div className="flex h-screen overflow-hidden bg-zinc-50 dark:bg-zinc-950">
                 <DesktopSidebar

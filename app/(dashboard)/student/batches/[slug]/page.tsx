@@ -23,6 +23,27 @@ export default async function BatchDetailPage({ params }: { params: Promise<{ sl
 
   const user = session?.user;
 
+  // Group tests by folder
+  const groupedTests: Record<string, { folderName: string, folderOrder: number, tests: any[] }> = {
+    "unfolder": { folderName: "Other Tests", folderOrder: 9999, tests: [] }
+  };
+
+  if (batch?.tests) {
+    batch.tests.forEach((bt: any) => {
+      const folderId = bt.test.folderId || "unfolder";
+      if (!groupedTests[folderId]) {
+        groupedTests[folderId] = {
+          folderName: bt.test.folder?.name || "Other Tests",
+          folderOrder: bt.test.folder?.order ?? 9999,
+          tests: []
+        };
+      }
+      groupedTests[folderId].tests.push(bt);
+    });
+  }
+
+  const sortedFolders = Object.values(groupedTests).filter(g => g.tests.length > 0).sort((a, b) => a.folderOrder - b.folderOrder);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Banner */}
@@ -85,15 +106,22 @@ export default async function BatchDetailPage({ params }: { params: Promise<{ sl
                   <h2 className="font-bold text-zinc-900 dark:text-zinc-100 mb-4 flex items-center gap-2">
                     <Timer className="w-4 h-4 text-zinc-500" /> Mock Tests ({batch.tests.length})
                   </h2>
-                  <div className="space-y-2">
-                    {batch.tests.map((bt: any) => (
-                      <div key={bt.id} className="flex items-center gap-3 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        <Play className="w-4 h-4 text-zinc-400" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{bt.test.title}</p>
-                          <p className="text-xs text-zinc-500">{bt.test.duration} mins · {bt.test.totalMarks} marks</p>
+                  <div className="space-y-6">
+                    {sortedFolders.map((group, idx) => (
+                      <div key={idx} className="space-y-3">
+                        <h3 className="font-semibold text-sm text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">{group.folderName}</h3>
+                        <div className="space-y-2">
+                          {group.tests.map((bt: any) => (
+                            <div key={bt.id} className="flex items-center gap-3 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                              <Play className="w-4 h-4 text-zinc-400" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">{bt.test.title}</p>
+                                <p className="text-xs text-zinc-500">{bt.test.duration} mins · {bt.test.totalMarks} marks</p>
+                              </div>
+                              {!batch.isEnrolled && <span className="text-xs text-zinc-400">🔒</span>}
+                            </div>
+                          ))}
                         </div>
-                        {!batch.isEnrolled && <span className="text-xs text-zinc-400">🔒</span>}
                       </div>
                     ))}
                   </div>

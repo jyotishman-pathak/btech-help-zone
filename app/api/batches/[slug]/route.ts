@@ -16,7 +16,7 @@ export async function GET(
     include: {
       features: { orderBy: { order: "asc" } },
       tests: {
-        include: { test: { select: { id: true, title: true, duration: true, totalMarks: true, examType: true } } },
+        include: { test: { select: { id: true, title: true, duration: true, totalMarks: true, examType: true, folderId: true, folder: { select: { id: true, name: true, order: true } } } } },
         orderBy: { order: "asc" },
       },
       notes: {

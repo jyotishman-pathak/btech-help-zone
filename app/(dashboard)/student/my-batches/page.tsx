@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  BookOpen, Timer, Download, Play, ChevronRight,
+  BookOpen, Timer, Download, Play, ChevronRight, ChevronLeft, Folder,
   Loader2, Trophy, CheckCircle2, Clock, Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
@@ -30,6 +30,8 @@ interface BatchTest {
     id: string; title: string; duration: number;
     totalMarks: number; examType: string; isActive: boolean;
     deletedAt?: string | null;
+    folderId?: string | null;
+    folder?: { id: string, name: string, order: number } | null;
   };
   lastAttempt: Attempt | null;
 }
@@ -64,6 +66,7 @@ export default function MyBatchesPage() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeEnrollment, setActiveEnrollment] = useState<string | null>(null);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -128,6 +131,30 @@ export default function MyBatchesPage() {
 
   const active = enrollments.find((e) => e.id === activeEnrollment);
 
+  // Group tests by folder for active batch
+  let groupedTests: Record<string, { folderId: string, folderName: string, folderOrder: number, tests: BatchTest[] }> = {
+    "unfolder": { folderId: "unfolder", folderName: "Other Tests", folderOrder: 9999, tests: [] }
+  };
+
+  if (active?.batch.tests) {
+    active.batch.tests.forEach((bt) => {
+      const folderId = bt.test.folderId || "unfolder";
+      if (!groupedTests[folderId]) {
+        groupedTests[folderId] = {
+          folderId: folderId,
+          folderName: bt.test.folder?.name || "Other Tests",
+          folderOrder: bt.test.folder?.order ?? 9999,
+          tests: []
+        };
+      }
+      groupedTests[folderId].tests.push(bt);
+    });
+  }
+
+  const sortedFolders = Object.values(groupedTests)
+    .filter(g => g.tests.length > 0)
+    .sort((a, b) => a.folderOrder - b.folderOrder);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
@@ -158,7 +185,10 @@ export default function MyBatchesPage() {
               return (
                 <button
                   key={enrollment.id}
-                  onClick={() => setActiveEnrollment(enrollment.id)}
+                  onClick={() => {
+                    setActiveEnrollment(enrollment.id);
+                    setActiveFolderId(null);
+                  }}
                   className={cn(
                     "w-full text-left p-4 rounded-xl border-2 transition-all",
                     isActive
@@ -287,75 +317,115 @@ export default function MyBatchesPage() {
                 </TabsList>
 
                 {/* Tests Tab */}
-                <TabsContent value="tests" className="mt-4 space-y-3">
+                <TabsContent value="tests" className="mt-4">
                   {active.batch.tests.length === 0 ? (
                     <EmptyState icon={Timer} message="No mock tests in this batch yet." />
-                  ) : (
-                    active.batch.tests.map((bt, idx) => {
-                      const attempted = !!bt.lastAttempt;
-                      return (
-                        <Card key={bt.id} className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-4">
-                              {/* Number */}
-                              <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0",
-                                attempted ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
-                              )}>
-                                {attempted ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{bt.test.title}</p>
-                                <div className="flex items-center gap-3 mt-0.5">
-                                  <span className="text-xs text-zinc-500 flex items-center gap-1">
-                                    <Clock className="w-3 h-3" /> {bt.test.duration} mins
-                                  </span>
-                                  <span className="text-xs text-zinc-500 flex items-center gap-1">
-                                    <Target className="w-3 h-3" /> {bt.test.totalMarks} marks
-                                  </span>
-                                  {attempted && bt.lastAttempt && (
-                                    <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                                      <Trophy className="w-3 h-3" /> {bt.lastAttempt.score}/{bt.test.totalMarks}
-                                      {" "}({Math.round(bt.lastAttempt.percentage)}%)
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {bt.test.deletedAt ? (
-                                <Button
-                                  size="sm"
-                                  className="shrink-0 border-zinc-200 dark:border-zinc-700"
-                                  variant="outline"
-                                  disabled
-                                >
-                                  <Play className="w-3.5 h-3.5 mr-1.5" />
-                                  Unavailable
-                                </Button>
-                              ) : (
-                                <Link href={`/cee/mock/${bt.test.id}`}>
-                                  <Button
-                                    size="sm"
-                                    className={cn(
-                                      "shrink-0",
-                                      attempted
-                                        ? "border-zinc-200 dark:border-zinc-700"
-                                        : "bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
-                                    )}
-                                    variant={attempted ? "outline" : "default"}
-                                    disabled={!bt.test.isActive}
-                                  >
-                                    <Play className="w-3.5 h-3.5 mr-1.5" />
-                                    {attempted ? "Reattempt" : bt.test.isActive ? "Start" : "Unavailable"}
-                                  </Button>
-                                </Link>
-                              )}
+                  ) : activeFolderId === null ? (
+                    // Folder Grid View
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {sortedFolders.map((group) => (
+                        <Card 
+                          key={group.folderId} 
+                          className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 cursor-pointer hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group"
+                          onClick={() => setActiveFolderId(group.folderId)}
+                        >
+                          <CardContent className="p-5 flex flex-col items-center justify-center text-center space-y-3">
+                            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Folder className="w-6 h-6 text-blue-500" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-zinc-900 dark:text-zinc-100">{group.folderName}</h3>
+                              <p className="text-xs text-zinc-500 mt-1">{group.tests.length} tests</p>
                             </div>
                           </CardContent>
                         </Card>
-                      );
-                    })
+                      ))}
+                    </div>
+                  ) : (
+                    // Inside Folder View
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 px-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                          onClick={() => setActiveFolderId(null)}
+                        >
+                          <ChevronLeft className="w-4 h-4 mr-1" /> Back
+                        </Button>
+                        <h3 className="font-bold text-lg text-zinc-900 dark:text-zinc-100">
+                          {sortedFolders.find(f => f.folderId === activeFolderId)?.folderName}
+                        </h3>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {sortedFolders.find(f => f.folderId === activeFolderId)?.tests.map((bt, idx) => {
+                          const attempted = !!bt.lastAttempt;
+                          return (
+                            <Card key={bt.id} className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+                              <CardContent className="p-4">
+                                <div className="flex items-center gap-4">
+                                  {/* Number */}
+                                  <div className={cn(
+                                    "w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0",
+                                    attempted ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500"
+                                  )}>
+                                    {attempted ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{bt.test.title}</p>
+                                    <div className="flex items-center gap-3 mt-0.5">
+                                      <span className="text-xs text-zinc-500 flex items-center gap-1">
+                                        <Clock className="w-3 h-3" /> {bt.test.duration} mins
+                                      </span>
+                                      <span className="text-xs text-zinc-500 flex items-center gap-1">
+                                        <Target className="w-3 h-3" /> {bt.test.totalMarks} marks
+                                      </span>
+                                      {attempted && bt.lastAttempt && (
+                                        <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                          <Trophy className="w-3 h-3" /> {bt.lastAttempt.score}/{bt.test.totalMarks}
+                                          {" "}({Math.round(bt.lastAttempt.percentage)}%)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {bt.test.deletedAt ? (
+                                    <Button
+                                      size="sm"
+                                      className="shrink-0 border-zinc-200 dark:border-zinc-700"
+                                      variant="outline"
+                                      disabled
+                                    >
+                                      <Play className="w-3.5 h-3.5 mr-1.5" />
+                                      Unavailable
+                                    </Button>
+                                  ) : (
+                                    <Link href={`/cee/mock/${bt.test.id}`}>
+                                      <Button
+                                        size="sm"
+                                        className={cn(
+                                          "shrink-0",
+                                          attempted
+                                            ? "border-zinc-200 dark:border-zinc-700"
+                                            : "bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+                                        )}
+                                        variant={attempted ? "outline" : "default"}
+                                        disabled={!bt.test.isActive}
+                                      >
+                                        <Play className="w-3.5 h-3.5 mr-1.5" />
+                                        {attempted ? "Reattempt" : bt.test.isActive ? "Start" : "Unavailable"}
+                                      </Button>
+                                    </Link>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </TabsContent>
 

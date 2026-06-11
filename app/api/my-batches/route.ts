@@ -25,6 +25,8 @@ export async function GET() {
                   id: true, title: true, duration: true,
                   totalMarks: true, isActive: true, examType: true,
                   deletedAt: true,
+                  folderId: true,
+                  folder: { select: { id: true, name: true, order: true } },
                 },
               },
             },

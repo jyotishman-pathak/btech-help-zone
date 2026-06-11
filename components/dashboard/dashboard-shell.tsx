@@ -213,13 +213,14 @@ function TopicRow({
 }
 
 function TierGate({
-  tier, required, children, upsellTitle, upsellDescription,
+  tier, required, children, upsellTitle, upsellDescription, overrideAccess = false,
 }: {
   tier: Tier; required: Tier; children: React.ReactNode;
   upsellTitle?: string; upsellDescription?: string;
+  overrideAccess?: boolean;
 }) {
   const levels: Record<Tier, number> = { NORMAL: 0, PREMIUM: 1, SUPER_PREMIUM: 2 };
-  if (levels[tier] >= levels[required]) return <>{children}</>;
+  if (overrideAccess || levels[tier] >= levels[required]) return <>{children}</>;
 
   return (
     <Card className="border-dashed border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
@@ -258,8 +259,9 @@ function ChartTooltip({ active, payload, label }: any) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function DashboardShell({ user, tier = "NORMAL", data }: {
+export function DashboardShell({ user, tier = "NORMAL", data, userFeatures }: {
   user?: User; tier?: Tier; data: DashboardData;
+  userFeatures?: { hasPredictor?: boolean; hasAnalytics?: boolean; hasCounselling?: boolean };
 }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [openSubjects, setOpenSubjects] = useState<Set<string>>(new Set([data.subjects[0]?.name]));
@@ -1019,6 +1021,7 @@ export function DashboardShell({ user, tier = "NORMAL", data }: {
               required="PREMIUM"
               upsellTitle="College Predictor"
               upsellDescription="See which Assam colleges you qualify for based on your mock scores."
+              overrideAccess={userFeatures?.hasPredictor}
             >
               <Card className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
                 <CardHeader className="pb-3 px-3 sm:px-6 pt-4 sm:pt-6">

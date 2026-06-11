@@ -35,7 +35,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const { title, description, duration, examType, isActive, subjectId, batchIds } = await req.json();
+  const { title, description, duration, examType, isActive, subjectId, folderId, batchIds } = await req.json();
 
   const test = await prisma.$transaction(async (tx) => {
     const updated = await tx.mockTest.update({
@@ -47,6 +47,7 @@ export async function PATCH(
         ...(examType !== undefined && { examType }),
         ...(isActive !== undefined && { isActive }),
         ...(subjectId !== undefined && { subjectId: subjectId || null }),
+        ...(folderId !== undefined && { folderId: folderId || null }),
       },
     });
 

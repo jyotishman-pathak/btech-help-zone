@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
     ChevronLeft, Save, Plus, Trash2, ChevronDown, ChevronUp,
     Check, X, Image as ImageIcon, Loader2, Eye, ToggleLeft,
-    ToggleRight, GripVertical, Copy, ExternalLink, BookOpen, Lightbulb,
+    ToggleRight, GripVertical, Copy, ExternalLink, BookOpen, Lightbulb, Upload, Download
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../../../components/ui/card";
 
@@ -60,6 +60,7 @@ interface Test {
     totalMarks: number;
     accessCode: string;
     subjectId: string | null;
+    folderId: string | null;
     batchTests: Array<{ batch: { id: string; name: string; type: string } }>;
 }
 
@@ -503,6 +504,7 @@ export default function TestEditPage() {
     const [test, setTest] = useState<Test | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [batches, setBatches] = useState<any[]>([]);
+    const [folders, setFolders] = useState<{ id: string; name: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Metadata save state
@@ -514,18 +516,62 @@ export default function TestEditPage() {
     const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
     const [addingQuestion, setAddingQuestion] = useState(false);
 
+    const [csvUploading, setCsvUploading] = useState(false);
+    const csvRef = useRef<HTMLInputElement>(null);
+
+    const handleCsvUpload = async (file: File) => {
+        setCsvUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            const res = await fetch(`/api/admin/tests/${testId}/bulk-upload`, {
+                method: "POST",
+                body: formData,
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setQuestions((prev) => [...prev, ...data.questions.map((q: any) => ({ ...q, _expanded: false }))]);
+                alert(`Successfully uploaded ${data.count} questions!`);
+            } else {
+                const err = await res.json();
+                alert(`Error: ${err.error}`);
+            }
+        } catch (e) {
+            alert("Failed to upload CSV");
+        } finally {
+            setCsvUploading(false);
+            if (csvRef.current) csvRef.current.value = "";
+        }
+    };
+
+    const handleDownloadTemplate = () => {
+        const headers = "questionText,questionImageUrl,option1,option1ImageUrl,option2,option2ImageUrl,option3,option3ImageUrl,option4,option4ImageUrl,correctIndex,section,marks,negativeMarks,explanation,explanationImageUrl,questionTextAs,option1As,option2As,option3As,option4As\n";
+        const example = '"What is the capital of India?","", "Delhi","","Mumbai","","Kolkata","","Chennai","",0,"General",4,1,"New Delhi is the capital of India.","","ভাৰতৰ ৰাজধানী কি?","দিল্লী","মুম্বাই","কলকাতা","চেন্নাই"\n';
+        
+        const blob = new Blob([headers + example], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "cee_questions_template.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // Fetch test data
     useEffect(() => {
         Promise.all([
             fetch(`/api/admin/tests/${testId}`).then((r) => r.json()),
             fetch("/api/admin/batches").then((r) => r.json()),
-        ]).then(([testData, batchData]) => {
+            fetch("/api/admin/tests/folders").then((r) => r.json()),
+        ]).then(([testData, batchData, folderData]) => {
             if (testData.id) {
                 setTest(testData);
                 setQuestions(testData.questions.map((q: Question) => ({ ...q, _expanded: false })));
                 setSelectedBatchIds(testData.batchTests?.map((bt: any) => bt.batch.id) ?? []);
             }
             setBatches(Array.isArray(batchData) ? batchData : []);
+            setFolders(Array.isArray(folderData) ? folderData : []);
         }).finally(() => setLoading(false));
     }, [testId]);
 
@@ -547,6 +593,7 @@ export default function TestEditPage() {
                     description: test.description,
                     duration: test.duration,
                     examType: test.examType,
+                    folderId: test.folderId,
                     isActive: test.isActive,
                     batchIds: selectedBatchIds,
                 }),
@@ -725,6 +772,18 @@ export default function TestEditPage() {
                                         </SelectContent>
                                     </Select>
                                 </div>
+                                <div className="space-y-1.5">
+                                    <Label>Folder</Label>
+                                    <Select value={test.folderId || "none"} onValueChange={(v) => updateTestField("folderId", v === "none" ? null : v)}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">No Folder</SelectItem>
+                                            {folders.map(f => (
+                                                <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                         <div className="space-y-1.5">
@@ -824,16 +883,40 @@ export default function TestEditPage() {
                                 {totalMarks} total marks · Each save is instant
                             </p>
                         </div>
-                        <Button
-                            onClick={addQuestion}
-                            disabled={addingQuestion}
-                            className="bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
-                        >
-                            {addingQuestion
-                                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Adding...</>
-                                : <><Plus className="w-4 h-4 mr-2" /> Add Question</>
-                            }
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <input
+                                ref={csvRef} type="file" accept=".csv" className="hidden"
+                                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleCsvUpload(f); }}
+                            />
+                            <Button
+                                onClick={handleDownloadTemplate}
+                                variant="outline"
+                                className="border-zinc-200 dark:border-zinc-800 text-zinc-500"
+                            >
+                                <Download className="w-4 h-4 mr-2" /> Template
+                            </Button>
+                            <Button
+                                onClick={() => csvRef.current?.click()}
+                                disabled={csvUploading}
+                                variant="outline"
+                                className="border-zinc-200 dark:border-zinc-800"
+                            >
+                                {csvUploading
+                                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
+                                    : <><Upload className="w-4 h-4 mr-2" /> Bulk CSV</>
+                                }
+                            </Button>
+                            <Button
+                                onClick={addQuestion}
+                                disabled={addingQuestion}
+                                className="bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+                            >
+                                {addingQuestion
+                                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Adding...</>
+                                    : <><Plus className="w-4 h-4 mr-2" /> Add Question</>
+                                }
+                            </Button>
+                        </div>
                     </div>
 
                     {questions.length === 0 ? (

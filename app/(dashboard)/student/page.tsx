@@ -326,7 +326,7 @@ export default async function DashboardPage() {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { emailVerified: true }
+    select: { emailVerified: true, hasPredictor: true, hasAnalytics: true, hasCounselling: true }
   });
 
   const data = await getDashboardData(userId);
@@ -340,6 +340,7 @@ export default async function DashboardPage() {
         emailVerified: dbUser?.emailVerified,
       }}
       tier={tier}
+      userFeatures={dbUser || undefined}
       data={data}
     />
   );

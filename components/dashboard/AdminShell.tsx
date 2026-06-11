@@ -16,6 +16,7 @@ import {
   LogOut,
   Tag,
   BookOpen,
+  Building2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -30,6 +31,7 @@ import Link from "next/link";
 
 import { signOut, useSession } from "next-auth/react";
 import prisma from "../../lib/prisma.client";
+import { UserAccessModal } from "./UserAccessModal";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -164,6 +166,10 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
   const [newContent, setNewContent] = useState({ title: "", type: "NOTE" as const, fileUrl: "", requiredTier: "NORMAL" as Tier });
   const [savingContent, setSavingContent] = useState(false);
+
+  // Access Modal
+  const [accessModalOpen, setAccessModalOpen] = useState(false);
+  const [selectedUserForAccess, setSelectedUserForAccess] = useState<AdminUser | null>(null);
 
   // Leads state
   const [leads, setLeads] = useState<any[]>([]);
@@ -437,6 +443,7 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
               { id: "dashboard", label: "Dashboard", icon: BarChart3 },
               { id: "users", label: "Users", icon: Users },
               { id: "content", label: "Content", icon: FileText },
+              { id: "predictor", label: "Predictor", icon: Building2, href: "/admin/predictor" },
               { id: "tests", label: "Mock Tests", icon: Code, href: "/admin/tests" },
               { id: "attempts", label: "Mock Attempts", icon: Timer, href: "/admin/attempts" },
               { id: "analytics", label: "Analytics", icon: PieChart },
@@ -673,7 +680,16 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
                     <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-50">Users</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">{userTotal.toLocaleString()} total students</p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input 
+                        placeholder="Search users..." 
+                        value={searchQuery} 
+                        onChange={(e) => { setSearchQuery(e.target.value); setUserPage(1); }}
+                        className="pl-9 w-full sm:w-64 bg-white dark:bg-[#12101F] border-slate-200/70 dark:border-slate-700/50" 
+                      />
+                    </div>
                     <Select value={userFilter} onValueChange={(v) => { setUserFilter(v as any); setUserPage(1); }}>
                       <SelectTrigger className="w-40 bg-white dark:bg-[#12101F] border-slate-200/70 dark:border-slate-700/50">
                         <SelectValue placeholder="Filter tier" />
@@ -745,6 +761,10 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="border-slate-200/70 dark:border-slate-700/50 bg-white dark:bg-[#12101F]">
+                                  <DropdownMenuItem onClick={() => { setSelectedUserForAccess(user); setAccessModalOpen(true); }} className="cursor-pointer font-medium text-indigo-600 dark:text-indigo-400">
+                                    <Shield className="w-4 h-4 mr-2" /> Manage Access
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator className="bg-slate-200 dark:bg-slate-700" />
                                   <DropdownMenuItem onClick={() => updateUser(user.id, { tier: "PREMIUM" })} className="cursor-pointer">
                                     <Edit className="w-4 h-4 mr-2" /> Set Premium
                                   </DropdownMenuItem>
@@ -777,6 +797,12 @@ export function AdminShell({ admin, initialTab }: { admin: { name: string; email
                     </div>
                   </div>
                 )}
+                
+                <UserAccessModal 
+                  user={selectedUserForAccess} 
+                  open={accessModalOpen} 
+                  onOpenChange={setAccessModalOpen} 
+                />
               </motion.div>
             )}
 

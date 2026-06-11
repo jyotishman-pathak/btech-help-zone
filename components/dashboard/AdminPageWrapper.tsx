@@ -45,6 +45,7 @@ export function AdminPageWrapper({ children, activeTab, backHref }: AdminPageWra
     { id: "leads", label: "Free Leads", icon: Users, href: "/admin?tab=leads" },
     { id: "audit", label: "Audit Logs", icon: Shield, href: "/admin/audit-logs" },
     { id: "pyq", label: "Upload PYQ", icon: Upload, href: "/admin/pyq" },
+    { id: "squads", label: "Study Squads", icon: Users, href: "/admin/squads" },
     { id: "settings", label: "Settings", icon: Settings, href: "/admin?tab=settings" },
   ];
 

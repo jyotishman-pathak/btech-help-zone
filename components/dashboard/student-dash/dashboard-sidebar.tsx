@@ -84,7 +84,7 @@ const NAV_ITEMS = [
   },
   {
     title: "College Predictor",
-    href: "/student/cee/colleges",
+    href: "/student/predictor",
     icon: GraduationCap,
     badge: "Pro",
     proOnly: true,

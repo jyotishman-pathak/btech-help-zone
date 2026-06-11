@@ -12,7 +12,10 @@ import {
   Check,
   BookOpen,
   Lightbulb,
+  Upload,
+  Download,
 } from "lucide-react";
+import Papa from "papaparse";
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Label } from "../ui/label";
@@ -87,6 +90,76 @@ export function AdminTestCreator() {
   const [error, setError] = useState("");
   const [availableBatches, setAvailableBatches] = useState<{ id: string; name: string; type: string }[]>([]);
   const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
+  const [availableFolders, setAvailableFolders] = useState<{ id: string; name: string }[]>([]);
+  const [selectedFolderId, setSelectedFolderId] = useState<string>("none");
+  
+  const csvRef = useRef<HTMLInputElement>(null);
+
+  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results: any) => {
+        if (results.errors.length > 0) {
+          setError("Failed to parse CSV: " + results.errors[0].message);
+          return;
+        }
+
+        const rows = results.data as any[];
+        const newQs: QuestionDraft[] = rows.map((row) => ({
+          id: Math.random().toString(36).slice(2),
+          text: row.questionText || "Empty Question",
+          textAs: row.questionTextAs || "",
+          imageUrl: row.questionImageUrl || null,
+          options: [
+            row.option1 || "",
+            row.option2 || "",
+            row.option3 || "",
+            row.option4 || "",
+          ],
+          optionsAs: [
+            row.option1As || "",
+            row.option2As || "",
+            row.option3As || "",
+            row.option4As || "",
+          ],
+          optionImages: [
+            row.option1ImageUrl || "",
+            row.option2ImageUrl || "",
+            row.option3ImageUrl || "",
+            row.option4ImageUrl || "",
+          ],
+          correctIndex: parseInt(row.correctIndex) || 0,
+          marks: parseFloat(row.marks) || 4,
+          negativeMarks: parseFloat(row.negativeMarks) || 1,
+          section: row.section || "Physics",
+          expanded: false,
+          explanation: row.explanation || "",
+          explanationImageUrl: row.explanationImageUrl || null,
+        }));
+
+        setQuestions((prev) => [...prev, ...newQs]);
+        if (csvRef.current) csvRef.current.value = "";
+      },
+    });
+  };
+
+  const handleDownloadTemplate = () => {
+    const headers = "questionText,questionImageUrl,option1,option1ImageUrl,option2,option2ImageUrl,option3,option3ImageUrl,option4,option4ImageUrl,correctIndex,section,marks,negativeMarks,explanation,explanationImageUrl,questionTextAs,option1As,option2As,option3As,option4As\n";
+    const example = '"What is the capital of India?","", "Delhi","","Mumbai","","Kolkata","","Chennai","",0,"General",4,1,"New Delhi is the capital of India.","","ভাৰতৰ ৰাজধানী কি?","দিল্লী","মুম্বাই","কলকাতা","চেন্নাই"\n';
+    
+    const blob = new Blob([headers + example], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "cee_questions_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const explanationFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -97,6 +170,11 @@ export function AdminTestCreator() {
     fetch("/api/admin/batches")
       .then((r) => r.json())
       .then((data) => setAvailableBatches(Array.isArray(data) ? data : []))
+      .catch(() => {});
+
+    fetch("/api/admin/tests/folders")
+      .then((r) => r.json())
+      .then((data) => setAvailableFolders(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 
@@ -205,6 +283,7 @@ export function AdminTestCreator() {
           duration,
           requiredTier,
           examType,
+          folderId: selectedFolderId === "none" ? null : selectedFolderId,
           batchIds: selectedBatchIds,
           questions: questions.map(
             ({ id, expanded, uploading, explanationUploading, optionUploading, ...q }) => q
@@ -302,6 +381,27 @@ export function AdminTestCreator() {
                 <SelectItem value="YEAR_WISE">
                   Year Wise
                 </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Folder</Label>
+
+            <Select value={selectedFolderId} onValueChange={setSelectedFolderId}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="none">
+                  No Folder
+                </SelectItem>
+                {availableFolders.map(folder => (
+                  <SelectItem key={folder.id} value={folder.id}>
+                    {folder.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -672,16 +772,41 @@ export function AdminTestCreator() {
           </Card>
         ))}
 
-        <Button
-          variant="outline"
-          onClick={() =>
-            setQuestions((qs) => [...qs, makeQuestion()])
-          }
-          className="w-full border-dashed border-slate-300 dark:border-slate-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add Question
-        </Button>
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            accept=".csv"
+            className="hidden"
+            ref={csvRef}
+            onChange={handleCsvUpload}
+          />
+          <Button
+            variant="outline"
+            onClick={handleDownloadTemplate}
+            className="flex-1 border-dashed border-slate-300 dark:border-slate-700 text-slate-500"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Template
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => csvRef.current?.click()}
+            className="flex-1 border-dashed border-slate-300 dark:border-slate-700"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk CSV
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() =>
+              setQuestions((qs) => [...qs, makeQuestion()])
+            }
+            className="flex-1 border-dashed border-slate-300 dark:border-slate-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Question
+          </Button>
+        </div>
       </div>
 
       {/* Batch Assignment */}

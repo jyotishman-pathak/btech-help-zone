@@ -1,5 +1,3 @@
-// prisma/schema.prisma — complete evolved schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,83 +6,42 @@ datasource db {
   provider = "postgresql"
 }
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
-enum Role {
-  STUDENT
-  PREMIUM_STUDENT // ← replaces NORMAL tier concept
-  ADMIN
-  SUPER_ADMIN // ← new, only manages admins
-}
-
-enum BatchType {
-  CEE_PREP // ← your existing content maps here
-  BTECH
-  COMPETITIVE
-  FREE
-}
-
-enum EnrollmentStatus {
-  ACTIVE
-  EXPIRED
-  CANCELLED
-  PENDING // for free batch lead-form pending approval
-}
-
-enum PaymentStatus {
-  PENDING
-  CAPTURED
-  FAILED
-  REFUNDED
-}
-
-enum ContentType {
-  PYQ
-  NOTE
-}
-
-enum ExamType {
-  FULL_MOCK
-  TOPIC_WISE
-  YEAR_WISE
-}
-
-// ─── Auth (keep as-is) ────────────────────────────────────────────────────────
-
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String?
-  role          Role      @default(STUDENT)
-  emailVerified DateTime?
-  image         String?
-  phone         String?
-  school        String?
-  district      String?
-  hasPredictor  Boolean   @default(false)
-  hasAnalytics  Boolean   @default(false)
-  hasCounselling Boolean  @default(false)
-  suspended     Boolean   @default(false)
-  deletedAt     DateTime? // soft delete
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
+  id               String              @id @default(cuid())
+  email            String              @unique
+  name             String?
+  password         String?
+  role             Role                @default(STUDENT)
+  emailVerified    DateTime?
+  image            String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  suspended        Boolean             @default(false)
+  deletedAt        DateTime?
+  district         String?
+  phone            String?
+  school           String?
+  hasAnalytics     Boolean             @default(false)
+  hasCounselling   Boolean             @default(false)
+  hasPredictor     Boolean             @default(false)
+  squadId          String?
   accounts         Account[]
-  sessions         Session[]
-  enrollments      Enrollment[]
-  mockTestAttempts MockTestAttempt[]
-  payments         Payment[]
-  notifications    Notification[]
   auditLogs        AuditLog[]          @relation("AuditActor")
   certificates     Certificate[]
+  enrollments      Enrollment[]
   leadSubmissions  LeadSubmission[]
-  topicProgress    UserTopicProgress[] // ← ADD THIS
+  mockTestAttempts MockTestAttempt[]
+  notifications    Notification[]
+  payments         Payment[]
+  sessions         Session[]
   subscription     Subscription?
+  squad            Squad?              @relation(fields: [squadId], references: [id])
+  topicProgress    UserTopicProgress[]
 
   @@index([email])
   @@index([role])
   @@index([createdAt])
+  @@index([squadId])
 }
 
 model Account {
@@ -93,12 +50,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -121,7 +78,6 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Password reset tokens
 model PasswordResetToken {
   id        String   @id @default(cuid())
   email     String
@@ -132,37 +88,32 @@ model PasswordResetToken {
   @@index([email])
 }
 
-// ─── Content Structure ────────────────────────────────────────────────────────
-
-// Engineering branches (CSE, ECE, ME etc.) — new for B.Tech
 model Branch {
   id       String    @id @default(cuid())
-  name     String // "Computer Science & Engineering"
-  code     String    @unique // "CSE"
-  subjects Subject[]
+  name     String
+  code     String    @unique
   batches  Batch[]
+  subjects Subject[]
 }
 
-// Semesters 1–8
 model Semester {
-  id       Int       @id // 1-8
+  id       Int       @id
   subjects Subject[]
 }
 
 model Subject {
-  id         String  @id @default(cuid())
+  id         String          @id @default(cuid())
   name       String
-  code       String?
   category   String
-  weightage  Int     @default(0)
+  weightage  Int             @default(0)
   branchId   String?
+  code       String?
   semesterId Int?
-
-  branch    Branch?         @relation(fields: [branchId], references: [id])
-  semester  Semester?       @relation(fields: [semesterId], references: [id])
-  topics    Topic[]
-  materials StudyMaterial[] // ← REPLACED notes + pyqs
-  tests     MockTest[]
+  tests      MockTest[]
+  materials  StudyMaterial[]
+  branch     Branch?         @relation(fields: [branchId], references: [id])
+  semester   Semester?       @relation(fields: [semesterId], references: [id])
+  topics     Topic[]
 
   @@index([branchId])
 }
@@ -182,44 +133,41 @@ model UserTopicProgress {
   topicId     String
   completed   Boolean   @default(false)
   completedAt DateTime?
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   topic       Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, topicId])
 }
 
-// ─── Batch System (main new feature) ─────────────────────────────────────────
-
 model Batch {
-  id            String    @id @default(cuid())
-  name          String // "Sarathi", "Sankalpa"
-  slug          String    @unique
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
   tagline       String?
   description   String?
-  type          BatchType @default(CEE_PREP)
-  isFree        Boolean   @default(false)
-  price         Int       @default(0) // paise
-  originalPrice Int? // for showing strikethrough
-  badge         String? // "Most Popular", "New", "Bestseller"
-  bannerUrl     String? // Cloudinary
+  type          BatchType      @default(CEE_PREP)
+  isFree        Boolean        @default(false)
+  price         Int            @default(0)
+  originalPrice Int?
+  badge         String?
+  bannerUrl     String?
   iconUrl       String?
-  validDays     Int? // null = lifetime
-  isActive      Boolean   @default(true)
-  isPublished   Boolean   @default(false)
-  sortOrder     Int       @default(0)
+  validDays     Int?
+  isActive      Boolean        @default(true)
+  isPublished   Boolean        @default(false)
+  sortOrder     Int            @default(0)
   branchId      String?
-  deletedAt     DateTime? // soft delete
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  branch      Branch?        @relation(fields: [branchId], references: [id])
-  features    BatchFeature[]
-  tests       BatchTest[]
-  notes       BatchNote[]
-  pyqs        BatchPYQ[]
-  enrollments Enrollment[]
-  leadForm    LeadForm?
-  coupons     Coupon[]
+  deletedAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  branch        Branch?        @relation(fields: [branchId], references: [id])
+  features      BatchFeature[]
+  notes         BatchNote[]
+  pyqs          BatchPYQ[]
+  tests         BatchTest[]
+  coupons       Coupon[]
+  enrollments   Enrollment[]
+  leadForm      LeadForm?
 
   @@index([slug])
   @@index([isActive, isPublished])
@@ -230,12 +178,11 @@ model BatchFeature {
   id      String  @id @default(cuid())
   batchId String
   text    String
-  icon    String? // lucide icon name
+  icon    String?
   order   Int     @default(0)
   batch   Batch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
 }
 
-// Junction: which tests belong to which batch
 model BatchTest {
   id      String   @id @default(cuid())
   batchId String
@@ -269,22 +216,19 @@ model BatchPYQ {
   @@unique([batchId, pyqId])
 }
 
-// ─── Enrollment ───────────────────────────────────────────────────────────────
-
 model Enrollment {
   id        String           @id @default(cuid())
   userId    String
   batchId   String
   status    EnrollmentStatus @default(ACTIVE)
-  source    String? // "payment" | "coupon" | "admin_grant" | "lead_form"
+  source    String?
   expiresAt DateTime?
-  grantedBy String? // admin userId if manually granted
+  grantedBy String?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
-
-  user    User     @relation(fields: [userId], references: [id])
-  batch   Batch    @relation(fields: [batchId], references: [id])
-  payment Payment? // if purchased
+  batch     Batch            @relation(fields: [batchId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
+  payment   Payment?
 
   @@unique([userId, batchId])
   @@index([userId])
@@ -292,26 +236,24 @@ model Enrollment {
   @@index([status])
 }
 
-// ─── Lead Forms (free batch registration) ─────────────────────────────────────
-
 model LeadForm {
   id          String          @id @default(cuid())
   batchId     String          @unique
   title       String          @default("Register for Free")
   description String?
-  fields      LeadFormField[]
   batch       Batch           @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  fields      LeadFormField[]
 }
 
 model LeadFormField {
   id          String   @id @default(cuid())
   formId      String
-  label       String // "Full Name"
+  label       String
   placeholder String?
-  fieldType   String // "text" | "email" | "phone" | "select" | "textarea"
+  fieldType   String
   required    Boolean  @default(true)
   order       Int
-  options     String[] // for select fields: ["Guwahati", "Jorhat", ...]
+  options     String[]
   form        LeadForm @relation(fields: [formId], references: [id], onDelete: Cascade)
 }
 
@@ -319,14 +261,12 @@ model LeadSubmission {
   id        String   @id @default(cuid())
   batchId   String
   userId    String?
-  data      Json // { "Full Name": "Rahul Das", "Phone": "9876..." }
+  data      Json
   createdAt DateTime @default(now())
   user      User?    @relation(fields: [userId], references: [id])
 
   @@index([batchId])
 }
-
-// ─── Content ──────────────────────────────────────────────────────────────────
 
 model StudyMaterial {
   id           String      @id @default(cuid())
@@ -334,64 +274,72 @@ model StudyMaterial {
   type         ContentType
   fileUrl      String
   subjectId    String?
-  year         Int?
-  requiredTier String      @default("NORMAL")
   downloads    Int         @default(0)
   uploadedBy   String
-  status       String      @default("published")
-  deletedAt    DateTime?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-
-  subject   Subject?    @relation(fields: [subjectId], references: [id]) // ← REMOVED "SubjectNotes"
-  batchNote BatchNote[]
-  batchPYQ  BatchPYQ[]
+  status       String      @default("published")
+  year         Int?
+  deletedAt    DateTime?
+  requiredTier String      @default("NORMAL")
+  batchNote    BatchNote[]
+  batchPYQ     BatchPYQ[]
+  subject      Subject?    @relation(fields: [subjectId], references: [id])
 
   @@index([type])
   @@index([status])
 }
 
-// ─── Mock Tests ───────────────────────────────────────────────────────────────
-
 model MockTest {
-  id           String    @id @default(cuid())
+  id           String             @id @default(cuid())
   title        String
   description  String?
   subjectId    String?
-  examType     ExamType  @default(FULL_MOCK)
+  examType     ExamType           @default(FULL_MOCK)
   year         Int?
-  duration     Int // minutes
-  accessCode   String    @unique
-  isActive     Boolean   @default(false)
+  duration     Int
+  accessCode   String             @unique
+  isActive     Boolean            @default(false)
   totalMarks   Int
-  requiredTier String    @default("NORMAL") // ✅ ADD THIS
-  scheduledAt  DateTime?
-  endsAt       DateTime?
+  createdAt    DateTime           @default(now())
   deletedAt    DateTime?
-  createdAt    DateTime  @default(now())
-
-  subject    Subject?           @relation(fields: [subjectId], references: [id])
-  questions  MockTestQuestion[]
-  attempts   MockTestAttempt[]
-  batchTests BatchTest[]
+  endsAt       DateTime?
+  scheduledAt  DateTime?
+  requiredTier String             @default("NORMAL")
+  folderId     String?
+  folder       MockTestFolder?    @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  batchTests   BatchTest[]
+  subject      Subject?           @relation(fields: [subjectId], references: [id])
+  attempts     MockTestAttempt[]
+  questions    MockTestQuestion[]
 
   @@index([isActive])
+}
+
+model MockTestFolder {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  tests       MockTest[]
 }
 
 model MockTestQuestion {
   id                  String   @id @default(cuid())
   testId              String
   text                String
-  textAs              String?
-  imageUrl            String?
   options             String[]
-  optionsAs           String[]
   correctIndex        Int
   marks               Int      @default(4)
+  imageUrl            String?
   negativeMarks       Float    @default(1)
-  section             String   @default("General")
+  optionsAs           String[]
   order               Int      @default(0)
-  explanation         String? // admin-written solution text
+  section             String   @default("General")
+  textAs              String?
+  explanation         String?
   explanationImageUrl String?
   optionImages        String[] @default([])
   test                MockTest @relation(fields: [testId], references: [id], onDelete: Cascade)
@@ -403,34 +351,31 @@ model MockTestAttempt {
   testId          String
   score           Int       @default(0)
   percentage      Float     @default(0)
-  answers         Json?
-  status          String    @default("IN_PROGRESS")
-  startedAt       DateTime  @default(now())
   completedAt     DateTime?
-  user            User      @relation(fields: [userId], references: [id])
-  test            MockTest  @relation(fields: [testId], references: [id])
+  answers         Json?
+  startedAt       DateTime  @default(now())
+  status          String    @default("IN_PROGRESS")
   markedForReview String[]  @default([])
+  test            MockTest  @relation(fields: [testId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([testId])
   @@index([status])
 }
 
-// ─── Payments ─────────────────────────────────────────────────────────────────
-
 model Payment {
   id                String        @id @default(cuid())
   userId            String
   batchId           String?
   enrollmentId      String?       @unique
-  amount            Int // paise
+  amount            Int
   currency          String        @default("INR")
   status            PaymentStatus @default(PENDING)
   razorpayOrderId   String?       @unique
   razorpayPaymentId String?
   razorpaySignature String?
   couponId          String?
-  serviceType       String? // PREDICTOR, ANALYTICS, COUNSELLING
   discountAmount    Int?
   invoiceUrl        String?
   refundId          String?
@@ -438,10 +383,10 @@ model Payment {
   metadata          Json?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
-
-  user       User        @relation(fields: [userId], references: [id])
-  enrollment Enrollment? @relation(fields: [enrollmentId], references: [id])
-  coupon     Coupon?     @relation(fields: [couponId], references: [id])
+  serviceType       String?
+  coupon            Coupon?       @relation(fields: [couponId], references: [id])
+  enrollment        Enrollment?   @relation(fields: [enrollmentId], references: [id])
+  user              User          @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([status])
@@ -452,22 +397,19 @@ model Coupon {
   id          String    @id @default(cuid())
   code        String    @unique
   description String?
-  discount    Int // percentage 0-100
+  discount    Int
   maxUses     Int       @default(100)
   used        Int       @default(0)
   expiresAt   DateTime?
   isActive    Boolean   @default(true)
-  batchId     String? // null = all batches
+  batchId     String?
   createdAt   DateTime  @default(now())
-
-  batch    Batch?    @relation(fields: [batchId], references: [id])
-  payments Payment[]
+  batch       Batch?    @relation(fields: [batchId], references: [id])
+  payments    Payment[]
 
   @@index([code])
   @@index([isActive])
 }
-
-// ─── Certificates ─────────────────────────────────────────────────────────────
 
 model Certificate {
   id       String   @id @default(cuid())
@@ -480,14 +422,12 @@ model Certificate {
   user     User     @relation(fields: [userId], references: [id])
 }
 
-// ─── Notifications ────────────────────────────────────────────────────────────
-
 model Notification {
   id        String   @id @default(cuid())
   userId    String
   title     String
   body      String
-  type      String   @default("INFO") // INFO | SUCCESS | WARNING | PAYMENT
+  type      String   @default("INFO")
   read      Boolean  @default(false)
   link      String?
   createdAt DateTime @default(now())
@@ -496,42 +436,34 @@ model Notification {
   @@index([userId, read])
 }
 
-// ─── Audit Logs ───────────────────────────────────────────────────────────────
-
 model AuditLog {
   id        String   @id @default(cuid())
   actorId   String
-  action    String // "ROLE_CHANGED", "BATCH_CREATED", "USER_SUSPENDED"
-  entity    String // "User", "Batch", "Payment"
+  action    String
+  entity    String
   entityId  String
   oldValue  Json?
   newValue  Json?
   ipAddress String?
   userAgent String?
   createdAt DateTime @default(now())
-
-  actor User @relation("AuditActor", fields: [actorId], references: [id])
+  actor     User     @relation("AuditActor", fields: [actorId], references: [id])
 
   @@index([actorId])
   @@index([entity, entityId])
   @@index([createdAt])
 }
 
-// ─── Platform Settings ────────────────────────────────────────────────────────
-
 model AdminSetting {
   id        String   @id @default(cuid())
-  key       String   @unique // "platform_name", "maintenance_mode", etc.
+  key       String   @unique
   value     Json
   updatedAt DateTime @updatedAt
 }
 
-// Backward compat — keep Subscription for existing CEE users
 model Subscription {
   id                String   @id @default(cuid())
   userId            String   @unique
-  tier              String
-  status            String   @default("ACTIVE")
   razorpayOrderId   String?
   razorpayPaymentId String?
   razorpaySignature String?
@@ -541,5 +473,87 @@ model Subscription {
   expiresAt         DateTime
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  tier              String
+  status            String   @default("ACTIVE")
   user              User     @relation(fields: [userId], references: [id])
+}
+
+model Squad {
+  id           String   @id @default(cuid())
+  name         String
+  inviteCode   String   @unique
+  goalTarget   Int      @default(500)
+  currentScore Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  members      User[]
+}
+
+model College {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  shortName String?
+  type      String?
+  state     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cutoffs   Cutoff[]
+}
+
+model Cutoff {
+  id          String   @id @default(cuid())
+  collegeId   String
+  branchName  String
+  category    String
+  year        Int
+  round       Int?
+  closingRank Int
+  openingRank Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  college     College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId])
+  @@index([category])
+  @@index([closingRank])
+}
+
+enum Role {
+  STUDENT
+  PREMIUM_STUDENT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum BatchType {
+  CEE_PREP
+  BTECH
+  COMPETITIVE
+  FREE
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PENDING
+}
+
+enum PaymentStatus {
+  PENDING
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum ContentType {
+  PYQ
+  NOTE
+}
+
+enum ExamType {
+  FULL_MOCK
+  TOPIC_WISE
+  YEAR_WISE
 }

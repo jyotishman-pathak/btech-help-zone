@@ -35,6 +35,7 @@ export async function GET() {
           batch: { select: { id: true, name: true } },
         },
       },
+      folder: { select: { id: true, name: true } },
     },
     orderBy: { id: "desc" },
   });
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
     requiredTier,
     questions,
     batchIds = [],
+    folderId,
   } = body;
 
   if (!questions?.length) {
@@ -84,6 +86,7 @@ export async function POST(req: NextRequest) {
       title,
       description,
       subjectId: subjectId || null,
+      folderId: folderId || null,
       examType: examType ?? "FULL_MOCK",
       duration: duration ?? 180,
       accessCode,

@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Card } from "../../../../components/ui/card";
 import { Input } from "../../../../components/ui/input";
 import { AdminPageWrapper } from "../../../../components/dashboard/AdminPageWrapper";
+import { AdminFolderManager } from "../../../../components/dashboard/AdminFolderManager";
 
 export default function AdminTestsPage() {
     const [tests, setTests] = useState<any[]>([]);
@@ -69,11 +70,14 @@ export default function AdminTestsPage() {
                             {tests.length} test{tests.length !== 1 ? "s" : ""} · {tests.filter((t) => t.isActive).length} active
                         </p>
                     </div>
-                    <Link href="/admin/tests/new">
-                        <Button className="bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900">
-                            <Plus className="w-4 h-4 mr-2" /> New Test
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <AdminFolderManager />
+                        <Link href="/admin/tests/new">
+                            <Button className="bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900">
+                                <Plus className="w-4 h-4 mr-2" /> New Test
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="relative max-w-xs">
@@ -106,6 +110,7 @@ export default function AdminTestsPage() {
                                 <TableRow className="border-zinc-200 dark:border-zinc-800">
                                     <TableHead className="text-zinc-500">Title</TableHead>
                                     <TableHead className="text-zinc-500">Access Code</TableHead>
+                                    <TableHead className="text-zinc-500">Folder</TableHead>
                                     <TableHead className="text-zinc-500">Questions</TableHead>
                                     <TableHead className="text-zinc-500">Marks</TableHead>
                                     <TableHead className="text-zinc-500">Duration</TableHead>
@@ -138,6 +143,15 @@ export default function AdminTestsPage() {
                                                     }
                                                 </button>
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            {test.folder ? (
+                                                <Badge variant="outline" className="text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400">
+                                                    {test.folder.name}
+                                                </Badge>
+                                            ) : (
+                                                <span className="text-xs text-zinc-400">—</span>
+                                            )}
                                         </TableCell>
                                         <TableCell className="text-zinc-700 dark:text-zinc-300">
                                             {test._count?.questions ?? 0}

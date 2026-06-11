@@ -129,6 +129,21 @@ export async function PUT(
     },
   });
 
+  // --- STUDY SQUAD: Increment score for correctly solved questions ---
+  if (correct > 0) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { squadId: true },
+    });
+
+    if (user?.squadId) {
+      await prisma.squad.update({
+        where: { id: user.squadId },
+        data: { currentScore: { increment: correct } },
+      });
+    }
+  }
+
   return NextResponse.json({
     ...updated,
     correct,
