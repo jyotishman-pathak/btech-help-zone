@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { db } from "@/lib/db";
+
 import Papa from "papaparse";
+import { auth } from "../../../../../auth";
+import prisma from "../../../../../lib/prisma.client";
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
     }
 
     const rows = parsed.data as any[];
-    
+
     let processedCount = 0;
 
     for (const row of rows) {
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
         continue; // Skip invalid rows
       }
 
-      const college = await db.college.upsert({
+      const college = await prisma.college.upsert({
         where: { name: CollegeName },
         update: {
           shortName: CollegeShortName || null,
@@ -65,7 +66,7 @@ export async function POST(req: Request) {
         }
       });
 
-      await db.cutoff.create({
+      await prisma.cutoff.create({
         data: {
           collegeId: college.id,
           branchName: BranchName,
