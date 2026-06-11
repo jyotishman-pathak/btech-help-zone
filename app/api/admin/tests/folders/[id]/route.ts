@@ -16,7 +16,7 @@ function isAdmin(session: Session | null) {
   );
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = (await auth()) as Session | null;
 
   if (!isAdmin(session)) {
@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = (await auth()) as Session | null;
 
   if (!isAdmin(session)) {
