@@ -112,7 +112,7 @@ const SECONDARY_NAV = [
     { title: "Study Squads", href: "/student/squad", icon: Users, badge: "New", proOnly: false },
     { title: "Analytics", href: "/student/cee/analytics", icon: BrainCircuit, badge: "Pro", proOnly: true },
     { title: "Browse Batches", href: "/student/batches", icon: Layers, badge: null, proOnly: false },
-    { title: "College Predictor", href: "/student/predictor", icon: GraduationCap, badge: "Pro", proOnly: true },
+    { title: "College Predictor", href: "/student/predictor", icon: GraduationCap, badge: null, proOnly: false },
     { title: "Settings", href: "/student/settings", icon: Settings, badge: null, proOnly: false },
     { title: "Help & Support", href: "/student/cee/support", icon: HelpCircle, badge: null, proOnly: false },
 ];
@@ -661,8 +661,15 @@ export default function DashboardLayout({
                         onClose={() => setSearchOpen(false)}
                     />
 
-                    <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
-                        {children}
+                    <main className="flex-1 overflow-y-auto pb-20 lg:pb-0 flex flex-col">
+                        <div className="flex-1">
+                            {children}
+                        </div>
+                        <div className="py-6 text-center border-t border-zinc-200 dark:border-zinc-800 mt-auto">
+                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                Made by <a href="https://jyotishmanpathak.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Jyotishman Pathak</a>
+                            </p>
+                        </div>
                     </main>
                 </div>
 

@@ -510,6 +510,7 @@ model Cutoff {
   round       Int?
   closingRank Int
   openingRank Int?
+  cutoffMarks Int? // NEW — marks of last admitted candidate
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   college     College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)

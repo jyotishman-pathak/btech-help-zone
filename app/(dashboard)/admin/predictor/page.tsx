@@ -68,8 +68,10 @@ export default function AdminPredictorPage() {
       "Year",
       "Round",
       "ClosingRank",
-      "OpeningRank"
+      "OpeningRank",
+      "CutoffMarks",
     ];
+
     const sampleRow = [
       "Assam Engineering College",
       "AEC",
@@ -80,9 +82,10 @@ export default function AdminPredictorPage() {
       "2023",
       "1",
       "1500",
-      "500"
+      "500",
+      "550",
     ];
-    
+
     const csv = [headers, sampleRow].map(e => e.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -97,7 +100,7 @@ export default function AdminPredictorPage() {
   return (
     <AdminPageWrapper activeTab="predictor">
       <div className="space-y-6">
-        
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -147,7 +150,7 @@ export default function AdminPredictorPage() {
                     Click to browse
                   </label>
                   <p className="text-xs text-slate-500 mt-1">CSV files only</p>
-                  
+
                   {file && (
                     <div className="mt-4 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-md inline-flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
                       {file.name}
@@ -161,7 +164,7 @@ export default function AdminPredictorPage() {
                     <p>{error}</p>
                   </div>
                 )}
-                
+
                 {success && (
                   <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-lg flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />

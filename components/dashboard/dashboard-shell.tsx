@@ -1018,7 +1018,7 @@ export function DashboardShell({ user, tier = "NORMAL", data, userFeatures }: {
             {/* College Predictor — premium gate */}
             <TierGate
               tier={tier}
-              required="PREMIUM"
+              required="NORMAL"
               upsellTitle="College Predictor"
               upsellDescription="See which Assam colleges you qualify for based on your mock scores."
               overrideAccess={userFeatures?.hasPredictor}

@@ -44,7 +44,8 @@ export async function POST(req: Request) {
         Year,
         Round,
         ClosingRank,
-        OpeningRank
+        OpeningRank,
+        CutoffMarks
       } = row;
 
       if (!CollegeName || !BranchName || !Category || !ClosingRank) {
@@ -75,6 +76,7 @@ export async function POST(req: Request) {
           round: parseInt(Round) || 1,
           closingRank: parseInt(ClosingRank),
           openingRank: OpeningRank ? parseInt(OpeningRank) : null,
+          cutoffMarks: CutoffMarks ? parseInt(CutoffMarks) : null,
         }
       });
 
