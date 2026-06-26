@@ -461,6 +461,12 @@ export default function StudentPredictorPage() {
             </div>
           </div>
         )}
+
+        <div className="pt-8 pb-4 text-center mt-auto">
+          <p className="text-xs text-gray-500">
+            Made by <a href="https://jyotishmanpathak.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 font-medium hover:underline">Jyotishman Pathak</a>
+          </p>
+        </div>
       </div>
     </div>
   );

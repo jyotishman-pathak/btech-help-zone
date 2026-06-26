@@ -590,11 +590,14 @@ function MobileMoreDrawer({ open, onClose }: { open: boolean; onClose: () => voi
                         <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 pb-safe-or-4">
                             <button
                                 onClick={() => signOut({ callbackUrl: "/login" })}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors mb-4"
                             >
                                 <LogOut className="w-4 h-4" />
                                 Sign Out
                             </button>
+                            <p className="text-xs text-center text-zinc-500 dark:text-zinc-400">
+                                Made by <a href="https://jyotishmanpathak.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Jyotishman Pathak</a>
+                            </p>
                         </div>
                     </motion.div>
                 </>
