@@ -1,4 +1,5 @@
-import fs from 'fs';
+const fs = require('fs');
+
 const filePath = './lib/data.ts';
 let content = fs.readFileSync(filePath, 'utf8');
 

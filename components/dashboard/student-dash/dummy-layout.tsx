@@ -230,7 +230,7 @@ function DesktopSidebar({
                 <nav className="space-y-0.5 px-2">
                     {allNav.map((item) => {
                         const isActive = pathname === item.href;
-                        
+
                         let isLocked = item.proOnly && !isPro;
                         if (isLocked && userFeatures) {
                             if (item.href.includes("predictor") || item.href.includes("colleges")) {
@@ -546,7 +546,7 @@ function MobileMoreDrawer({ open, onClose }: { open: boolean; onClose: () => voi
                             <div className="grid grid-cols-1 gap-0.5">
                                 {moreItems.map((item) => {
                                     const isActive = pathname === item.href;
-                                    
+
                                     let isLocked = item.proOnly && !isPro;
                                     if (isLocked && userFeatures) {
                                         if (item.href.includes("predictor") || item.href.includes("colleges")) {
@@ -595,9 +595,9 @@ function MobileMoreDrawer({ open, onClose }: { open: boolean; onClose: () => voi
                                 <LogOut className="w-4 h-4" />
                                 Sign Out
                             </button>
-                            <p className="text-xs text-center text-zinc-500 dark:text-zinc-400">
-                                Made by <a href="https://jyotishmanpathak.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Jyotishman Pathak</a>
-                            </p>
+                            <div className="flex justify-center">
+                                <CreatorCredit />
+                            </div>
                         </div>
                     </motion.div>
                 </>
@@ -606,7 +606,32 @@ function MobileMoreDrawer({ open, onClose }: { open: boolean; onClose: () => voi
     );
 }
 
+// ─── Creator Credit ───────────────────────────────────────────────────────────
+
+function CreatorCredit() {
+    return (
+        <a
+            href="https://jyotishmanpathak.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex flex-col items-center gap-0.5 select-none"
+        >
+            <span className="flex items-center gap-1.5 text-[11px] text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-500 dark:group-hover:text-zinc-400 transition-colors">
+                <span className="inline-block w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                built by{" "}
+                <span className="font-semibold text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
+                    Jyotishman Pathak
+                </span>
+            </span>
+            <span className="text-[10px] text-zinc-300 dark:text-zinc-600 group-hover:text-zinc-400 dark:group-hover:text-zinc-500 transition-colors tracking-wide">
+                dev related queries
+            </span>
+        </a>
+    );
+}
+
 // ─── Main Layout ──────────────────────────────────────────────────────────────
+
 export default function DashboardLayout({
     children,
     userName,
@@ -668,10 +693,8 @@ export default function DashboardLayout({
                         <div className="flex-1">
                             {children}
                         </div>
-                        <div className="py-6 text-center border-t border-zinc-200 dark:border-zinc-800 mt-auto">
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                Made by <a href="https://jyotishmanpathak.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Jyotishman Pathak</a>
-                            </p>
+                        <div className="py-5 mt-auto border-t border-zinc-200/60 dark:border-zinc-800/60 flex justify-center">
+                            <CreatorCredit />
                         </div>
                     </main>
                 </div>
