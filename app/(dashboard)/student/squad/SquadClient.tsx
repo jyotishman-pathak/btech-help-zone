@@ -25,7 +25,7 @@ export function SquadClient({ initialSquad, userId, userName }: { initialSquad: 
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      
+
       // Refresh page to load new squad
       router.refresh();
       // Optimistically update
@@ -54,7 +54,7 @@ export function SquadClient({ initialSquad, userId, userName }: { initialSquad: 
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      
+
       router.refresh();
       // Normally we'd fetch the whole squad or rely on router.refresh
       // For simplicity, we just reload window if optimism fails
@@ -98,7 +98,7 @@ export function SquadClient({ initialSquad, userId, userName }: { initialSquad: 
           </div>
           <h2 className="text-xl font-bold mb-2 text-zinc-900 dark:text-zinc-50">Create a Squad</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mb-6">Form a new study squad and invite up to 3 friends to join you.</p>
-          
+
           <input
             type="text"
             placeholder="Enter Squad Name (e.g. Physics Pro Max)"
@@ -123,7 +123,7 @@ export function SquadClient({ initialSquad, userId, userName }: { initialSquad: 
           </div>
           <h2 className="text-xl font-bold mb-2 text-zinc-900 dark:text-zinc-50">Join a Squad</h2>
           <p className="text-zinc-500 dark:text-zinc-400 mb-6">Have an invite code? Enter it below to join your friends.</p>
-          
+
           <input
             type="text"
             placeholder="Enter 8-character Invite Code"
@@ -156,7 +156,7 @@ export function SquadClient({ initialSquad, userId, userName }: { initialSquad: 
       {/* Squad Header & Progress */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
-        
+
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -171,7 +171,7 @@ export function SquadClient({ initialSquad, userId, userName }: { initialSquad: 
           <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-950 p-2 pl-4 pr-2 rounded-xl border border-zinc-200 dark:border-zinc-800">
             <div className="text-sm font-medium text-zinc-500">Invite Code:</div>
             <div className="font-mono font-bold text-zinc-900 dark:text-white tracking-widest">{squad.inviteCode}</div>
-            <button 
+            <button
               onClick={copyInvite}
               className="p-2 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700"
             >
@@ -189,7 +189,7 @@ export function SquadClient({ initialSquad, userId, userName }: { initialSquad: 
             <span className="text-zinc-400">{squad.goalTarget} goal</span>
           </div>
           <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-1000 ease-out"
               style={{ width: `${progressPercentage}%` }}
             />

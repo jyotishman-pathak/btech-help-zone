@@ -1,4 +1,5 @@
 import data from "../public/data/predictions.json"
+import { CEE_STATIC_DATA } from "./data"
 
 export type Prediction = {
     year: number
@@ -32,6 +33,8 @@ export const BRANCHES = Array.from(
     new Set(predictions.map((p) => p.branch))
 ).sort()
 
+export const ALL_BRANCHES_VALUE = "__ALL__"
+
 export const COLLEGES = Array.from(
     new Set(predictions.map((p) => p.college))
 )
@@ -47,24 +50,94 @@ export const COLLEGE_META: Record<string, { short: string; location: string; tie
     "DHEMAJI ENGINEERING COLLEGE": { short: "DEC", location: "Dhemaji", tier: 3 },
 }
 
-export function predictColleges(
-    rank: number,
-    category: string,
-    branch: string
-): CollegeResult[] {
-    // Get all historical data for this category + branch
-    const relevant = predictions.filter(
-        (p) => p.category === category && p.branch === branch && p.seat_type === "EXCLUDING 5%"
-    )
+// ---------------------------------------------------------------------------
+// Marks → Rank estimation
+// Build a lookup table from cutoffMarks → closingRank using CEE_STATIC_DATA.
+// We take data points from all colleges/branches/categories, then sort by marks
+// descending and use linear interpolation to estimate rank from marks.
+// ---------------------------------------------------------------------------
 
-    // Group by college, take latest year's rank
+type MarksRankPoint = { marks: number; rank: number }
+
+let _marksRankTable: MarksRankPoint[] | null = null
+
+function getMarksRankTable(): MarksRankPoint[] {
+    if (_marksRankTable) return _marksRankTable
+
+    const points: MarksRankPoint[] = []
+
+    CEE_STATIC_DATA.forEach((college) => {
+        college.branches.forEach((branch) => {
+            Object.values(branch.categories).forEach((catData) => {
+                catData.history.forEach((round) => {
+                    if (round.cutoffMarks !== null && round.closingRank > 0) {
+                        points.push({ marks: round.cutoffMarks, rank: round.closingRank })
+                    }
+                })
+            })
+        })
+    })
+
+    // Deduplicate and sort by marks descending (higher marks → lower/better rank)
+    const seen = new Set<string>()
+    const unique = points.filter((p) => {
+        const key = `${p.marks}-${p.rank}`
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+    })
+
+    // Sort by marks descending
+    _marksRankTable = unique.sort((a, b) => b.marks - a.marks)
+    return _marksRankTable
+}
+
+/**
+ * Estimate CEE rank from marks using linear interpolation on historical data.
+ * Higher marks → lower (better) rank.
+ */
+export function estimateRankFromMarks(marks: number): number {
+    const table = getMarksRankTable()
+    if (table.length === 0) return Math.round(50000 * (1 - marks / 300))
+
+    // marks above maximum → rank 1
+    if (marks >= table[0].marks) return 1
+
+    // marks below minimum → very high rank
+    if (marks <= table[table.length - 1].marks) {
+        return Math.min(50000, table[table.length - 1].rank * 2)
+    }
+
+    // Find surrounding points and interpolate
+    for (let i = 0; i < table.length - 1; i++) {
+        const upper = table[i]   // higher marks, lower rank
+        const lower = table[i + 1] // lower marks, higher rank
+        if (marks <= upper.marks && marks >= lower.marks) {
+            const ratio = (upper.marks - marks) / (upper.marks - lower.marks)
+            return Math.round(upper.rank + ratio * (lower.rank - upper.rank))
+        }
+    }
+
+    return 5000 // fallback
+}
+
+// ---------------------------------------------------------------------------
+// Core prediction logic (shared)
+// ---------------------------------------------------------------------------
+
+function buildResults(
+    relevant: Prediction[],
+    rank: number,
+    groupKey: (p: Prediction) => string
+): CollegeResult[] {
     const collegeMap = new Map<string, { latest: Prediction; historical: { year: number; rank: number }[] }>()
 
     relevant.forEach((p) => {
-        if (!collegeMap.has(p.college)) {
-            collegeMap.set(p.college, { latest: p, historical: [] })
+        const key = groupKey(p)
+        if (!collegeMap.has(key)) {
+            collegeMap.set(key, { latest: p, historical: [] })
         }
-        const entry = collegeMap.get(p.college)!
+        const entry = collegeMap.get(key)!
         entry.historical.push({ year: p.year, rank: p.closing_rank })
         if (p.year > entry.latest.year || (p.year === entry.latest.year && p.round > entry.latest.round)) {
             entry.latest = p
@@ -75,10 +148,6 @@ export function predictColleges(
 
     collegeMap.forEach(({ latest, historical }) => {
         const closingRank = latest.closing_rank
-
-        // Calculate probability using a smooth sigmoid-like function
-        // If rank < closingRank: high probability
-        // If rank > closingRank: drops off
         const ratio = rank / closingRank
         let probability: number
         let zone: "safe" | "moderate" | "risky"
@@ -102,12 +171,11 @@ export function predictColleges(
 
         probability = Math.max(2, Math.min(99, probability))
 
-        // Trend calculation
         const sorted = historical.sort((a, b) => a.year - b.year)
         let trend: "up" | "stable" | "down" = "stable"
         if (sorted.length >= 2) {
             const diff = sorted[sorted.length - 1].rank - sorted[sorted.length - 2].rank
-            if (diff > 50) trend = "up"    // cutoff increased = more competitive
+            if (diff > 50) trend = "up"
             else if (diff < -50) trend = "down"
         }
 
@@ -124,6 +192,48 @@ export function predictColleges(
     })
 
     return results.sort((a, b) => b.probability - a.probability)
+}
+
+// ---------------------------------------------------------------------------
+// Public predict functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Predict colleges by rank + category + branch (or all branches).
+ * Pass ALL_BRANCHES_VALUE for branch to see all branches.
+ */
+export function predictColleges(
+    rank: number,
+    category: string,
+    branch: string
+): CollegeResult[] {
+    const relevant = predictions.filter(
+        (p) =>
+            p.category === category &&
+            (branch === ALL_BRANCHES_VALUE || p.branch === branch) &&
+            p.seat_type === "EXCLUDING 5%"
+    )
+
+    // When all branches: group by college+branch so each college×branch is its own row
+    const groupKey = branch === ALL_BRANCHES_VALUE
+        ? (p: Prediction) => `${p.college}||${p.branch}`
+        : (p: Prediction) => p.college
+
+    return buildResults(relevant, rank, groupKey)
+}
+
+/**
+ * Predict colleges by marks (converts marks → estimated rank first).
+ * Pass ALL_BRANCHES_VALUE for branch to see all branches.
+ */
+export function predictCollegesByMarks(
+    marks: number,
+    category: string,
+    branch: string
+): { results: CollegeResult[]; estimatedRank: number } {
+    const estimatedRank = estimateRankFromMarks(marks)
+    const results = predictColleges(estimatedRank, category, branch)
+    return { results, estimatedRank }
 }
 
 export function formatRank(rank: number): string {
